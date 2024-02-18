@@ -11,4 +11,9 @@ A text editor with the dumbest features imaginable.
     - Have ASCII mode where each key correlates to its ASCII value.
     - File mode: Allow you to edit your directory where each line is a file, backspace goes to the parent dir, enter enters the file, etc
         - THIS IS VERY DANGEROUS. I CANNOT MESS THIS UP FOR THE SAKE OF MY SYSTEM.
-- Exiting: You will not be able to exit this text editor.
+- Exiting: The only way to exit this text editor is to remain inactive for more than ten seconds. 
+    - After five seconds, your code falls to the ground like in the [Cellular Automata Neovim plugin](https://github.com/Eandrju/cellular-automaton.nvim) plugin.
+- Use <Ctrl>+<Shift>+<Arrow> to navigate between files. 
+    - Stored in order, left goes back, right goes forwards
+        - Can do something regarding up and down keys
+- Similar to Vim, you can move using given keys; however, which keys do this is yet to be decided. I can either make it stupid or functional.
