@@ -1,3 +1,7 @@
+/*
+ * Inspiration for this file and its implementation is Tsoding's [nob.h](https://github.com/tsoding/musializer/blob/master/src/nob.h)
+ */
+
 #include <stdlib.h>
 #include <stddef.h>
 
@@ -13,19 +17,19 @@
 
 #define list_append(list, item)                                                                             \
         do {                                                                                                \
-                if ((list).cap < ++(list).n) {                                                            \
-                        (list).cap *= 2;                                                                   \
-                        (list).items = realloc((list).items, (list).cap * sizeof((list).items[0]));     \
+                if ((list).cap < ++(list).n) {                                                              \
+                        (list).cap *= 2;                                                                    \
+                        (list).items = realloc((list).items, (list).cap * sizeof(*(list).items));           \
                 }                                                                                           \
-                (list).items[(list).n - 1] = item;                                                       \
+                (list).items[(list).n - 1] = item;                                                          \
         }                                                                                                   \
         while (0);                                                                              
 
-#define list_init(list, size)                                                               \
-        do {                                                                                \
-                (list).items = malloc(size * sizeof(*(list).items));   /* problem line */   \
-                (list).cap = size;                                                          \
-        } while (0);
+#define list_init(type, size)                                                 \
+        {                                                                     \
+                .items = malloc((size) * sizeof(*((type *) 0)->items)),       \
+                .cap = (size), .n = 0                                         \
+        }
 
 #define list_test(list) do { printf("%lu\n", sizeof(*(list.items))); } while(0);
 
