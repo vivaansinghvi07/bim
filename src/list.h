@@ -8,29 +8,26 @@
 #ifndef LIST
 #define LIST 
 
-#define typedef_list(name, type)    \
+#define list_typedef(name, type)    \
         typedef struct {            \
                 size_t cap;         \
-                size_t n;           \
+                size_t len;         \
                 type *items;        \
-        } name;                  
+        } name
 
 #define list_append(list, item)                                                                             \
         do {                                                                                                \
-                if ((list).cap < ++(list).n) {                                                              \
+                if ((list).cap < ++(list).len) {                                                            \
                         (list).cap *= 2;                                                                    \
                         (list).items = realloc((list).items, (list).cap * sizeof(*(list).items));           \
                 }                                                                                           \
-                (list).items[(list).n - 1] = item;                                                          \
-        }                                                                                                   \
-        while (0);                                                                              
+                (list).items[(list).len - 1] = item;                                                        \
+        } while (0)                                                                              
 
 #define list_init(type, size)                                                 \
         {                                                                     \
                 .items = malloc((size) * sizeof(*((type *) 0)->items)),       \
-                .cap = (size), .n = 0                                         \
+                .cap = (size), .len = 0                                       \
         }
-
-#define list_test(list) do { printf("%lu\n", sizeof(*(list.items))); } while(0);
 
 #endif
