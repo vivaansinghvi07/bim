@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#ifndef LIST
-#define LIST 
+#ifndef EDITOR_LIST
+#define EDITOR_LIST
 
 #define list_typedef(name, type)    \
         typedef struct {            \
@@ -24,10 +24,11 @@
                 (list).items[(list).len - 1] = item;                                                        \
         } while (0)                                                                              
 
-#define list_init(type, size)                                                 \
-        {                                                                     \
-                .items = malloc((size) * sizeof(*((type *) 0)->items)),       \
-                .cap = (size), .len = 0                                       \
-        }
+#define list_init(type, size)                                     \
+        (type) {                                                  \
+                (size),             /* capacity */                \
+                0,                  /*  length  */                \
+                malloc((size) * sizeof(*((type *) 0)->items))     \
+        }           
 
 #endif
