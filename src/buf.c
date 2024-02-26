@@ -1,3 +1,4 @@
+#include "buf.h"
 #include "list.h"
 #include "utils.h"
 #include "str.h" 
@@ -6,14 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-list_typedef(dyn_contents, dyn_str);
-
-typedef struct {
-        dyn_str filename;
-        dyn_contents lines;  // i believe it's okay to not use a pointer of this type
-} file_buf;
-
 
 file_buf *buf_open(const char *filename) {
 
