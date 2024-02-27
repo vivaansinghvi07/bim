@@ -1,30 +1,26 @@
 #include "src/list.h"
 #include "src/utils.h"
 #include "src/buf.h"
+#include "src/input.h"
 
 #include <stdint.h>
 #include <stdio.h>
-#include <Carbon/Carbon.h>
+#include <sgtty.h>
 
 typedef enum {
         NORMAL, FILES, EDIT  // files is plural b/c FILE is a kw
 } editor_mode;
 
-typedef enum {
-        CTRL, CMD, ALT, SHIFT
-} modifier;
-
-typedef struct {
-        char key;
-        modifier mod;
-} input;
-
-input get_input() {
-        GetCurrentKeyModifiers();
-        return (input) {0};
+int main(void) {
+        input_set_tty_raw();
+        int c;
+        while ((c = getchar()) != 'q') {
+                printf("Entered char-code: %d\n\r", c);
+        }
+        return input_restore_tty();
 }
 
-int main(int argc, char **argv) {
+int chain(int argc, char **argv) {
 
         // open all the buffers
         if (argc == 1) {
@@ -39,7 +35,6 @@ int main(int argc, char **argv) {
         editor_mode mode = NORMAL;
         input in;
         while (1) {
-                in = get_input();
                 switch (mode) {
                         case NORMAL: 
                         case FILES:
