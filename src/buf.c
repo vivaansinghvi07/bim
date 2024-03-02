@@ -24,14 +24,14 @@ file_buf *buf_open(const char *filename) {
         uint64_t file_length = ftell(file);
         fseek(file, 0, SEEK_SET);
 
-        char *buf = malloc((file_length + 1) * sizeof(char));
+        char buf[file_length + 1];
         fread(buf, sizeof(char), file_length, file);
         fclose(file);
 
         char *curr = buf - 1;
-        while (*(++buf) != '\0') {
-                list_append(return_buffer->lines.items[return_buffer->lines.len - 1], *buf);
-                if (*buf == '\n') {
+        while (*(++curr) != '\0') {
+                list_append(return_buffer->lines.items[return_buffer->lines.len - 1], *curr);
+                if (*curr == '\n') {
                         list_append(return_buffer->lines, list_init(dyn_str, 128));
                 }
         }
