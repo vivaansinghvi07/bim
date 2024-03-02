@@ -5,6 +5,12 @@
 
 static struct termios tbufsave;
 
+/*
+ *  Implementation for the two below functions taken from stty source:
+ *    https://github.com/wertarbyte/coreutils/blob/master/src/stty.c#L1162
+ *  And this reference:
+ *    https://www.scosales.com/ta/kb/100487.html
+ */
 int input_set_tty_raw(void) {
         struct termios tbuf;
         if (tcgetattr(0, &tbufsave) == -1) {
@@ -20,7 +26,6 @@ int input_set_tty_raw(void) {
 
         return tcsetattr(0, TCSANOW, &tbuf) == -1;   // 1 for error
 }
-
 int input_restore_tty(void) {
         return tcsetattr(0, TCSANOW, &tbufsave) == -1;   // 1 for error
 }
