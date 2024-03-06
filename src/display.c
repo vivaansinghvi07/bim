@@ -110,9 +110,7 @@ const char *get_bottom_bar(editor_mode mode, int width, struct bar_info info) {
                         memcpy(bar + 2 + 3           , mode_text, mode_len);
                         memcpy(bar + 2 + 3 + mode_len, " ==", 3);
         }
-
-        // represents the space from the beginning that the filename must stop expanding to
-        int used_up_space = mode_len + 10;  
+        int used_up_front_space = mode_len + 10;  
 
         // add information about the filename and lines and stuff
         // in file mode, add information about the current directory
@@ -126,7 +124,7 @@ const char *get_bottom_bar(editor_mode mode, int width, struct bar_info info) {
                         int total_lines_len = strlen(total_lines_str);
 
                         // space_in_beginning + curr + "/" + total + "  "
-                        if (used_up_space + curr_line_len + 1 + total_lines_len + 2 > width) {
+                        if (used_up_front_space + curr_line_len + 1 + total_lines_len + 2 > width) {
                                 return bar;  // return as is - forget about adding anything else
                         }
         
@@ -135,11 +133,18 @@ const char *get_bottom_bar(editor_mode mode, int width, struct bar_info info) {
                         bar[width - 2 - total_lines_len - 1] = '/';
                         memcpy(bar + width - 2 - total_lines_len - 1 - curr_line_len, curr_line_str, curr_line_len);
 
-                        // now, adjust for the length of the file name. TODO
-
+                        // check if there is space for the pipe operator and the filename
+                        int used_up_back_space = curr_line_len + total_lines_len + 3;
+                        if (width - used_up_front_space - used_up_back_space - 3 - filename->len < 0) {  
+                                return bar;
+                        }
+        
+                        // copy the filename and the straight line
+                        memcpy(bar + width - used_up_back_space - 3, " | ", 3);
+                        memcpy(bar + width - used_up_back_space - 3 - filename->len, filename->items, filename->len);
 
                 case FILES:
-                        break;
+                        break;  // TODO
         }
         return bar;
 }
@@ -155,15 +160,14 @@ int display_buffer(file_buf *buffer, editor_mode mode) {
         // now, fill the string that contains what needs to be printed
         char *output = malloc(H * W * sizeof(char));  // TOFREE
         memset(output, ' ', H * W);
-        int curr_line;  // TODO: figure out how to pass and store this information
         for (int i = 0; i < H - 1; ++i) { 
-                if (curr_line + i >= buffer->lines.len) {  // no lines left
+                if (buffer->screen_top_line + i >= buffer->lines.len) {  // no lines left
                         continue;
                 }
-                dyn_str *line = buffer->lines.items + curr_line + i;
+                dyn_str *line = buffer->lines.items + buffer->screen_top_line + i;
                 memcpy(output + (i * W), line->items, line->len > W ? W : line->len);
         }
-        struct bar_info info = { .normal_info = { 0 } };
+        struct bar_info info = { .normal_info = (struct bar_info_buffer) { 0 } };  // TODO
         memcpy(output + (H - 1) * W, get_bottom_bar(mode, W, info), W);
         return 0;
 }

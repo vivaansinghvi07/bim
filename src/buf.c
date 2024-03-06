@@ -14,6 +14,7 @@ file_buf *buf_open(const char *filename) {
         file_buf *return_buffer = malloc(sizeof(file_buf));
         return_buffer->filename = *dyn_str_from_string(filename);
         return_buffer->lines = list_init(dyn_contents, 128);
+        return_buffer->cursor_line = return_buffer->screen_top_line = 1;
 
         if (file == NULL) {
                 return_buffer->lines.items[0] = list_init(dyn_str, 256);

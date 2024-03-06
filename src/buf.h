@@ -7,6 +7,8 @@
 list_typedef(dyn_contents, dyn_str);
 
 typedef struct {
+        size_t cursor_line;
+        size_t screen_top_line;
         dyn_str filename;
         dyn_contents lines;  // i believe it's okay to not use a pointer of this type
 } file_buf;
