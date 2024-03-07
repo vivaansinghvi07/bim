@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 dyn_str *dyn_str_from_string(const char *str) {
-        uint64_t len = strlen(str) + 1;
+        uint64_t len = strlen(str);
         char *target_str = malloc(len * sizeof(char));
         memcpy(target_str, str, len);
         dyn_str *retval = malloc(sizeof(dyn_str));

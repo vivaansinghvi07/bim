@@ -14,15 +14,15 @@ file_buf *buf_open(const char *filename) {
         file_buf *return_buffer = malloc(sizeof(file_buf));
         return_buffer->filename = *dyn_str_from_string(filename);
         return_buffer->lines = list_init(dyn_contents, 128);
+	list_append(return_buffer->lines, list_init(dyn_str, 128));
         return_buffer->cursor_line = return_buffer->screen_top_line = 1;
 
         if (file == NULL) {
-                return_buffer->lines.items[0] = list_init(dyn_str, 256);
                 return return_buffer;
         }
 
         fseek(file, 0, SEEK_END);
-        uint64_t file_length = ftell(file);
+        size_t file_length = ftell(file);
         fseek(file, 0, SEEK_SET);
 
         char buf[file_length + 1];
@@ -31,9 +31,10 @@ file_buf *buf_open(const char *filename) {
 
         char *curr = buf - 1;
         while (*(++curr) != '\0') {
-                list_append(return_buffer->lines.items[return_buffer->lines.len - 1], *curr);
                 if (*curr == '\n') {
                         list_append(return_buffer->lines, list_init(dyn_str, 128));
+                } else {
+                        list_append(return_buffer->lines.items[return_buffer->lines.len - 1], *curr);
                 }
         }
         return return_buffer;
