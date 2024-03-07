@@ -158,17 +158,24 @@ int display_buffer(file_buf *buffer, editor_mode mode) {
         store_cursor_pos(&cursor_y, &cursor_x);
 
         // now, fill the string that contains what needs to be printed
-        char *output = malloc(H * W * sizeof(char));  // TOFREE
+        char *output = malloc((H * W + 1) * sizeof(char));  // TOFREE
         memset(output, ' ', H * W);
+        output[H * W] = '\0';
         for (int i = 0; i < H - 1; ++i) { 
-                if (buffer->screen_top_line + i >= buffer->lines.len) {  // no lines left
+                if (buffer->screen_top_line - 1 + i >= buffer->lines.len) {  // no lines left
                         continue;
                 }
-                dyn_str *line = buffer->lines.items + buffer->screen_top_line + i;
+                dyn_str *line = buffer->lines.items + buffer->screen_top_line - 1 + i;
                 memcpy(output + (i * W), line->items, line->len > W ? W : line->len);
         }
-        struct bar_info info = { .normal_info = (struct bar_info_buffer) { 0 } };  // TODO
-        memcpy(output + (H - 1) * W, get_bottom_bar(mode, W, info), W);
+        struct bar_info info = { .normal_info = (struct bar_info_buffer) { 
+                .filename = &buffer->filename, .curr_line = buffer->cursor_line, .total_lines = buffer->lines.len}};  // TODO
+        const char *bar = get_bottom_bar(mode, W, info);
+        memcpy(output + (H - 1) * W, bar, W);
+
+        printf("%s", output);
+        free(output);
+        free((void *) bar);
         return 0;
 }
 
