@@ -194,13 +194,9 @@ char *apply_syntax_highlighting(dyn_str *line, highlighting_mode mode) {
         size_t t = 0;
         tokens[t].start = 0;
         for (size_t c = 0; c < line->len; ++c) {
-                if (!is_name_char(*(line->items + c))) {  // name char end reached
-                        tokens[t++].end = c;
-                        tokens[t].start = c;
-                        if (c < line->len - 1) {
-                                tokens[t++].end = c + 1;
-                                tokens[t].start = c + 1;
-                        }
+                if (!is_name_char(*(line->items + c)) || (c < line->len - 1 && !is_name_char(*(line->items + c + 1)))) {
+                        tokens[t++].end = c + 1;
+                        tokens[t].start = c + 1;
                 }
         }
         tokens[t].end = line->len;
@@ -208,7 +204,6 @@ char *apply_syntax_highlighting(dyn_str *line, highlighting_mode mode) {
         // for each token in the line, build a new string with syntax highlighting
         size_t len = 0;
         for (size_t i = 0; i <= t; ++i) {
-
                 char *code = get_highlighting_for_token(tokens[i], mode);
                 memcpy(output + len, code, ANSI_ESCAPE_LEN);
                 memcpy(output + (len += ANSI_ESCAPE_LEN), 
