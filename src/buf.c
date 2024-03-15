@@ -29,8 +29,7 @@ file_buf *buf_open(const char *filename) {
         fread(buf, sizeof(char), file_length, file);
         fclose(file);
 
-        char *curr = buf - 1;
-        while (*(++curr) != '\0') {
+        for (char *curr = buf; *curr; ++curr) {
                 if (*curr == '\n') {
                         list_append(return_buffer->lines, list_init(dyn_str, 128));
                 } else {

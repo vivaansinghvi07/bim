@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 void set_timer(struct timespec *timer) {
         clock_gettime(CLOCK_MONOTONIC, timer);
@@ -34,34 +35,42 @@ int main(int argc, char **argv) {
         char *cwd = getcwd(NULL, PATH_MAX + 1);  
 
         // main loop, handling inputs and etc
-        editor_mode mode = EDIT;
-        int buf_curr = buffers.len - 1;
-        dyn_str input_history = list_init(dyn_str, 128);
+        struct {
+                int buf_curr;
+                dyn_str input_history;
+                struct timespec timer; 
+                bool starting;
+                editor_mode mode;
+        } state;
+        state.input_history = list_init(dyn_str, 128);
+        state.starting = true;
+        state.buf_curr = buffers.len - 1;
+        state.mode = NORMAL;
         input_set_tty_raw();
-        struct timespec timer;
-        while (1) {
+        while (true) {
 
                 // if the input was received soon enough after the previous one, 
                 // it is reasonable to assume that it is the 27-91-XX combo from hitting arrow keys
                 // or another possible input that could mess things up
-                set_timer(&timer);
+                set_timer(&state.timer);
                 char c = getchar();
                 if (c == 'q') {
                         break;
                 }
-                if (get_ms_elapsed(&timer) < 1) {
+                if (get_ms_elapsed(&state.timer) < 1) {
                         continue;
                 }
-
-                if (mode == NORMAL || mode == EDIT) {
-                        display_buffer(buffers.items[buf_curr], mode);
+        
+                if (state.starting) {
+                        display_buffer(buffers.items[state.buf_curr], state.mode, RANDOM);
+                        state.starting = false;
                 }
-                switch (mode) {
+                switch (state.mode) {
                         case NORMAL: 
                         case FILES:
                         case EDIT: break;
                 }
         }
-        
+
         return input_restore_tty();
 }
