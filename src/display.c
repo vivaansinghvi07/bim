@@ -175,11 +175,11 @@ typedef struct {
 char *get_highlighting_for_token(token_t t, highlighting_mode mode) {
         char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
         switch (mode) {
-                case RANDOM: // TODO: make this not really random, seed with the token contents
+                case RANDOM: 
                         snprintf(code, ANSI_ESCAPE_LEN + 1, "\033[38;2;%03d;%03d;%03d;%dm",
                                  rand() % 255, rand() % 255, rand() % 255, 1);
                         return code;
-                case ALPHA:
+                case ALPHA:  // TODO
                         return code;
         }
 }
@@ -204,6 +204,9 @@ char *apply_syntax_highlighting(dyn_str *line, highlighting_mode mode) {
         // for each token in the line, build a new string with syntax highlighting
         size_t len = 0;
         for (size_t i = 0; i <= t; ++i) {
+                if (tokens[i].start == tokens[i].end) {
+                        continue;
+                }
                 char *code = get_highlighting_for_token(tokens[i], mode);
                 memcpy(output + len, code, ANSI_ESCAPE_LEN);
                 memcpy(output + (len += ANSI_ESCAPE_LEN), 
@@ -229,7 +232,7 @@ int display_buffer(file_buf *buffer, editor_mode mode, highlighting_mode syntax_
         for (int i = 0; i < H - 1; ++i) { 
                 if (buffer->screen_top_line - 1 + i >= buffer->lines.len) {  // no lines left 
                         continue;
-                }
+                } 
                 dyn_str *line = buffer->lines.items + buffer->screen_top_line - 1 + i;
                 dyn_str limited_line = *line; 
                 if (line->len + 1 > W) {
