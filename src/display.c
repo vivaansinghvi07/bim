@@ -14,9 +14,9 @@
 #include <string.h>
 
 // the standardized codes for this project will be as below:
-// \033[38;2;XXX;XXX;XXX;Xm  <-- this is 21 characters long
-// so, this will be 21
-#define ANSI_ESCAPE_LEN 21
+// \033[0;38;2;XXX;XXX;XXX;XXm  <-- this is 24 characters long
+#define ANSI_ESCAPE_LEN 24
+#define ANSI_COLOR_FORMAT "\033[0;38;2;%03d;%03d;%03d;%02dm"
 
 typedef uint8_t ansi_num_t;
 
@@ -167,17 +167,32 @@ bool is_name_char(char c) {
                c == '_';
 }
 
+// return a random ANSI styling code 
+uint8_t get_random_ansi_style(void) {
+        switch (rand() % 7) {
+                case 0: return 22;  // normal
+                case 1: return 1;  // bold
+                case 2: return 4;  // underline
+                case 3: return 2;  // dim
+                case 4: return 3;  // italic
+                case 5: return 9;  // strikethrough
+                case 6: return 5;  // blinking :D
+        }
+        return 0;
+}
+
 typedef struct {
         size_t start;
         size_t end;
 } token_t;
 
-char *get_highlighting_for_token(token_t t, highlighting_mode mode) {
+char *get_highlighting_for_token(dyn_str *line, token_t t, highlighting_mode mode) {
         char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
         switch (mode) {
-                case RANDOM: 
-                        snprintf(code, ANSI_ESCAPE_LEN + 1, "\033[38;2;%03d;%03d;%03d;%dm",
-                                 rand() % 255, rand() % 255, rand() % 255, 1);
+                case RANDOM:;
+                        uint8_t style = line->items[t.start] == ' ' ? 22 : get_random_ansi_style();
+                        snprintf(code, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT,
+                                 rand() % 255, rand() % 255, rand() % 255, style);
                         return code;
                 case ALPHA:  // TODO
                         return code;
@@ -207,7 +222,7 @@ char *apply_syntax_highlighting(dyn_str *line, highlighting_mode mode) {
                 if (tokens[i].start == tokens[i].end) {
                         continue;
                 }
-                char *code = get_highlighting_for_token(tokens[i], mode);
+                char *code = get_highlighting_for_token(line, tokens[i], mode);
                 memcpy(output + len, code, ANSI_ESCAPE_LEN);
                 memcpy(output + (len += ANSI_ESCAPE_LEN), 
                        line->items + tokens[i].start, tokens[i].end - tokens[i].start);
