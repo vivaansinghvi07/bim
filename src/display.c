@@ -169,14 +169,14 @@ bool is_name_char(char c) {
 
 // return a random ANSI styling code 
 uint8_t get_random_ansi_style(void) {
-        switch (rand() % 7) {
+        switch (rand() % 3) {
                 case 0: return 22;  // normal
                 case 1: return 1;  // bold
-                case 2: return 4;  // underline
-                case 3: return 2;  // dim
-                case 4: return 3;  // italic
-                case 5: return 9;  // strikethrough
-                case 6: return 5;  // blinking :D
+                case 2: return 3;  // italic
+                // case 3: return 2;  // dim
+                // case 4: return 4;  // underline
+                // case 5: return 9;  // strikethrough
+                // case 6: return 5;  // blinking :D
         }
         return 0;
 }
