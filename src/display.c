@@ -17,6 +17,7 @@
 // \033[0;38;2;XXX;XXX;XXX;XXm  <-- this is 24 characters long
 #define ANSI_ESCAPE_LEN 24
 #define ANSI_COLOR_FORMAT "\033[0;38;2;%03d;%03d;%03d;%02dm"
+#define ANSI_STYLE_VARIATION 3  // affects the get_random_ansi_style function
 
 typedef uint8_t ansi_num_t;
 
@@ -169,14 +170,14 @@ bool is_name_char(char c) {
 
 // return a random ANSI styling code 
 uint8_t get_random_ansi_style(void) {
-        switch (rand() % 3) {
+        switch (rand() % ANSI_STYLE_VARIATION) {
                 case 0: return 22;  // normal
                 case 1: return 1;  // bold
                 case 2: return 3;  // italic
-                // case 3: return 2;  // dim
-                // case 4: return 4;  // underline
-                // case 5: return 9;  // strikethrough
-                // case 6: return 5;  // blinking :D
+                case 3: return 2;  // dim
+                case 4: return 4;  // underline
+                case 5: return 9;  // strikethrough
+                case 6: return 5;  // blinking :D
         }
         return 0;
 }

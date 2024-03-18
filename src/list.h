@@ -2,6 +2,7 @@
  * Inspiration for this file and its implementation is Tsoding's [nob.h](https://github.com/tsoding/musializer/blob/master/src/nob.h)
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stddef.h>
 
@@ -22,6 +23,7 @@
                 if ((list).cap < ++(list).len) {                                                            \
                         (list).cap *= 2;                                                                    \
                         (list).items = realloc((list).items, (list).cap * sizeof(*(list).items));           \
+                        assert((list).items && "Needs more memory");                                        \
                 }                                                                                           \
                 (list).items[(list).len - 1] = item;                                                        \
         } while (0)                                                                              

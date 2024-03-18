@@ -10,7 +10,7 @@ typedef enum {
 
 typedef enum {
         ALPHA, RANDOM
-} highlighting_mode ;
+} highlighting_mode;
 
 int store_cursor_pos(int *y, int *x);
 struct winsize get_window_size(void);
