@@ -11,6 +11,15 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+typedef struct {
+        size_t buf_curr;
+        struct timespec timer; 
+        dyn_str input_history;
+        bool initializing;
+        editor_mode mode;
+        display_state_t display_state;
+} editor_state_t;
+
 void set_timer(struct timespec *timer) {
         clock_gettime(CLOCK_MONOTONIC, timer);
 }
@@ -20,33 +29,35 @@ double get_ms_elapsed(struct timespec *start) {
         return (end.tv_sec - start->tv_sec) * 1e3 + (end.tv_nsec - start->tv_nsec) / 1e6;
 }
 
+void setup(void) {
+        fill_ansi_color_table();
+        input_set_tty_raw();
+}
+
 int main(int argc, char **argv) {
 
         // open all the buffers, storing them in a list of buffers
         if (argc == 1) {
                 exit_error("Must pass in a filename to run this editor.");
         }
-        buf_list buffers = list_init(buf_list, argc); 
+        buf_list buffers = list_init(buf_list, argc);   // NOLINT
         for (uint8_t i = 1; i < argc; ++i) {
-                list_append(buffers, buf_open(argv[i]));
+                list_append(buffers, buf_open(argv[i]));  // NOLINT
         }
 
         // according to the man pages, if NULL, space is allocated for it and a pointer to it is returned
         char *cwd = getcwd(NULL, PATH_MAX + 1);  
 
         // main loop, handling inputs and etc
-        struct {
-                int buf_curr;
-                dyn_str input_history;
-                struct timespec timer; 
-                bool starting;
-                editor_mode mode;
-        } state;
+        editor_state_t state;
         state.input_history = list_init(dyn_str, 128);
-        state.starting = true;
+        state.initializing = true;
         state.buf_curr = buffers.len - 1;
         state.mode = NORMAL;
-        input_set_tty_raw();
+        state.display_state.syntax_mode = HIGH_GRADIENT;
+        state.display_state.gradient_color = GRADIENT_PURPLE;
+
+        setup();
         while (true) {
 
                 // if the input was received soon enough after the previous one, 
@@ -61,9 +72,9 @@ int main(int argc, char **argv) {
                         continue;
                 }
         
-                if (state.starting) {
-                        display_buffer(buffers.items[state.buf_curr], state.mode, RANDOM);
-                        state.starting = false;
+                if (state.initializing) {
+                        display_buffer(buffers.items[state.buf_curr], state.mode, &state.display_state);
+                        state.initializing = false;
                 }
                 switch (state.mode) {
                         case NORMAL: 

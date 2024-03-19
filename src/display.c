@@ -13,13 +13,23 @@
 #include <termios.h>
 #include <string.h>
 
+#define ANSI_NORMAL 22
+#define ANSI_BOLD 1
+#define ANSI_ITALIC 3
+#define ANSI_DIM 2
+#define ANSI_UNDERLINE 4
+#define ANSI_STRIKETHROUGH 9
+#define ANSI_BLINKING 5
+
 // the standardized codes for this project will be as below:
 // \033[0;38;2;XXX;XXX;XXX;XXm  <-- this is 24 characters long
 #define ANSI_ESCAPE_LEN 24
 #define ANSI_COLOR_FORMAT "\033[0;38;2;%03d;%03d;%03d;%02dm"
-#define ANSI_STYLE_VARIATION 3  // affects the get_random_ansi_style function
+#define ANSI_STYLE_VARIATION 3  // affects the get_ansi_style function
 
-typedef uint8_t ansi_num_t;
+typedef struct {
+        uint8_t r, g, b, style;
+} ansi_code_t;
 
 struct winsize get_window_size(void) {
         struct winsize w;
@@ -80,7 +90,7 @@ int store_cursor_pos(int *y, int *x) {
 struct bar_info_buffer {
         int curr_line;
         int total_lines;
-        dyn_str *filename;
+        const char *filename;
 };
 
 struct bar_info {
@@ -128,11 +138,12 @@ const char *get_bottom_bar(editor_mode mode, int width, struct bar_info info) {
         switch (mode) {
                 case NORMAL:
                 case EDIT:;
-                        dyn_str *filename = info.normal_info.filename;
+                        const char *filename = info.normal_info.filename;
                         const char *curr_line_str = num_to_str(info.normal_info.curr_line);
                         const char *total_lines_str = num_to_str(info.normal_info.total_lines);
-                        int curr_line_len = strlen(curr_line_str);
-                        int total_lines_len = strlen(total_lines_str);
+                        size_t filename_len = strlen(filename);
+                        size_t curr_line_len = strlen(curr_line_str);
+                        size_t total_lines_len = strlen(total_lines_str);
 
                         // space_in_beginning + curr + "/" + total + "  "
                         if (used_up_front_space + curr_line_len + 1 + total_lines_len + 2 > width) {
@@ -146,13 +157,13 @@ const char *get_bottom_bar(editor_mode mode, int width, struct bar_info info) {
 
                         // check if there is space for the pipe operator and the filename
                         int used_up_back_space = curr_line_len + total_lines_len + 3;
-                        if (width - used_up_front_space - used_up_back_space - 3 - filename->len < 0) {  
+                        if (width - used_up_front_space - used_up_back_space - 3 - filename_len < 0) {  
                                 return bar;
                         }
         
                         // copy the filename and the straight line
                         memcpy(bar + width - used_up_back_space - 3, " | ", 3);
-                        memcpy(bar + width - used_up_back_space - 3 - filename->len, filename->items, filename->len);
+                        memcpy(bar + width - used_up_back_space - 3 - filename_len, filename, filename_len);
 
                 case FILES:
                         break;  // TODO
@@ -168,18 +179,32 @@ bool is_name_char(char c) {
                c == '_';
 }
 
-// return a random ANSI styling code 
-uint8_t get_random_ansi_style(void) {
-        switch (rand() % ANSI_STYLE_VARIATION) {
-                case 0: return 22;  // normal
-                case 1: return 1;  // bold
-                case 2: return 3;  // italic
-                case 3: return 2;  // dim
-                case 4: return 4;  // underline
-                case 5: return 9;  // strikethrough
-                case 6: return 5;  // blinking :D
+/*
+ * In the mode HIGH_ALPHA, the first character of each token corresponds to a color.
+ * The below function must be called when the editor starts to fill the array.
+ */
+ansi_code_t ANSI_COLOR_TABLE[256];
+void fill_ansi_color_table(void) {
+        for (uint16_t i = 0; i < 256; ++i) {
+                ANSI_COLOR_TABLE[i].r = rand() % 256;
+                ANSI_COLOR_TABLE[i].g = rand() % 256;
+                ANSI_COLOR_TABLE[i].b = rand() % 256;
+                ANSI_COLOR_TABLE[i].style = rand() % ANSI_STYLE_VARIATION;
         }
-        return 0;
+}
+
+// return a random ANSI styling code 
+uint8_t get_ansi_style(uint8_t key) {
+        switch (key) {
+                case 0: return ANSI_NORMAL;
+                case 1: return ANSI_BOLD;
+                case 2: return ANSI_ITALIC;
+                case 3: return ANSI_DIM;
+                case 4: return ANSI_UNDERLINE;
+                case 5: return ANSI_STRIKETHROUGH;
+                case 6: return ANSI_BLINKING;
+        }
+        return 22;
 }
 
 typedef struct {
@@ -187,30 +212,57 @@ typedef struct {
         size_t end;
 } token_t;
 
-char *get_highlighting_for_token(dyn_str *line, token_t t, highlighting_mode mode) {
-        char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
-        switch (mode) {
-                case RANDOM:;
-                        uint8_t style = line->items[t.start] == ' ' ? 22 : get_random_ansi_style();
-                        snprintf(code, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT,
-                                 rand() % 255, rand() % 255, rand() % 255, style);
-                        return code;
-                case ALPHA:  // TODO
-                        return code;
+void store_gradient_color(ansi_code_t *code, gradient_color color, uint8_t grad_value) {
+        code->style = 1;
+        switch (color) {
+                case GRADIENT_RED: code->r = grad_value; break;
+                case GRADIENT_BLUE: code->b = grad_value; break;
+                case GRADIENT_GREEN: code->g = grad_value; break;
+                case GRADIENT_PURPLE: code->r = code->b = grad_value; break;
+                case GRADIENT_YELLOW: code->r = code->g = grad_value; break;
+                case GRADIENT_CYAN: code->g = code->b = grad_value; break;
         }
 }
 
+char *get_highlighting_for_token(dyn_str *line, token_t t, display_state_t *state, int width) {
+        char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
+        ansi_code_t rgb_style = {0};
+        switch (state->syntax_mode) {
+                case HIGH_RANDOM: {
+                        rgb_style.style = line->items[t.start] == ' ' ? 22 
+                                : get_ansi_style(rand() % ANSI_STYLE_VARIATION);
+                        rgb_style.r = rand() % 256;
+                        rgb_style.g = rand() % 256;
+                        rgb_style.b = rand() % 256;
+                } break;
+                case HIGH_ALPHA: {
+                        rgb_style = ANSI_COLOR_TABLE[line->items[t.start]];
+                        rgb_style.style = get_ansi_style(rgb_style.style);
+                } break;
+                case HIGH_GRADIENT: {
+                        uint8_t grad_value = 150 * (width - t.start) / width + 105;
+                        store_gradient_color(&rgb_style, state->gradient_color, grad_value);
+                } break;
+        }
+        snprintf(code, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 
+                 rgb_style.r, rgb_style.g, rgb_style.b, rgb_style.style);
+        return code;
+}
+
 // applies syntax highlighting one of the following strategies:
-char *apply_syntax_highlighting(dyn_str *line, highlighting_mode mode) { 
+char *apply_syntax_highlighting(dyn_str *line, display_state_t *state, int width) {
 
         char *output = malloc((ANSI_ESCAPE_LEN + 1) * line->len * sizeof(char));  // TO_FREE
-        token_t tokens[line->len];
-        
-        // fill up tokens - treat every series of [_a-zA-Z0-9] or punctuation as a unique token
+        token_t tokens[line->len + 1];
         size_t t = 0;
+
+        // fill up tokens - treat every series of [_a-zA-Z0-9] or punctuation as a unique token
+        // alternatively, when the highlighting mode is a gradient, each character is a token
         tokens[t].start = 0;
         for (size_t c = 0; c < line->len; ++c) {
-                if (!is_name_char(*(line->items + c)) || (c < line->len - 1 && !is_name_char(*(line->items + c + 1)))) {
+                if (state->syntax_mode == HIGH_GRADIENT 
+                    || !is_name_char(*(line->items + c)) 
+                    || (c < line->len - 1 && !is_name_char(*(line->items + c + 1)))) {
                         tokens[t++].end = c + 1;
                         tokens[t].start = c + 1;
                 }
@@ -223,7 +275,7 @@ char *apply_syntax_highlighting(dyn_str *line, highlighting_mode mode) {
                 if (tokens[i].start == tokens[i].end) {
                         continue;
                 }
-                char *code = get_highlighting_for_token(line, tokens[i], mode);
+                char *code = get_highlighting_for_token(line, tokens[i], state, width);
                 memcpy(output + len, code, ANSI_ESCAPE_LEN);
                 memcpy(output + (len += ANSI_ESCAPE_LEN), 
                        line->items + tokens[i].start, tokens[i].end - tokens[i].start);
@@ -234,7 +286,7 @@ char *apply_syntax_highlighting(dyn_str *line, highlighting_mode mode) {
         return output;
 }
 
-int display_buffer(file_buf *buffer, editor_mode mode, highlighting_mode syntax_mode) {
+int display_buffer(file_buf *buffer, editor_mode mode, display_state_t *state) {
 
         // determine information about the screen
         struct winsize w = get_window_size();
@@ -254,44 +306,23 @@ int display_buffer(file_buf *buffer, editor_mode mode, highlighting_mode syntax_
                 if (line->len + 1 > W) {
                         limited_line.len = W - 1;
                 }
-                char *formatted_line = apply_syntax_highlighting(&limited_line, syntax_mode);
+                char *formatted_line = apply_syntax_highlighting(&limited_line, state, W);
                 printf("%s\n\r", formatted_line);  // this should please work :D
                 free(formatted_line); 
         }
-        struct bar_info info = { .normal_info = (struct bar_info_buffer) { 
-                .filename = &buffer->filename, .curr_line = buffer->cursor_line, .total_lines = buffer->lines.len}};
+
+        struct bar_info info;
+        switch (mode) {
+                case NORMAL:
+                case EDIT: {
+                        info = (struct bar_info) { .normal_info = (struct bar_info_buffer) { 
+                                .filename = buffer->filename, .curr_line = buffer->cursor_line,
+                                .total_lines = buffer->lines.len}};
+                } break;
+        }
         const char *bar = get_bottom_bar(mode, W, info);
         printf("%s", bar);
         free((void *) bar);
         return 0;
 }
 
-// int display_buffer(file_buf *buffer, editor_mode mode) {
-//
-//         // determine information about the screen
-//         struct winsize w = get_window_size();
-//         int W = w.ws_col, H = w.ws_row;
-//         int cursor_y, cursor_x;
-//         store_cursor_pos(&cursor_y, &cursor_x);
-//
-//         // now, fill the string that contains what needs to be printed
-//         char *output = malloc((H * W + 1) * sizeof(char));  // TOFREE
-//         memset(output, ' ', H * W);
-//         output[H * W] = '\0';
-//         for (int i = 0; i < H - 1; ++i) { 
-//                 if (buffer->screen_top_line - 1 + i >= buffer->lines.len) {  // no lines left
-//                         continue;
-//                 }
-//                 dyn_str *line = buffer->lines.items + buffer->screen_top_line - 1 + i;
-//                 memcpy(output + (i * W), line->items, line->len > W ? W : line->len);
-//         }
-//         struct bar_info info = { .normal_info = (struct bar_info_buffer) { 
-//                 .filename = &buffer->filename, .curr_line = buffer->cursor_line, .total_lines = buffer->lines.len}};
-//         const char *bar = get_bottom_bar(mode, W, info);
-//         memcpy(output + (H - 1) * W, bar, W);
-//
-//         printf("%s", output);
-//         free(output);
-//         free((void *) bar);
-//         return 0;
-// }
