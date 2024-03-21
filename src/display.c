@@ -21,6 +21,8 @@
 #define ANSI_STRIKETHROUGH 9
 #define ANSI_BLINKING 5
 
+#define GRADIENT_TEXT_STYLE ANSI_NORMAL
+
 // the standardized codes for this project will be as below:
 // \033[0;38;2;XXX;XXX;XXX;XXm  <-- this is 24 characters long
 #define ANSI_ESCAPE_LEN 24
@@ -28,7 +30,8 @@
 #define ANSI_STYLE_VARIATION 3  // affects the get_ansi_style function
 
 typedef struct {
-        uint8_t r, g, b, style;
+        rgb_t rgb;
+        uint8_t style;
 } ansi_code_t;
 
 struct winsize get_window_size(void) {
@@ -186,9 +189,9 @@ bool is_name_char(char c) {
 ansi_code_t ANSI_COLOR_TABLE[256];
 void fill_ansi_color_table(void) {
         for (uint16_t i = 0; i < 256; ++i) {
-                ANSI_COLOR_TABLE[i].r = rand() % 256;
-                ANSI_COLOR_TABLE[i].g = rand() % 256;
-                ANSI_COLOR_TABLE[i].b = rand() % 256;
+                ANSI_COLOR_TABLE[i].rgb.r = rand() % 256;
+                ANSI_COLOR_TABLE[i].rgb.g = rand() % 256;
+                ANSI_COLOR_TABLE[i].rgb.b = rand() % 256;
                 ANSI_COLOR_TABLE[i].style = rand() % ANSI_STYLE_VARIATION;
         }
 }
@@ -212,18 +215,6 @@ typedef struct {
         size_t end;
 } token_t;
 
-void store_gradient_color(ansi_code_t *code, gradient_color color, uint8_t grad_value) {
-        code->style = 1;
-        switch (color) {
-                case GRADIENT_RED: code->r = grad_value; break;
-                case GRADIENT_BLUE: code->b = grad_value; break;
-                case GRADIENT_GREEN: code->g = grad_value; break;
-                case GRADIENT_PURPLE: code->r = code->b = grad_value; break;
-                case GRADIENT_YELLOW: code->r = code->g = grad_value; break;
-                case GRADIENT_CYAN: code->g = code->b = grad_value; break;
-        }
-}
-
 char *get_highlighting_for_token(dyn_str *line, token_t t, display_state_t *state, int width) {
         char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
         ansi_code_t rgb_style = {0};
@@ -231,28 +222,32 @@ char *get_highlighting_for_token(dyn_str *line, token_t t, display_state_t *stat
                 case HIGH_RANDOM: {
                         rgb_style.style = line->items[t.start] == ' ' ? 22 
                                 : get_ansi_style(rand() % ANSI_STYLE_VARIATION);
-                        rgb_style.r = rand() % 256;
-                        rgb_style.g = rand() % 256;
-                        rgb_style.b = rand() % 256;
+                        rgb_style.rgb.r = rand() % 256;
+                        rgb_style.rgb.g = rand() % 256;
+                        rgb_style.rgb.b = rand() % 256;
                 } break;
                 case HIGH_ALPHA: {
                         rgb_style = ANSI_COLOR_TABLE[line->items[t.start]];
                         rgb_style.style = get_ansi_style(rgb_style.style);
                 } break;
                 case HIGH_GRADIENT: {
-                        uint8_t grad_value = 150 * (width - t.start) / width + 105;
-                        store_gradient_color(&rgb_style, state->gradient_color, grad_value);
+                        rgb_t left = state->gradient_color.left, right = state->gradient_color.right;
+                        rgb_style.style =  GRADIENT_TEXT_STYLE;
+                        rgb_style.rgb.r = (double) (right.r - left.r) * t.start / line->len + left.r;  
+                        rgb_style.rgb.b = (double) (right.b - left.b) * t.start / line->len + left.b;  
+                        rgb_style.rgb.g = (double) (right.g - left.g) * t.start / line->len + left.g;  
                 } break;
         }
         snprintf(code, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 
-                 rgb_style.r, rgb_style.g, rgb_style.b, rgb_style.style);
+                 rgb_style.rgb.r, rgb_style.rgb.g, rgb_style.rgb.b, rgb_style.style);
         return code;
 }
 
 // applies syntax highlighting one of the following strategies:
 char *apply_syntax_highlighting(dyn_str *line, display_state_t *state, int width) {
 
-        char *output = malloc((ANSI_ESCAPE_LEN + 1) * line->len * sizeof(char));  // TO_FREE
+        // assuming one code per character, allocate enough to fill everything + \0
+        char *output = malloc(((ANSI_ESCAPE_LEN + 1) * line->len + 1) * sizeof(char));
         token_t tokens[line->len + 1];
         size_t t = 0;
 
@@ -272,14 +267,15 @@ char *apply_syntax_highlighting(dyn_str *line, display_state_t *state, int width
         // for each token in the line, build a new string with syntax highlighting
         size_t len = 0;
         for (size_t i = 0; i <= t; ++i) {
-                if (tokens[i].start == tokens[i].end) {
+                token_t *tok = tokens + i;
+                if (tok->start == tok->end) {
                         continue;
                 }
-                char *code = get_highlighting_for_token(line, tokens[i], state, width);
-                memcpy(output + len, code, ANSI_ESCAPE_LEN);
-                memcpy(output + (len += ANSI_ESCAPE_LEN), 
-                       line->items + tokens[i].start, tokens[i].end - tokens[i].start);
-                len += tokens[i].end - tokens[i].start;
+                char *code = get_highlighting_for_token(line, *tok, state, width);
+                for (size_t j = tok->start; j < tok->end; ++j, ++len) {
+                        memcpy(output + len, code, ANSI_ESCAPE_LEN);
+                        output[len += ANSI_ESCAPE_LEN] = line->items[j];
+                }
                 free(code);
         }
         output[len] = '\0';
@@ -321,8 +317,9 @@ int display_buffer(file_buf *buffer, editor_mode mode, display_state_t *state) {
                 } break;
         }
         const char *bar = get_bottom_bar(mode, W, info);
-        printf("%s", bar);
+        printf("\033[0m%s", bar);
         free((void *) bar);
+        fflush(stdout);
         return 0;
 }
 

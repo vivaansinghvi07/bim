@@ -3,7 +3,9 @@
 #include "src/buf.h"
 #include "src/input.h"
 #include "src/display.h"
+#include "src/state.h"
 
+#include <poll.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,14 +13,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-typedef struct {
-        size_t buf_curr;
-        struct timespec timer; 
-        dyn_str input_history;
-        bool initializing;
-        editor_mode mode;
-        display_state_t display_state;
-} editor_state_t;
+#define POLL_TIMEOUT_MS 20
 
 void set_timer(struct timespec *timer) {
         clock_gettime(CLOCK_MONOTONIC, timer);
@@ -29,9 +24,17 @@ double get_ms_elapsed(struct timespec *start) {
         return (end.tv_sec - start->tv_sec) * 1e3 + (end.tv_nsec - start->tv_nsec) / 1e6;
 }
 
-void setup(void) {
+void setup(editor_state_t *state, buf_list *buffers) {
+
         fill_ansi_color_table();
         input_set_tty_raw();
+
+        state->input_history = list_init(dyn_str, 128);
+        state->buf_curr = buffers->len - 1;
+        state->mode = NORMAL;
+        state->display_state.syntax_mode = HIGH_GRADIENT;
+        state->display_state.gradient_color = (gradient_color_t) { 
+                .left = (rgb_t) {200, 100, 238}, .right = (rgb_t) {72, 224, 255}};
 }
 
 int main(int argc, char **argv) {
@@ -47,23 +50,20 @@ int main(int argc, char **argv) {
 
         // according to the man pages, if NULL, space is allocated for it and a pointer to it is returned
         char *cwd = getcwd(NULL, PATH_MAX + 1);  
-
-        // main loop, handling inputs and etc
+        struct pollfd in = {.fd = 0, .events = POLLIN};
         editor_state_t state;
-        state.input_history = list_init(dyn_str, 128);
-        state.initializing = true;
-        state.buf_curr = buffers.len - 1;
-        state.mode = NORMAL;
-        state.display_state.syntax_mode = HIGH_GRADIENT;
-        state.display_state.gradient_color = GRADIENT_PURPLE;
 
-        setup();
+        setup(&state, &buffers);
+        display_buffer(buffers.items[state.buf_curr], state.mode, &state.display_state);
         while (true) {
 
                 // if the input was received soon enough after the previous one, 
                 // it is reasonable to assume that it is the 27-91-XX combo from hitting arrow keys
                 // or another possible input that could mess things up
                 set_timer(&state.timer);
+                if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
+                        continue;
+                }
                 char c = getchar();
                 if (c == 'q') {
                         break;
@@ -72,10 +72,6 @@ int main(int argc, char **argv) {
                         continue;
                 }
         
-                if (state.initializing) {
-                        display_buffer(buffers.items[state.buf_curr], state.mode, &state.display_state);
-                        state.initializing = false;
-                }
                 switch (state.mode) {
                         case NORMAL: 
                         case FILES:

@@ -1,25 +1,9 @@
 #include <sys/ioctl.h>
 #include "buf.h"
+#include "state.h"
 
 #ifndef EDITOR_DISPLAY
 #define EDITOR_DISPLAY
-
-typedef enum {
-        NORMAL, FILES, EDIT  // files is plural b/c FILE is a kw
-} editor_mode;
-
-typedef enum {
-        HIGH_ALPHA, HIGH_RANDOM, HIGH_GRADIENT
-} highlighting_mode;
-typedef enum {
-        GRADIENT_BLUE, GRADIENT_RED, GRADIENT_PURPLE,
-        GRADIENT_YELLOW, GRADIENT_CYAN, GRADIENT_GREEN
-} gradient_color;
-
-typedef struct {
-        highlighting_mode syntax_mode;
-        gradient_color gradient_color;
-} display_state_t;
 
 int store_cursor_pos(int *y, int *x);
 struct winsize get_window_size(void);
