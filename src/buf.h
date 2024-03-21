@@ -1,5 +1,5 @@
 #include "list.h"
-#include "str.h"
+#include "utils.h"
 
 #ifndef EDITOR_BUF
 #define EDITOR_BUF

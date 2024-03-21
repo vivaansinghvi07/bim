@@ -1,7 +1,6 @@
 #include "buf.h"
 #include "list.h"
 #include "utils.h"
-#include "str.h" 
 
 #include <stdint.h>
 #include <stdio.h>
