@@ -17,3 +17,4 @@ A text editor with the dumbest features imaginable.
     - Stored in order, left goes back, right goes forwards
         - Can do something regarding up and down keys
 - Similar to Vim, you can move using given keys; however, which keys do this is yet to be decided. I can either make it stupid or functional.
+- For syntax highlighting in the gradient mode, allow the user to press a key to rotate the direction of the gradient by 45 degress counter/clockwise.
