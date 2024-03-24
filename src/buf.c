@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void buf_write(file_buf *buf) {
+void buf_save(const file_buf *buf) {
         FILE *file = fopen(buf->filename, "w");
         for (size_t i = 0; i < buf->lines.len; ++i) {
                 dyn_str *line = buf->lines.items + i;

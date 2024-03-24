@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "buf.h"
 
 #include <stdbool.h>
 #include <time.h>
@@ -37,11 +38,16 @@ typedef struct {
 } display_state_t;
 
 typedef struct {
-        size_t buf_curr;
+
         struct timespec timer; 
         struct timespec inactive_timer; 
+
+        size_t buf_curr;
+        buf_list *buffers;
+
         dyn_str input_history;
         editor_mode mode;
+
         display_state_t display_state;
 } editor_state_t;
 

@@ -15,7 +15,7 @@ typedef struct {
 
 list_typedef(buf_list, file_buf *);
 
-void buf_write(file_buf *buf);
+void buf_save(const file_buf *buf);
 file_buf *buf_open(const char *filename);
 
 #endif // !EDITOR_BUF

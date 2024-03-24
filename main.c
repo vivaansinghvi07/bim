@@ -1,7 +1,6 @@
 #include "src/list.h"
 #include "src/utils.h"
 #include "src/buf.h"
-#include "src/input.h"
 #include "src/display.h"
 #include "src/state.h"
 
@@ -19,13 +18,13 @@
 void set_timer(struct timespec *timer) {
         clock_gettime(CLOCK_MONOTONIC, timer);
 }
-double get_ms_elapsed(struct timespec *start) {
+double get_ms_elapsed(const struct timespec *start) {
         struct timespec end;
         clock_gettime(CLOCK_MONOTONIC, &end);
         return (end.tv_sec - start->tv_sec) * 1e3 + (end.tv_nsec - start->tv_nsec) / 1e6;
 }
 
-void setup(editor_state_t *state, buf_list *buffers) {
+void setup(editor_state_t *state, const buf_list *buffers) {
 
         fill_ansi_color_table();
         input_set_tty_raw();
@@ -33,6 +32,7 @@ void setup(editor_state_t *state, buf_list *buffers) {
 
         state->input_history = list_init(dyn_str, 128);
         state->buf_curr = buffers->len - 1;
+        state->buffers = (buf_list *) buffers;
         state->mode = NORMAL;
 }
 

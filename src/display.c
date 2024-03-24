@@ -27,11 +27,6 @@
 #define ANSI_COLOR_FORMAT "\033[0;38;2;%03d;%03d;%03d;%02dm"
 #define ANSI_STYLE_VARIATION 3  // affects the get_ansi_style function
 
-typedef struct {
-        rgb_t rgb;
-        uint8_t style;
-} ansi_code_t;
-
 struct winsize get_window_size(void) {
         struct winsize w;
         if (ioctl(0, TIOCGWINSZ, &w) == -1) {
@@ -106,7 +101,7 @@ struct bar_info {
 *   == MODE ==                                       filename.ext | curr/len 
 * The length of the bar is guaranteed to be <width>
 */
-char *get_bottom_bar(editor_mode mode, int width, struct bar_info info) {
+char *get_bottom_bar(const editor_mode mode, const int width, const struct bar_info info) {
         const char *mode_text = "edit";
         int mode_len = 4;
         char *bar = malloc(width * sizeof(char));  // TOFREE
@@ -173,7 +168,7 @@ char *get_bottom_bar(editor_mode mode, int width, struct bar_info info) {
 }
 
 // check if [_a-zA-Z0-9] matches <c>
-bool is_name_char(char c) {
+bool is_name_char(const char c) {
         return c >= 'a' && c <= 'z' ||
                c >= 'A' && c <= 'Z' || 
                c >= '0' && c <= '9' ||
@@ -195,7 +190,7 @@ void fill_ansi_color_table(void) {
 }
 
 // return a random ANSI styling code 
-uint8_t get_ansi_style(uint8_t key) {
+uint8_t get_ansi_style(const uint8_t key) {
         switch (key) {
                 case 0: return ANSI_NORMAL;
                 case 1: return ANSI_BOLD;
@@ -213,7 +208,7 @@ typedef struct {
         size_t end;
 } token_t;
 
-uint8_t get_style_from_style_enum(text_style_mode mode) {
+uint8_t get_style_from_style_enum(const text_style_mode mode) {
         switch (mode) {
                 case STYLE_BOLD: return ANSI_BOLD; 
                 case STYLE_NORMAL: return ANSI_NORMAL; 
@@ -222,7 +217,7 @@ uint8_t get_style_from_style_enum(text_style_mode mode) {
         return ANSI_NORMAL;
 }
 
-char *get_highlighting_for_token(dyn_str *line, token_t t, display_state_t *state, int width) {
+char *get_highlighting_for_token(const dyn_str *line, const token_t t, const display_state_t *state, const int width) {
         char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
         ansi_code_t rgb_style = {0};
         switch (state->syntax_mode) {
@@ -255,7 +250,7 @@ char *get_highlighting_for_token(dyn_str *line, token_t t, display_state_t *stat
 }
 
 // applies syntax highlighting one of the following strategies:
-char *apply_syntax_highlighting(dyn_str *line, display_state_t *state, int width) {
+char *apply_syntax_highlighting(const dyn_str *line, const display_state_t *state, const int width) {
 
         // assuming one code per character, allocate enough to fill everything + \0
         char *output = malloc(((ANSI_ESCAPE_LEN + 1) * line->len + 1) * sizeof(char));
@@ -293,7 +288,7 @@ char *apply_syntax_highlighting(dyn_str *line, display_state_t *state, int width
         return output;
 }
 
-char *get_displayed_buffer_string(file_buf *buffer, editor_mode mode, display_state_t *state) {
+char *get_displayed_buffer_string(const file_buf *buffer, const editor_mode mode, const display_state_t *state) {
 
         // determine information about the screen
         struct winsize w = get_window_size();
@@ -345,7 +340,7 @@ char *get_displayed_buffer_string(file_buf *buffer, editor_mode mode, display_st
         return output;
 }
 
-void display_buffer(file_buf *buffer, editor_mode mode, display_state_t *state) {
+void display_buffer(const file_buf *buffer, const editor_mode mode, const display_state_t *state) {
         char *output = get_displayed_buffer_string(buffer, mode, state);
         printf("%s", output);
         fflush(stdout);

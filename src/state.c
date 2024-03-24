@@ -71,7 +71,7 @@ uint8_t get_hex_value(const char c) {
         }
 }
  
-rgb_t parse_color(struct parse_info *info) {
+rgb_t parse_color(const struct parse_info *info) {
         if (info->line->items[info->equal_index + 1] != '#') {
                 exit_error("Color must begin with a hex code.");
         } else if (info->line->len - info->equal_index - 2 < 6) {
@@ -96,17 +96,17 @@ rgb_t parse_color(struct parse_info *info) {
         return ret;
 }
 
-void parse_gradient_left(struct parse_info *info, editor_state_t *state) {
+void parse_gradient_left(const struct parse_info *info, editor_state_t *state) {
         rgb_t color = parse_color(info);
         state->display_state.gradient_color.left = color;
 }
 
-void parse_gradient_right(struct parse_info *info, editor_state_t *state) {
+void parse_gradient_right(const struct parse_info *info, editor_state_t *state) {
         rgb_t color = parse_color(info);
         state->display_state.gradient_color.right = color;
 }
 
-void parse_highlight_mode(struct parse_info *info, editor_state_t *state) {
+void parse_highlight_mode(const struct parse_info *info, editor_state_t *state) {
 
         const char *ending_str = info->line->items + info->equal_index + 1;
         size_t len = info->line->len - info->equal_index - 1;
@@ -125,7 +125,7 @@ void parse_highlight_mode(struct parse_info *info, editor_state_t *state) {
         }
 }
 
-void parse_text_style(struct parse_info *info, editor_state_t *state) {
+void parse_text_style(const struct parse_info *info, editor_state_t *state) {
         
         const char *ending_str = info->line->items + info->equal_index + 1;
         size_t len = info->line->len - info->equal_index - 1;
@@ -140,7 +140,7 @@ void parse_text_style(struct parse_info *info, editor_state_t *state) {
         } else if (!strncmp(ending_str, STYLE_OPT_NORMAL, len)) {
                 state->display_state.text_style_mode = STYLE_NORMAL; 
         } else {
-                exit_error("Invalid highlighting mode settings.");
+                exit_error("Invalid text style settings.");
         }
 }
 
