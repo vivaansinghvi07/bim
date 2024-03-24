@@ -14,6 +14,7 @@
 #include <stdbool.h>
 
 #define POLL_TIMEOUT_MS 20
+#define MAX_TIME_INACTIVE_MS 5000
 
 void set_timer(struct timespec *timer) {
         clock_gettime(CLOCK_MONOTONIC, timer);
@@ -28,13 +29,11 @@ void setup(editor_state_t *state, buf_list *buffers) {
 
         fill_ansi_color_table();
         input_set_tty_raw();
+        parse_config_file(state);
 
         state->input_history = list_init(dyn_str, 128);
         state->buf_curr = buffers->len - 1;
         state->mode = NORMAL;
-        state->display_state.syntax_mode = HIGH_GRADIENT;
-        state->display_state.gradient_color = (gradient_color_t) { 
-                .left = (rgb_t) {200, 100, 238}, .right = (rgb_t) {72, 224, 255}};
 }
 
 int main(int argc, char **argv) {
@@ -57,17 +56,22 @@ int main(int argc, char **argv) {
         display_buffer(buffers.items[state.buf_curr], state.mode, &state.display_state);
         while (true) {
 
-                // if the input was received soon enough after the previous one, 
-                // it is reasonable to assume that it is the 27-91-XX combo from hitting arrow keys
-                // or another possible input that could mess things up
                 set_timer(&state.timer);
                 if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
+                        if (get_ms_elapsed(&state.inactive_timer) > MAX_TIME_INACTIVE_MS) {
+                                // run_screensaver_func();
+                        }
                         continue;
                 }
+                set_timer(&state.inactive_timer);
                 char c = getchar();
                 if (c == 'q') {
                         break;
                 }
+
+                // if the input was received soon enough after the previous one, 
+                // it is reasonable to assume that it is the 27-91-XX combo from hitting arrow keys
+                // or another possible input that could mess things up
                 if (get_ms_elapsed(&state.timer) < 1) {
                         continue;
                 }

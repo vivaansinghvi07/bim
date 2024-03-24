@@ -21,8 +21,6 @@
 #define ANSI_STRIKETHROUGH 9
 #define ANSI_BLINKING 5
 
-#define GRADIENT_TEXT_STYLE ANSI_NORMAL
-
 // the standardized codes for this project will be as below:
 // \033[0;38;2;XXX;XXX;XXX;XXm  <-- this is 24 characters long
 #define ANSI_ESCAPE_LEN 24
@@ -108,7 +106,7 @@ struct bar_info {
 *   == MODE ==                                       filename.ext | curr/len 
 * The length of the bar is guaranteed to be <width>
 */
-const char *get_bottom_bar(editor_mode mode, int width, struct bar_info info) {
+char *get_bottom_bar(editor_mode mode, int width, struct bar_info info) {
         const char *mode_text = "edit";
         int mode_len = 4;
         char *bar = malloc(width * sizeof(char));  // TOFREE
@@ -215,10 +213,23 @@ typedef struct {
         size_t end;
 } token_t;
 
+uint8_t get_style_from_style_enum(text_style_mode mode) {
+        switch (mode) {
+                case STYLE_BOLD: return ANSI_BOLD; 
+                case STYLE_NORMAL: return ANSI_NORMAL; 
+                case STYLE_ITALIC: return ANSI_ITALIC; 
+        }
+        return ANSI_NORMAL;
+}
+
 char *get_highlighting_for_token(dyn_str *line, token_t t, display_state_t *state, int width) {
         char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
         ansi_code_t rgb_style = {0};
         switch (state->syntax_mode) {
+                case HIGH_NONE: {
+                        rgb_style.rgb = (rgb_t) {255, 255, 255};
+                        rgb_style.style = get_style_from_style_enum(state->text_style_mode);
+                }
                 case HIGH_RANDOM: {
                         rgb_style.style = line->items[t.start] == ' ' ? 22 
                                 : get_ansi_style(rand() % ANSI_STYLE_VARIATION);
@@ -232,7 +243,7 @@ char *get_highlighting_for_token(dyn_str *line, token_t t, display_state_t *stat
                 } break;
                 case HIGH_GRADIENT: {
                         rgb_t left = state->gradient_color.left, right = state->gradient_color.right;
-                        rgb_style.style =  GRADIENT_TEXT_STYLE;
+                        rgb_style.style = get_style_from_style_enum(state->text_style_mode);
                         rgb_style.rgb.r = (double) (right.r - left.r) * t.start / line->len + left.r;  
                         rgb_style.rgb.b = (double) (right.b - left.b) * t.start / line->len + left.b;  
                         rgb_style.rgb.g = (double) (right.g - left.g) * t.start / line->len + left.g;  
@@ -282,7 +293,7 @@ char *apply_syntax_highlighting(dyn_str *line, display_state_t *state, int width
         return output;
 }
 
-int display_buffer(file_buf *buffer, editor_mode mode, display_state_t *state) {
+char *get_displayed_buffer_string(file_buf *buffer, editor_mode mode, display_state_t *state) {
 
         // determine information about the screen
         struct winsize w = get_window_size();
@@ -290,11 +301,14 @@ int display_buffer(file_buf *buffer, editor_mode mode, display_state_t *state) {
         int cursor_y, cursor_x;
         store_cursor_pos(&cursor_y, &cursor_x);
 
-        // print each line with syntax highlighting
-        char *printer = malloc((W + 1) * sizeof(char));
-        printer[W] = '\0';
+        // creating a big string in which lines are printed into
+        // so that screensaver functions can access the string without it being printed 
+        char *output = malloc(H * (W + 1) * (ANSI_ESCAPE_LEN + 1) * sizeof(char));  // W + 1 accounting for \n
+        int len = 0;
         for (int i = 0; i < H - 1; ++i) { 
                 if (buffer->screen_top_line - 1 + i >= buffer->lines.len) {  // no lines left 
+                        memcpy(output + len, "\n\r", 2);
+                        len += 2;
                         continue;
                 } 
                 dyn_str *line = buffer->lines.items + buffer->screen_top_line - 1 + i;
@@ -302,8 +316,15 @@ int display_buffer(file_buf *buffer, editor_mode mode, display_state_t *state) {
                 if (line->len + 1 > W) {
                         limited_line.len = W - 1;
                 }
+
+                // after doing a benchmark, i found that strlen + memcpy seems to be faster  
+                // for small strings than using snprintf. however, until this becomes an issue 
+                // i will not implement it
                 char *formatted_line = apply_syntax_highlighting(&limited_line, state, W);
-                printf("%s\n\r", formatted_line);  // this should please work :D
+                size_t formatted_len = strlen(formatted_line);
+                memcpy(output + len, formatted_line, formatted_len);
+                memcpy(output + (len += formatted_len), "\n\r", 2);
+                len += 2;
                 free(formatted_line); 
         }
 
@@ -316,10 +337,18 @@ int display_buffer(file_buf *buffer, editor_mode mode, display_state_t *state) {
                                 .total_lines = buffer->lines.len}};
                 } break;
         }
-        const char *bar = get_bottom_bar(mode, W, info);
-        printf("\033[0m%s", bar);
-        free((void *) bar);
+        char *bar = get_bottom_bar(mode, W, info);
+        len += snprintf(output + len, W * (ANSI_ESCAPE_LEN + 1), "\033[0m%s", bar);
+        free(bar);
+
+        output[len] = '\0';
+        return output;
+}
+
+void display_buffer(file_buf *buffer, editor_mode mode, display_state_t *state) {
+        char *output = get_displayed_buffer_string(buffer, mode, state);
+        printf("%s", output);
         fflush(stdout);
-        return 0;
+        free(output);
 }
 

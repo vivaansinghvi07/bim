@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "list.h"
+#include "input.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,7 @@ dyn_str *dyn_str_from_string(const char *str) {
 }
 
 void exit_error(const char *msg) {
+        input_restore_tty();
         printf("%s\n", msg);
         exit(1);
 }
