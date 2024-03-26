@@ -1,6 +1,7 @@
 #include "screensaver.h"
 #include "display.h"
 
+#include <unistd.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -36,6 +37,7 @@ cell_t *build_cells(const char *buf_str) {
         struct winsize window_size = get_window_size();
         const int W = window_size.ws_col, H = window_size.ws_row;
         cell_t *cells = malloc((H - 1) * W * sizeof(cell_t));
+        bzero(cells, (H - 1) * W * sizeof(cell_t));
 
         // i am about to write the most god-awful code in order to traverse this string 
         // it will use so many assumptions about string structure, so changing something 
@@ -65,7 +67,6 @@ cell_t *build_cells(const char *buf_str) {
 void display_cells(cell_t *cells, const int W, const int H) {
         size_t len = 0;
         char *output = malloc(H * (W + 1) * (ANSI_ESCAPE_LEN + 1) * sizeof(char));  
-
 
         for (int i = 0; i < H - 1; ++i) {
                 for (int j = 0; j < W; ++j, ++len) {
