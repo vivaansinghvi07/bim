@@ -19,13 +19,14 @@
 #define FRAME_LENGTH_MS 20
 
 /*
- * <code> is in the ANSI_CODE_FORMAT, so it has a length of ANSI_CODE_FORMAT
+ * <code> is in the ANSI_COLOR_FORMAT, so it has a length of ANSI_ESCAPE_LEN
  * returns a unique ID made from R << 16 + G << 8 + B
  * each R, G, and B are guaranteed by the format to have strlen 3
  */
 #define ANSI_R_INDEX 9
 #define ANSI_B_INDEX 13
 #define ANSI_G_INDEX 17
+#define ANSI_STYLE_INDEX 21 
 uint32_t get_id_from_color(const char *code) {
         int r = strtol(code + ANSI_R_INDEX, NULL, 10);
         int g = strtol(code + ANSI_G_INDEX, NULL, 10);
@@ -102,11 +103,14 @@ void run_screensaver(editor_state_t *state, void (*func)(cell_t *, int, int)) {
         while (true) {
                 if (poll(&in, 1, FRAME_LENGTH_MS)) {
                         getchar(); // this is here to get rid of what's in the poll
+
                         show_cursor();
                         clear_screen();
                         display_buffer(state);
+
                         free((char *) buf_str);
                         free(cells);
+
                         break;
                 }
                 func(cells, W, H);
@@ -116,41 +120,105 @@ void run_screensaver(editor_state_t *state, void (*func)(cell_t *, int, int)) {
 }
 
 void left_slide(cell_t *cells, const int W, const int H) {
-        for (int i = 0; i < H - 1; ++i) {
-                cell_t saved = cells[i * W]; 
-                for (int j = 1; j < W; ++j) {
-                        cells[i * W + j - 1] = cells[i * W + j];
+        for (int y = 0; y < H - 1; ++y) {
+                cell_t saved = cells[y * W]; 
+                for (int x = 1; x < W; ++x) {
+                        cells[y * W + x - 1] = cells[y * W + x];
                 }
-                cells[(i + 1) * W - 1] = saved;
+                cells[(y + 1) * W - 1] = saved;
         }
 }
 
 void right_slide(cell_t *cells, const int W, const int H) {
-        for (int i = 0; i < H - 1; ++i) {
-                cell_t saved = cells[(i + 1) * W - 1]; 
-                for (int j = W - 1; j > 0; --j) {
-                        cells[i * W + j] = cells[i * W + j - 1];
+        for (int y = 0; y < H - 1; ++y) {
+                cell_t saved = cells[(y + 1) * W - 1]; 
+                for (int x = W - 1; x > 0; --x) {
+                        cells[y * W + x] = cells[y * W + x - 1];
                 }
-                cells[i * W] = saved;
+                cells[y * W] = saved;
         }
 }
 
 void bottom_slide(cell_t *cells, const int W, const int H) {
-        for (int i = 0; i < W; ++i) {  // for every col
-                cell_t saved = cells[(H - 2) * W + i]; 
-                for (int j = H - 2; j > 0; --j) { 
-                        cells[j * W + i] = cells[(j - 1) * W + i];
+        for (int x = 0; x < W; ++x) {  // for every col
+                cell_t saved = cells[(H - 2) * W + x]; 
+                for (int y = H - 2; y > 0; --y) { 
+                        cells[y * W + x] = cells[(y - 1) * W + x];
                 }
-                cells[i] = saved;
+                cells[x] = saved;
         }
 }
 
 void top_slide(cell_t *cells, const int W, const int H) {
-        for (int i = 0; i < W; ++i) {
-                cell_t saved = cells[i]; 
-                for (int j = 1; j < H - 1; ++j) {
-                        cells[(j - 1) * W + i] = cells[j * W + i];
+        for (int x = 0; x < W; ++x) {
+                cell_t saved = cells[x]; 
+                for (int y = 1; y < H - 1; ++y) {
+                        cells[(y - 1) * W + x] = cells[y * W + x];
                 }
-                cells[(H - 2) * W + i] = saved;
+                cells[(H - 2) * W + x] = saved;
         }
+}
+
+bool is_alive(const cell_t *cell) {
+        return !(cell->c == '\0'
+                 || cell->c == ' '
+                 || cell->c == '\n' 
+                 || cell->c == '\t');
+}
+
+list_typedef(color_choices_t, const char *);
+list_typedef(char_choices_t, char);
+
+/*
+ * This seems to be pretty computationally expensive because it needs to:
+ *   1) Make about 9 comparisons per square on the board, making it O(9n^2)
+ *   2) For dead cells, determine the new color traits using random selection,
+ *      which happens for every dead cell that becomes alive.
+ *   3) Use the strtol function to read colors.
+ */
+void game_of_life(cell_t *cells, const int W, const int H) {
+
+        // this is insane nesting lmao
+        cell_t *other_cells = malloc((H - 1) * W * sizeof(cell_t));
+        for (int y = 0; y < H - 1; ++y) {
+                for (int x = 0; x < W; ++x) {
+                        int total_alive = 0;
+                        const cell_t *cell = cells + y * W + x;
+                        cell_t *target_cell = other_cells + y * W + x;
+                        color_choices_t colors = list_init(color_choices_t, 9);
+                        char_choices_t chars = list_init(char_choices_t, 9);
+                        for (int i = -1; i < 2; ++i) {
+                                for (int j = -1; j < 2; ++j) {
+                                        if (y + i < 0 || y + i > H - 2
+                                            || x + j < 0 || x + j > W - 1
+                                            || i == 0 && j == 0) {
+                                                editor_log("Continuing at %d %d\n", x, y);
+                                                continue;
+                                        }
+                                        const cell_t *neighbor = cells + (y + i) * W + (x + j);
+                                        total_alive += is_alive(neighbor);
+                                        if (!is_alive(cell) && is_alive(neighbor)) {   // is dead
+                                                list_append(chars, neighbor->c);
+                                                list_append(colors, neighbor->ansi_code);
+                                        }
+                                }
+                        }
+                        
+                        // keep with the current state
+                        if (!is_alive(cell) && total_alive == 3) {
+                                const char *color = colors.items[rand() % colors.len];
+                                *target_cell = (cell_t) {
+                                        .c = chars.items[rand() % chars.len],
+                                        .ansi_code = color,
+                                        .id = get_id_from_color(color)
+                                };
+                        } else if (is_alive(cell) && (total_alive < 2 || total_alive > 3)) {
+                                *target_cell = (cell_t) {0};
+                        } else {
+                                *target_cell = *cell;
+                        }
+                        free_list_items(2, &chars, &colors);
+                }
+        }
+        memcpy(cells, other_cells, (H - 1) * W * sizeof(cell_t));
 }

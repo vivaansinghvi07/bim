@@ -45,4 +45,6 @@
                 }                                                                                           \
         } while(0)
 
+void free_list_items(int n, ...);
+
 #endif

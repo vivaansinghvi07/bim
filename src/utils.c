@@ -12,7 +12,8 @@
 static FILE *logger;
 
 void open_log_file() {
-        logger = fopen("./log.txt", "a");
+        logger = fopen("editor_log.txt", "a");
+        setbuf(logger, NULL);
 }
 
 void editor_log(const char *format, ...) {
@@ -23,6 +24,16 @@ void editor_log(const char *format, ...) {
         va_start(arg_ptr, format);
         vfprintf(logger, format, arg_ptr);
         va_end(arg_ptr);
+}
+
+/* https://stackoverflow.com/questions/1056411/how-to-pass-variable-number-of-arguments-to-printf-sprintf */
+void exit_error(const char *format, ...) {
+        input_restore_tty();
+        va_list arg_ptr;
+        va_start(arg_ptr, format);
+        vfprintf(stderr, format, arg_ptr);
+        va_end(arg_ptr);
+        exit(1);
 }
 
 static struct termios tbufsave;
@@ -81,12 +92,6 @@ dyn_str *dyn_str_from_string(const char *str) {
         retval->cap = retval->len = len;
         retval->items = target_str;
         return retval;
-}
-
-void exit_error(const char *msg) {
-        input_restore_tty();
-        printf("%s\n", msg);
-        exit(1);
 }
 
 size_t num_len(const int n) {

@@ -67,14 +67,13 @@ int main(int argc, char **argv) {
                 set_timer(&state.timer);
                 if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
                         if (get_ms_elapsed(&state.inactive_timer) > MAX_TIME_INACTIVE_MS) {
-                                run_screensaver(&state, &right_slide);
+                                run_screensaver(&state, &game_of_life);
                                 set_timer(&state.inactive_timer);
                         }
                         continue;
                 }
                 set_timer(&state.inactive_timer);
                 char c = getchar(); 
-                editor_log("Gotten char %c.\n\r", c);
                 if (c == 'q') {
                         break;
                 }
