@@ -169,6 +169,45 @@ bool is_alive(const cell_t *cell) {
 list_typedef(color_choices_t, const char *);
 list_typedef(char_choices_t, char);
 
+// i am aware this has a lot of arguments and yes, I could make a 2d point struct but i dont wanna
+void iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
+                     const int y, const int W, const int H) {
+        int total_alive = 0;
+        const cell_t *cell = cells + y * W + x;
+        cell_t *target_cell = target_cells + y * W + x;
+        color_choices_t colors = list_init(color_choices_t, 9);
+        char_choices_t chars = list_init(char_choices_t, 9);
+        for (int i = -1; i < 2; ++i) {
+                for (int j = -1; j < 2; ++j) {
+                        if (y + i < 0 || y + i > H - 2
+                            || x + j < 0 || x + j > W - 1
+                            || i == 0 && j == 0) {
+                                continue;
+                        }
+                        const cell_t *neighbor = cells + (y + i) * W + (x + j);
+                        total_alive += is_alive(neighbor);
+                        if (!is_alive(cell) && is_alive(neighbor)) {   // is dead
+                                list_append(chars, neighbor->c);
+                                list_append(colors, neighbor->ansi_code);
+                        }
+                }
+        }
+        
+        if (!is_alive(cell) && total_alive == 3) {   // new cell
+                const char *color = colors.items[rand() % colors.len];
+                *target_cell = (cell_t) {
+                        .c = chars.items[rand() % chars.len],
+                        .ansi_code = color,
+                        .id = get_id_from_color(color)
+                };
+        } else if (is_alive(cell) && (total_alive < 2 || total_alive > 3)) {  // kill
+                *target_cell = (cell_t) {0};
+        } else {  // leave current state
+                *target_cell = *cell;
+        }
+        free_list_items(2, &chars, &colors);
+}
+
 /*
  * This seems to be pretty computationally expensive because it needs to:
  *   1) Make about 9 comparisons per square on the board, making it O(9n^2)
@@ -178,47 +217,11 @@ list_typedef(char_choices_t, char);
  */
 void game_of_life(cell_t *cells, const int W, const int H) {
 
-        // this is insane nesting lmao
-        cell_t *other_cells = malloc((H - 1) * W * sizeof(cell_t));
+        cell_t *target_cells = malloc((H - 1) * W * sizeof(cell_t));
         for (int y = 0; y < H - 1; ++y) {
                 for (int x = 0; x < W; ++x) {
-                        int total_alive = 0;
-                        const cell_t *cell = cells + y * W + x;
-                        cell_t *target_cell = other_cells + y * W + x;
-                        color_choices_t colors = list_init(color_choices_t, 9);
-                        char_choices_t chars = list_init(char_choices_t, 9);
-                        for (int i = -1; i < 2; ++i) {
-                                for (int j = -1; j < 2; ++j) {
-                                        if (y + i < 0 || y + i > H - 2
-                                            || x + j < 0 || x + j > W - 1
-                                            || i == 0 && j == 0) {
-                                                editor_log("Continuing at %d %d\n", x, y);
-                                                continue;
-                                        }
-                                        const cell_t *neighbor = cells + (y + i) * W + (x + j);
-                                        total_alive += is_alive(neighbor);
-                                        if (!is_alive(cell) && is_alive(neighbor)) {   // is dead
-                                                list_append(chars, neighbor->c);
-                                                list_append(colors, neighbor->ansi_code);
-                                        }
-                                }
-                        }
-                        
-                        // keep with the current state
-                        if (!is_alive(cell) && total_alive == 3) {
-                                const char *color = colors.items[rand() % colors.len];
-                                *target_cell = (cell_t) {
-                                        .c = chars.items[rand() % chars.len],
-                                        .ansi_code = color,
-                                        .id = get_id_from_color(color)
-                                };
-                        } else if (is_alive(cell) && (total_alive < 2 || total_alive > 3)) {
-                                *target_cell = (cell_t) {0};
-                        } else {
-                                *target_cell = *cell;
-                        }
-                        free_list_items(2, &chars, &colors);
+                        iterate_cell_at(cells, target_cells, x, y, W, H);
                 }
         }
-        memcpy(cells, other_cells, (H - 1) * W * sizeof(cell_t));
+        memcpy(cells, target_cells, (H - 1) * W * sizeof(cell_t));
 }
