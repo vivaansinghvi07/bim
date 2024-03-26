@@ -213,7 +213,6 @@ void iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
  *   1) Make about 9 comparisons per square on the board, making it O(9n^2)
  *   2) For dead cells, determine the new color traits using random selection,
  *      which happens for every dead cell that becomes alive.
- *   3) Use the strtol function to read colors.
  */
 void game_of_life(cell_t *cells, const int W, const int H) {
 
