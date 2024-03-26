@@ -86,11 +86,11 @@ rgb_t parse_color(const struct parse_info *info) {
                 }
                 switch (j) {
                         case 0: ret.r = get_hex_value(c) << 4; break;
-                        case 1: ret.r += get_hex_value(c);break;
-                        case 2: ret.g = get_hex_value(c) << 4;break;
-                        case 3: ret.g += get_hex_value(c);break;
-                        case 4: ret.b = get_hex_value(c) << 4;break;
-                        case 5: ret.b += get_hex_value(c);break;
+                        case 1: ret.r += get_hex_value(c); break;
+                        case 2: ret.g = get_hex_value(c) << 4; break;
+                        case 3: ret.g += get_hex_value(c); break;
+                        case 4: ret.b = get_hex_value(c) << 4; break;
+                        case 5: ret.b += get_hex_value(c); break;
                 }
         }
         return ret;

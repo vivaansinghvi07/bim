@@ -47,6 +47,7 @@ typedef struct {
 
         dyn_str input_history;
         editor_mode mode;
+        char *cwd;
 
         display_state_t display_state;
 } editor_state_t;

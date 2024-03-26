@@ -1,8 +1,9 @@
 #include "src/list.h"
 #include "src/utils.h"
 #include "src/buf.h"
-#include "src/display.h"
 #include "src/state.h"
+#include "src/display/screensaver.h"
+#include "src/display/display.h"
 
 #include <poll.h>
 #include <limits.h>
@@ -13,7 +14,7 @@
 #include <stdbool.h>
 
 #define POLL_TIMEOUT_MS 20
-#define MAX_TIME_INACTIVE_MS 5000
+#define MAX_TIME_INACTIVE_MS 1000
 
 void set_timer(struct timespec *timer) {
         clock_gettime(CLOCK_MONOTONIC, timer);
@@ -24,19 +25,26 @@ double get_ms_elapsed(const struct timespec *start) {
         return (end.tv_sec - start->tv_sec) * 1e3 + (end.tv_nsec - start->tv_nsec) / 1e6;
 }
 
-void setup(editor_state_t *state, const buf_list *buffers) {
+void setup_state(editor_state_t *state, const buf_list *buffers, const char *cwd) {
 
         fill_ansi_color_table();
-        input_set_tty_raw();
         parse_config_file(state);
 
+        state->cwd = (char *) cwd;
         state->input_history = list_init(dyn_str, 128);
         state->buf_curr = buffers->len - 1;
         state->buffers = (buf_list *) buffers;
         state->mode = NORMAL;
 }
 
+void init(editor_state_t *state) {
+        display_buffer(state);
+        set_timer(&state->inactive_timer);
+}
+
 int main(int argc, char **argv) {
+
+        input_set_tty_raw();
 
         // open all the buffers, storing them in a list of buffers
         if (argc == 1) {
@@ -52,19 +60,20 @@ int main(int argc, char **argv) {
         struct pollfd in = {.fd = 0, .events = POLLIN};
         editor_state_t state;
 
-        setup(&state, &buffers);
-        display_buffer(buffers.items[state.buf_curr], state.mode, &state.display_state);
+        setup_state(&state, &buffers, cwd);
+        init(&state);
         while (true) {
 
                 set_timer(&state.timer);
                 if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
                         if (get_ms_elapsed(&state.inactive_timer) > MAX_TIME_INACTIVE_MS) {
-                                // run_screensaver_func();
+                                run_screensaver(&state, &right_slide);
+                        } else {
+                                continue;
                         }
-                        continue;
                 }
                 set_timer(&state.inactive_timer);
-                char c = getchar();
+                char c = getchar(); 
                 if (c == 'q') {
                         break;
                 }

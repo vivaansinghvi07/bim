@@ -7,7 +7,7 @@
 list_typedef(dyn_contents, dyn_str);
 
 typedef struct {
-        size_t cursor_line;
+        size_t cursor_line;  // THIS IS ONE-INDEXED!!!
         size_t screen_top_line;
         const char *filename;
         dyn_contents lines;  // i believe it's okay to not use a pointer of this type

@@ -7,6 +7,23 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <termios.h>
+#include <stdarg.h>
+
+static FILE *logger;
+
+void open_log_file() {
+        logger = fopen("./log.txt", "a");
+}
+
+void editor_log(const char *format, ...) {
+        if (!logger) {
+                open_log_file();
+        }
+        va_list arg_ptr;
+        va_start(arg_ptr, format);
+        vfprintf(logger, format, arg_ptr);
+        va_end(arg_ptr);
+}
 
 static struct termios tbufsave;
 
@@ -34,6 +51,26 @@ int input_set_tty_raw(void) {
 
 int input_restore_tty(void) {
         return tcsetattr(0, TCSANOW, &tbufsave) == -1;   // 1 for error
+}
+
+void move_to_top_left(void) {
+        printf("\033[1;1H"); 
+}
+
+void clear_screen(void) {
+#ifdef _WIN32
+        system("cls");
+#else 
+        system("clear");
+#endif
+}
+
+void hide_cursor(void) {
+        printf("\x1b[?25l");
+}
+
+void show_cursor(void) {
+        printf("\x1b[?25h");
 }
 
 dyn_str *dyn_str_from_string(const char *str) {

@@ -8,8 +8,16 @@
 
 list_typedef(dyn_str, char);
 
+void open_log_file();
+void editor_log(const char *format, ...);
+
 int input_set_tty_raw(void);
 int input_restore_tty(void);
+
+void clear_screen(void);
+void hide_cursor(void);
+void show_cursor(void);
+void move_to_top_left(void);
 
 dyn_str *dyn_str_from_string(const char *str);
 

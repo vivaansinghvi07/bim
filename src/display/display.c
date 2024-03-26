@@ -1,7 +1,7 @@
 #include "display.h"
-#include "buf.h"
-#include "list.h"
-#include "utils.h"
+#include "../buf.h"
+#include "../list.h"
+#include "../utils.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -20,12 +20,6 @@
 #define ANSI_UNDERLINE 4
 #define ANSI_STRIKETHROUGH 9
 #define ANSI_BLINKING 5
-
-// the standardized codes for this project will be as below:
-// \033[0;38;2;XXX;XXX;XXX;XXm  <-- this is 24 characters long
-#define ANSI_ESCAPE_LEN 24
-#define ANSI_COLOR_FORMAT "\033[0;38;2;%03d;%03d;%03d;%02dm"
-#define ANSI_STYLE_VARIATION 3  // affects the get_ansi_style function
 
 struct winsize get_window_size(void) {
         struct winsize w;
@@ -82,26 +76,13 @@ int store_cursor_pos(int *y, int *x) {
         return 0;
 }
 
-// is this even good code? what am i doing???
-struct bar_info_buffer {
-        int curr_line;
-        int total_lines;
-        const char *filename;
-};
-
-struct bar_info {
-        union {
-                struct bar_info_buffer normal_info;
-                char *file_mode_dir;
-        };
-};
-
 /*
 * Creates a bottom bar like so: 
 *   == MODE ==                                       filename.ext | curr/len 
 * The length of the bar is guaranteed to be <width>
 */
-char *get_bottom_bar(const editor_mode mode, const int width, const struct bar_info info) {
+char *get_bottom_bar(const int width, const editor_state_t *state) {
+
         const char *mode_text = "edit";
         int mode_len = 4;
         char *bar = malloc(width * sizeof(char));  // TOFREE
@@ -114,7 +95,7 @@ char *get_bottom_bar(const editor_mode mode, const int width, const struct bar_i
         }
 
         // set the == mode_text == in the bar
-        switch (mode) {
+        switch (state->mode) {
                 case NORMAL:
                         mode_text = "normal", mode_len = 6;
                         break;
@@ -131,15 +112,16 @@ char *get_bottom_bar(const editor_mode mode, const int width, const struct bar_i
 
         // add information about the filename and lines and stuff
         // in file mode, add information about the current directory
-        switch (mode) {
+        switch (state->mode) {
                 case NORMAL:
                 case EDIT:;
-                        const char *filename = info.normal_info.filename;
-                        const char *curr_line_str = num_to_str(info.normal_info.curr_line);
-                        const char *total_lines_str = num_to_str(info.normal_info.total_lines);
-                        size_t filename_len = strlen(filename);
-                        size_t curr_line_len = strlen(curr_line_str);
-                        size_t total_lines_len = strlen(total_lines_str);
+                        const file_buf *buf = state->buffers->items[state->buf_curr];
+                        const char *filename = buf->filename;
+                        const char *curr_line_str = num_to_str(buf->cursor_line);
+                        const char *total_lines_str = num_to_str(buf->lines.len);
+                        const size_t filename_len = strlen(filename);
+                        const size_t curr_line_len = strlen(curr_line_str);
+                        const size_t total_lines_len = strlen(total_lines_str);
 
                         // space_in_beginning + curr + "/" + total + "  "
                         if (used_up_front_space + curr_line_len + 1 + total_lines_len + 2 > width) {
@@ -288,11 +270,19 @@ char *apply_syntax_highlighting(const dyn_str *line, const display_state_t *stat
         return output;
 }
 
-char *get_displayed_buffer_string(const file_buf *buffer, const editor_mode mode, const display_state_t *state) {
+
+/*
+ * Returns an entire string that will be printed to the screen while editing.
+ * This includes the bar at the bottom.
+ *
+ */
+char *get_displayed_buffer_string(const editor_state_t *state) {
+        
+        const file_buf *buffer = state->buffers->items[state->buf_curr];
 
         // determine information about the screen
-        struct winsize w = get_window_size();
-        int W = w.ws_col, H = w.ws_row;
+        const struct winsize w = get_window_size();
+        const int W = w.ws_col, H = w.ws_row;
         int cursor_y, cursor_x;
         store_cursor_pos(&cursor_y, &cursor_x);
 
@@ -306,7 +296,7 @@ char *get_displayed_buffer_string(const file_buf *buffer, const editor_mode mode
                         len += 2;
                         continue;
                 } 
-                dyn_str *line = buffer->lines.items + buffer->screen_top_line - 1 + i;
+                const dyn_str *line = buffer->lines.items + buffer->screen_top_line - 1 + i;
                 dyn_str limited_line = *line; 
                 if (line->len + 1 > W) {
                         limited_line.len = W - 1;
@@ -315,7 +305,7 @@ char *get_displayed_buffer_string(const file_buf *buffer, const editor_mode mode
                 // after doing a benchmark, i found that strlen + memcpy seems to be faster  
                 // for small strings than using snprintf. however, until this becomes an issue 
                 // i will not implement it
-                char *formatted_line = apply_syntax_highlighting(&limited_line, state, W);
+                char *formatted_line = apply_syntax_highlighting(&limited_line, &state->display_state, W);
                 size_t formatted_len = strlen(formatted_line);
                 memcpy(output + len, formatted_line, formatted_len);
                 memcpy(output + (len += formatted_len), "\n\r", 2);
@@ -323,27 +313,19 @@ char *get_displayed_buffer_string(const file_buf *buffer, const editor_mode mode
                 free(formatted_line); 
         }
 
-        struct bar_info info;
-        switch (mode) {
-                case NORMAL:
-                case EDIT: {
-                        info = (struct bar_info) { .normal_info = (struct bar_info_buffer) { 
-                                .filename = buffer->filename, .curr_line = buffer->cursor_line,
-                                .total_lines = buffer->lines.len}};
-                } break;
-        }
-        char *bar = get_bottom_bar(mode, W, info);
-        len += snprintf(output + len, W * (ANSI_ESCAPE_LEN + 1), "\033[0m%s", bar);
-        free(bar);
-
         output[len] = '\0';
         return output;
 }
 
-void display_buffer(const file_buf *buffer, const editor_mode mode, const display_state_t *state) {
-        char *output = get_displayed_buffer_string(buffer, mode, state);
-        printf("%s", output);
+void display_buffer(const editor_state_t *state) {
+
+        const struct winsize w = get_window_size();
+        char *buffer_output = get_displayed_buffer_string(state);
+        char *bar = get_bottom_bar(w.ws_col, state);
+
+        printf("%s\033[0m%s", buffer_output, bar);
+        free(bar);
+        free(buffer_output);
         fflush(stdout);
-        free(output);
 }
 
