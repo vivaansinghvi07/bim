@@ -375,3 +375,44 @@ void rock_paper_scissors(cell_t *cells, const int W, const int H) {
         memcpy(cells, target_cells, (H - 1) * W * sizeof(cell_t));
         free(target_cells);
 }
+
+void sand_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
+                          const int y, const int W, const int H) {
+
+        cell_t *cell = target_cells + y * W + x; 
+	if (!is_alive(cell)) {
+		return;
+	}
+
+        cell_t *below = target_cells + (y + 1) * W + x;
+        if (!is_alive(below)) {
+                *below = *cell;
+                *cell = (cell_t) {0};
+                return;
+        }
+
+        cell_t *left_below  = target_cells + (y + 1) * W + x - 1,
+               *right_below = target_cells + (y + 1) * W + x + 1;
+        if (x > 0 && !is_alive(left_below)
+            || x < W - 1 && !is_alive(right_below)) {
+                if (x > 0 && (rand() % 2 || x == W - 1)) {
+                        *right_below = *cell;
+                } else {
+                        *left_below = *cell;
+                }
+                *cell = (cell_t) {0};
+                return;
+        }
+}
+
+void falling_sand(cell_t *cells, const int W, const int H) {
+        cell_t *target_cells = malloc((H - 1) * W * sizeof(cell_t));
+        memcpy(target_cells, cells, (H - 1) * W * sizeof(cell_t));
+        for (int y = H - 3; y >= 0; --y) {  // skipping bottom layer
+                for (int x = W - 1; x >= 0; --x) {
+                        sand_iterate_cell_at(cells, target_cells, x, y, W, H);
+                }
+        }
+        memcpy(cells, target_cells, (H - 1) * W * sizeof(cell_t));
+        free(target_cells);
+}

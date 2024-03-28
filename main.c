@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
                 set_timer(&state.timer);
                 if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
                         if (get_ms_elapsed(&state.inactive_timer) > MAX_TIME_INACTIVE_MS) {
-                                run_screensaver(&state, &rock_paper_scissors);
+                                run_screensaver(&state, &falling_sand);
                                 set_timer(&state.inactive_timer);
                         }
                         continue;
