@@ -366,7 +366,7 @@ void rps_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
 
 void rock_paper_scissors(cell_t *cells, const int W, const int H) {
         cell_t *target_cells = malloc((H - 1) * W * sizeof(cell_t));
-        memcpy(target_cells, cells, (H - 1) * W * sizeof(cell_t));
+        bzero(target_cells, (H - 1) * W * sizeof(cell_t));
         for (int y = 0; y < H - 1; ++y) {
                 for (int x = 0; x < W; ++x) {
                         rps_iterate_cell_at(cells, target_cells, x, y, W, H);
