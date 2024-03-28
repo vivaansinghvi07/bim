@@ -10,11 +10,14 @@
 #ifndef EDTIOR_SCREENSAVER
 #define EDTIOR_SCREENSAVER
 
+#define COLOR_GROUP_COUNT 7
+typedef enum {
+        CG_R, CG_W, CG_B, CG_G,
+        CG_RB, CG_RG, CG_BG
+} color_group;
+
 typedef struct {
-
-        // a unique ID built from the color of the character
-        uint32_t id;
-
+        color_group group;
         char c;
         const char *ansi_code;
 } cell_t;

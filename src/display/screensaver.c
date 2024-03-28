@@ -15,8 +15,50 @@
  * AND THERE EXISTS A BOTTOM BAR, THE DIMENSIONS OF <cells> IS ALWAYS W BY H - 1
  */
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
 // TODO: make this a setting too prob
 #define FRAME_LENGTH_MS 20
+
+// in the rock-paper-scissors mode, needs at least this many winning neighbors to change
+#define RPS_LOSING_THRESH 3
+
+typedef struct {
+    uint8_t h;
+    uint8_t s;
+    uint8_t v;
+} hsv_t;
+
+// https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both
+hsv_t rgb_to_hsv(uint8_t r, uint8_t g, uint8_t b) {
+        hsv_t hsv;
+        uint8_t rgb_min = min(min(r, b), g),
+                rgb_max = max(max(r, b), g);
+    
+        hsv.v = rgb_max;
+        if (hsv.v == 0) {
+                hsv.h = 0;
+                hsv.s = 0;
+                return hsv;
+        }
+
+        hsv.s = 255 * (rgb_max - rgb_min) / hsv.v;
+        if (hsv.s == 0) {
+                hsv.h = 0;
+                return hsv;
+        }
+
+        if (rgb_max == r) {
+                hsv.h = 0 + 43 * (g - b) / (rgb_max - rgb_min);
+        } else if (rgb_max == g) {
+                hsv.h = 85 + 43 * (b - r) / (rgb_max - rgb_min);
+        } else {
+                hsv.h = 171 + 43 * (r - g) / (rgb_max - rgb_min);
+        }
+
+        return hsv;
+}
 
 /*
  * <code> is in the ANSI_COLOR_FORMAT, so it has a length of ANSI_ESCAPE_LEN
@@ -26,12 +68,32 @@
 #define ANSI_R_INDEX 9
 #define ANSI_B_INDEX 13
 #define ANSI_G_INDEX 17
-#define ANSI_STYLE_INDEX 21 
-uint32_t get_id_from_color(const char *code) {
-        int r = strtol(code + ANSI_R_INDEX, NULL, 10);
-        int g = strtol(code + ANSI_G_INDEX, NULL, 10);
-        int b = strtol(code + ANSI_B_INDEX, NULL, 10);
-        return (r << 16) + (b << 8) + g;
+color_group determine_color_group(const char *code) {
+        uint8_t r = strtol(code + ANSI_R_INDEX, NULL, 10);
+        uint8_t g = strtol(code + ANSI_G_INDEX, NULL, 10);
+        uint8_t b = strtol(code + ANSI_B_INDEX, NULL, 10);
+        hsv_t hsv = rgb_to_hsv(r, g, b);
+
+        // these are all magic numbers picked using an HSV color picker
+        // i basically eyeballed what the color groups are 
+        // the first if check sees if it is unsaturated enough to consider white
+        if (hsv.s < 80) {
+                return CG_W;
+        } else if (hsv.h < 32) {
+                return CG_R;
+        } else if (hsv.h < 52) {
+                return CG_RG;
+        } else if (hsv.h < 118) {
+                return CG_G;
+        } else if (hsv.h < 149) {
+                return CG_BG;
+        } else if (hsv.h < 193) {
+                return CG_B;
+        } else if (hsv.h < 223) {
+                return CG_RB;
+        } else {
+                return CG_R;
+        }
 }
 
 cell_t *build_cells(const char *buf_str) {
@@ -57,7 +119,7 @@ cell_t *build_cells(const char *buf_str) {
                 cell_t *cell = cells + line_count * W + col_count;
                 cell->c = buf_str[curr + ANSI_ESCAPE_LEN];
                 cell->ansi_code = (const char *) buf_str + curr;
-                cell->id = get_id_from_color(cell->ansi_code);
+                cell->group = determine_color_group(cell->ansi_code);
 
                 ++col_count;
                 curr += ANSI_ESCAPE_LEN + 1;
@@ -69,9 +131,9 @@ void display_cells(cell_t *cells, const int W, const int H) {
         size_t len = 0;
         char *output = malloc(H * (W + 1) * (ANSI_ESCAPE_LEN + 1) * sizeof(char));  
 
-        for (int i = 0; i < H - 1; ++i) {
-                for (int j = 0; j < W; ++j, ++len) {
-                        cell_t *cell = cells + i * W + j;
+        for (int y = 0; y < H - 1; ++y) {
+                for (int x = 0; x < W; ++x, ++len) {
+                        cell_t *cell = cells + y * W + x;
                         if (!cell->c) {
                                 output[len] = ' ';
                                 continue;
@@ -119,6 +181,8 @@ void run_screensaver(editor_state_t *state, void (*func)(cell_t *, int, int)) {
         }
 }
 
+// i could have combined two of these into one but i think its much more
+// readable and managable if its all seperate
 void left_slide(cell_t *cells, const int W, const int H) {
         for (int y = 0; y < H - 1; ++y) {
                 cell_t saved = cells[y * W]; 
@@ -166,17 +230,15 @@ bool is_alive(const cell_t *cell) {
                  || cell->c == '\t');
 }
 
-list_typedef(color_choices_t, const char *);
-list_typedef(char_choices_t, char);
+list_typedef(dyn_cells, const cell_t *);
 
 // i am aware this has a lot of arguments and yes, I could make a 2d point struct but i dont wanna
-void iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
+void life_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
                      const int y, const int W, const int H) {
         int total_alive = 0;
         const cell_t *cell = cells + y * W + x;
         cell_t *target_cell = target_cells + y * W + x;
-        color_choices_t colors = list_init(color_choices_t, 9);
-        char_choices_t chars = list_init(char_choices_t, 9);
+        dyn_cells alive_neighbors = list_init(dyn_cells, 9);  // NOLINT
         for (int i = -1; i < 2; ++i) {
                 for (int j = -1; j < 2; ++j) {
                         if (y + i < 0 || y + i > H - 2
@@ -186,26 +248,20 @@ void iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
                         }
                         const cell_t *neighbor = cells + (y + i) * W + (x + j);
                         total_alive += is_alive(neighbor);
-                        if (!is_alive(cell) && is_alive(neighbor)) {   // is dead
-                                list_append(chars, neighbor->c);
-                                list_append(colors, neighbor->ansi_code);
+                        if (!is_alive(cell) && is_alive(neighbor)) {
+                                list_append(alive_neighbors, neighbor);  // NOLINT
                         }
                 }
         }
         
-        if (!is_alive(cell) && total_alive == 3) {   // new cell
-                const char *color = colors.items[rand() % colors.len];
-                *target_cell = (cell_t) {
-                        .c = chars.items[rand() % chars.len],
-                        .ansi_code = color,
-                        .id = get_id_from_color(color)
-                };
-        } else if (is_alive(cell) && (total_alive < 2 || total_alive > 3)) {  // kill
+        if (!is_alive(cell) && total_alive == 3) {
+                *target_cell = *alive_neighbors.items[rand() % alive_neighbors.len];
+        } else if (is_alive(cell) && (total_alive < 2 || total_alive > 3)) {
                 *target_cell = (cell_t) {0};
-        } else {  // leave current state
+        } else {
                 *target_cell = *cell;
         }
-        free_list_items(2, &chars, &colors);
+        free_list_items(1, &alive_neighbors);
 }
 
 /*
@@ -219,8 +275,103 @@ void game_of_life(cell_t *cells, const int W, const int H) {
         cell_t *target_cells = malloc((H - 1) * W * sizeof(cell_t));
         for (int y = 0; y < H - 1; ++y) {
                 for (int x = 0; x < W; ++x) {
-                        iterate_cell_at(cells, target_cells, x, y, W, H);
+                        life_iterate_cell_at(cells, target_cells, x, y, W, H);
                 }
         }
         memcpy(cells, target_cells, (H - 1) * W * sizeof(cell_t));
+        free(target_cells);
+}
+
+// this is how it is. i don't feel like explaining it
+bool is_winning_color_group(color_group a, color_group b) {
+        switch (a) {
+                case CG_W:  return b == CG_B  || b == CG_R  || b == CG_G;
+                case CG_R:  return b == CG_RB || b == CG_BG || b == CG_B;
+                case CG_G:  return b == CG_RB || b == CG_RG || b == CG_R;
+                case CG_B:  return b == CG_RG || b == CG_BG || b == CG_G;
+                case CG_RG: return b == CG_R  || b == CG_RB || b == CG_W;
+                case CG_RB: return b == CG_B  || b == CG_BG || b == CG_W;
+                case CG_BG: return b == CG_G  || b == CG_RG || b == CG_W;
+        }
+}
+
+list_typedef(group_choices, color_group);
+
+void rps_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
+                         const int y, const int W, const int H) {
+
+        const cell_t *cell = cells + y * W + x;
+        cell_t *target_cell = target_cells + y * W + x;
+        dyn_cells winners_by_group[COLOR_GROUP_COUNT];
+        for (uint8_t g = 0; g < COLOR_GROUP_COUNT; ++g) { 
+                winners_by_group[g] = list_init(dyn_cells, 9);  // NOLINT
+        }
+        uint8_t losses = 0;
+
+        for (int i = -1; i < 2; ++i) {
+                for (int j = -1; j < 2; ++j) {
+                        if (y + i < 0 || y + i > H - 2
+                            || x + j < 0 || x + j > W - 1 
+                            || i == 0 && j == 0) {
+                                continue;
+                        }
+                        const cell_t *neighbor = cells + (y + i) * W + (x + j);
+                        if (!is_alive(neighbor)) {
+                                continue;
+                        }
+                        
+                        bool is_win = (is_winning_color_group(neighbor->group, cell->group)
+                                       || !is_alive(cell));
+                        if (is_win || is_alive(cell) && neighbor->group == cell->group) {
+                                list_append(winners_by_group[neighbor->group], neighbor);  // NOLINT
+                                if (is_win) {
+                                        ++losses;
+                                }
+                        } 
+                }
+        }
+
+        group_choices winning_groups = list_init(group_choices, 4);
+        if (!is_alive(cell) && losses >= 1 || losses >= RPS_LOSING_THRESH) {
+                uint8_t max_frequency = 0;
+                for (int g = 0; g < COLOR_GROUP_COUNT; ++g) {
+                        if (cell->group == g && is_alive(cell)) {
+                                continue;
+                        }
+                        uint8_t l = winners_by_group[g].len;
+                        if (l > max_frequency) {
+                                max_frequency = l;
+                        }
+                }
+
+                for (int g = 0; g < COLOR_GROUP_COUNT; ++g) {
+                        if (winners_by_group[g].len == max_frequency) {
+                                list_append(winning_groups, g);
+                        }    
+                }
+
+                color_group winner = winning_groups.items[rand() % winning_groups.len];
+                dyn_cells *possible_cells = winners_by_group + winner;
+                *target_cell = *possible_cells->items[rand() % possible_cells->len];
+        } else if (is_alive(cell) && winners_by_group[cell->group].len) { 
+                dyn_cells *possible_cells = winners_by_group + cell->group;
+                *target_cell = *possible_cells->items[rand() % possible_cells->len];
+        }
+
+        for (int g = 0; g < COLOR_GROUP_COUNT; ++g) {
+                free_list_items(1, winners_by_group + g);
+        }
+        free_list_items(1, &winning_groups);
+}
+
+void rock_paper_scissors(cell_t *cells, const int W, const int H) {
+        cell_t *target_cells = malloc((H - 1) * W * sizeof(cell_t));
+        memcpy(target_cells, cells, (H - 1) * W * sizeof(cell_t));
+        for (int y = 0; y < H - 1; ++y) {
+                for (int x = 0; x < W; ++x) {
+                        rps_iterate_cell_at(cells, target_cells, x, y, W, H);
+                }
+        }
+        memcpy(cells, target_cells, (H - 1) * W * sizeof(cell_t));
+        free(target_cells);
 }

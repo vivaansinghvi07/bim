@@ -210,7 +210,7 @@ char *get_highlighting_for_token(const dyn_str *line, const token_t t, const dis
                 case HIGH_RANDOM: {
                         rgb_style.style = line->items[t.start] == ' ' ? 22 
                                 : get_ansi_style(rand() % ANSI_STYLE_VARIATION);
-                        rgb_style.rgb.r = rand() % 256;
+                        rgb_style.rgb.r = rand() % 256;  // TODO: possible forcing of this to be > 100
                         rgb_style.rgb.g = rand() % 256;
                         rgb_style.rgb.b = rand() % 256;
                 } break;
