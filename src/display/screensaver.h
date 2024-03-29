@@ -22,7 +22,7 @@ typedef struct {
         const char *ansi_code;
 } cell_t;
 
-void run_screensaver(editor_state_t *state, void (*func)(cell_t *, int, int));
+void run_screensaver(editor_state_t *state);
 void game_of_life(cell_t *cells, const int W, const int H); 
 void falling_sand(cell_t *cells, const int W, const int H); 
 void left_slide(cell_t *cells, const int W, const int H); 

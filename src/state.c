@@ -15,17 +15,34 @@
 #define GRADIENT_RIGHT_SETTING "gradient_right"
 #define TEXT_STYLE_SETTING "text_style"
 #define HIGHLIGHT_MODE_SETTING "highlight_mode"
+#define SCREENSAVER_MODE_SETTING "screensaver_mode"
 
-#define HIGHLIGHT_OPT_GRADIENT "GRADIENT"
-#define HIGHLIGHT_OPT_ALPHA "LEXICAL"
-#define HIGHLIGHT_OPT_RANDOM "RANDOM"
+const char *HIGH_STR_OPTS[] = {"GRADIENT", "LEXICAL", "RANDOM", "NONE"};
+const highlighting_mode HIGH_ENUM_OPTS[] = {HIGH_GRADIENT, HIGH_ALPHA, HIGH_RANDOM, HIGH_NONE};
 
-#define STYLE_OPT_BOLD "BOLD"
-#define STYLE_OPT_NORMAL "NORMAL"
-#define STYLE_OPT_ITALIC "ITALIC"
+const char *STYLE_STR_OPTS[] = {"BOLD", "NORMAL", "ITALIC"};
+const text_style_mode STYLE_ENUM_OPTS[] = {STYLE_BOLD, STYLE_NORMAL, STYLE_ITALIC};
+
+const char *SS_STR_OPTS[] = {"LEFT_SLIDE", "RIGHT_SLIDE", "TOP_SLIDE", "BOTTOM_SLIDE",
+                            "ROCK_PAPER_SCISSORS", "GAME_OF_LIFE", "FALLING_SAND"};
+const screensaver_mode SS_ENUM_OPTS[] = {SS_LEFT, SS_RIGHT, SS_TOP, SS_BOTTOM,
+                                         SS_RPS, SS_LIFE, SS_SAND};
 
 #define DEFAULT_GRAD_LEFT {255, 0, 0}
 #define DEFAULT_GRAD_RIGHT {0, 0, 255}
+
+#define parse_text_opts(val_to_set, str_opts_arr, enum_opts_arr, info)                              \
+        do {                                                                                        \
+                const char *ending_str = (info).line->items + (info).equal_index + 1;               \
+                size_t len = (info).line->len - (info).equal_index - 1;                             \
+                for (size_t i = (info).line->len - 1; (info).line->items[i] == ' '; --i, --len) {}  \
+                                                                                                    \
+                for (int i = 0; i < sizeof(str_opts_arr) / sizeof(*str_opts_arr); ++i) {            \
+                        if (!strncmp(ending_str, str_opts_arr[i], len)) {                           \
+                                val_to_set = enum_opts_arr[i];                                      \
+                        }                                                                           \
+                }                                                                                   \
+        } while (0)
 
 // source: https://stackoverflow.com/a/78195956
 char *get_config_path(void) {
@@ -96,6 +113,7 @@ rgb_t parse_color(const struct parse_info *info) {
         return ret;
 }
 
+
 void parse_gradient_left(const struct parse_info *info, editor_state_t *state) {
         rgb_t color = parse_color(info);
         state->display_state.gradient_color.left = color;
@@ -106,49 +124,12 @@ void parse_gradient_right(const struct parse_info *info, editor_state_t *state) 
         state->display_state.gradient_color.right = color;
 }
 
-void parse_highlight_mode(const struct parse_info *info, editor_state_t *state) {
-
-        const char *ending_str = info->line->items + info->equal_index + 1;
-        size_t len = info->line->len - info->equal_index - 1;
-        
-        // this eliminates trailing whitespace
-        for (size_t i = info->line->len - 1; info->line->items[i] == ' '; --i, --len) {} 
-
-        if (!strncmp(ending_str, HIGHLIGHT_OPT_GRADIENT, len)) {
-                state->display_state.syntax_mode = HIGH_GRADIENT;
-        } else if (!strncmp(ending_str, HIGHLIGHT_OPT_RANDOM, len)) {
-                state->display_state.syntax_mode = HIGH_RANDOM;
-        } else if (!strncmp(ending_str, HIGHLIGHT_OPT_ALPHA, len)) {
-                state->display_state.syntax_mode = HIGH_ALPHA;
-        } else {
-                exit_error("Invalid highlighting mode settings.");
-        }
-}
-
-void parse_text_style(const struct parse_info *info, editor_state_t *state) {
-        
-        const char *ending_str = info->line->items + info->equal_index + 1;
-        size_t len = info->line->len - info->equal_index - 1;
-        
-        // this eliminates trailing whitespace
-        for (size_t i = info->line->len - 1; info->line->items[i] == ' '; --i, --len) {} 
-
-        if (!strncmp(ending_str, STYLE_OPT_BOLD, len)) {
-                state->display_state.text_style_mode = STYLE_BOLD;
-        } else if (!strncmp(ending_str, STYLE_OPT_ITALIC, len)) {
-                state->display_state.text_style_mode = STYLE_ITALIC; 
-        } else if (!strncmp(ending_str, STYLE_OPT_NORMAL, len)) {
-                state->display_state.text_style_mode = STYLE_NORMAL; 
-        } else {
-                exit_error("Invalid text style settings.");
-        }
-}
-
 void load_default_config(editor_state_t *state) {
         state->display_state.syntax_mode = HIGH_NONE;
         state->display_state.text_style_mode = STYLE_NORMAL;
         state->display_state.gradient_color.left = (rgb_t) DEFAULT_GRAD_LEFT;
         state->display_state.gradient_color.right = (rgb_t) DEFAULT_GRAD_RIGHT;
+        state->display_state.screensaver_mode = SS_RPS;
 }
 
 void parse_config_file(editor_state_t *state) {
@@ -182,9 +163,14 @@ void parse_config_file(editor_state_t *state) {
                 } else if (!strncmp(line->items, GRADIENT_RIGHT_SETTING, key_len)) {
                         parse_gradient_right(&info, state);
                 } else if (!strncmp(line->items, HIGHLIGHT_MODE_SETTING, key_len)) {
-                        parse_highlight_mode(&info, state);
+                        parse_text_opts(state->display_state.syntax_mode,
+                                        HIGH_STR_OPTS, HIGH_ENUM_OPTS, info);
                 } else if (!strncmp(line->items, TEXT_STYLE_SETTING, key_len)) {
-                        parse_text_style(&info, state);
+                        parse_text_opts(state->display_state.text_style_mode,
+                                        STYLE_STR_OPTS, STYLE_ENUM_OPTS, info);
+                } else if (!strncmp(line->items, SCREENSAVER_MODE_SETTING, key_len)) {
+                        parse_text_opts(state->display_state.screensaver_mode,
+                                        SS_STR_OPTS, SS_ENUM_OPTS, info);
                 }
 
         next_line:;

@@ -25,6 +25,11 @@ typedef enum {
         STYLE_BOLD, STYLE_NORMAL, STYLE_ITALIC
 } text_style_mode;
 
+typedef enum {
+        SS_LEFT, SS_RIGHT, SS_TOP, SS_BOTTOM,
+        SS_LIFE, SS_RPS, SS_SAND
+} screensaver_mode;
+
 typedef struct {
         rgb_t left, right;
 } gradient_color_t;
@@ -32,6 +37,7 @@ typedef struct {
 typedef struct {
         highlighting_mode syntax_mode;
         text_style_mode text_style_mode;
+        screensaver_mode screensaver_mode;
 
         // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
         gradient_color_t gradient_color;  

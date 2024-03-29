@@ -27,6 +27,18 @@
 // in the falling sand mode, this is how many spaces the program is allowed to look in horizontal
 #define SAND_HORIZONTAL_SEEK 12
 
+void (*get_ss_func(editor_state_t *state))(cell_t *, const int, const int) {
+        switch (state->display_state.screensaver_mode) {
+                case SS_LEFT: return &left_slide;
+                case SS_RIGHT: return &right_slide;
+                case SS_BOTTOM: return &bottom_slide;
+                case SS_TOP: return &top_slide;
+                case SS_RPS: return &rock_paper_scissors;
+                case SS_SAND: return &falling_sand;
+                case SS_LIFE: return &game_of_life;
+        }
+}
+
 typedef struct {
     uint8_t h;
     uint8_t s;
@@ -153,8 +165,9 @@ void display_cells(cell_t *cells, const int W, const int H) {
         free(output);
 }
 
-void run_screensaver(editor_state_t *state, void (*func)(cell_t *, int, int)) {
+void run_screensaver(editor_state_t *state) {
 
+        void (*func)(cell_t *, const int, const int) = get_ss_func(state);
         hide_cursor();
         struct winsize window_size = get_window_size();
         const int W = window_size.ws_col, H = window_size.ws_row;
