@@ -24,6 +24,9 @@
 // in the rock-paper-scissors mode, needs at least this many winning neighbors to change
 #define RPS_LOSING_THRESH 3
 
+// in the falling sand mode, this is how many spaces the program is allowed to look in horizontal
+#define SAND_HORIZONTAL_SEEK 12
+
 typedef struct {
     uint8_t h;
     uint8_t s;
@@ -380,10 +383,11 @@ void sand_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x
                           const int y, const int W, const int H) {
 
         cell_t *cell = target_cells + y * W + x; 
-	if (!is_alive(cell)) {
-		return;
-	}
-
+        if (!is_alive(cell)) {
+                return;
+        }
+        
+        // allow cell to fall if there is space right below
         cell_t *below = target_cells + (y + 1) * W + x;
         if (!is_alive(below)) {
                 *below = *cell;
@@ -391,25 +395,63 @@ void sand_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x
                 return;
         }
 
+        // allow cell to fall if there is space right under it
         cell_t *left_below  = target_cells + (y + 1) * W + x - 1,
                *right_below = target_cells + (y + 1) * W + x + 1;
-        if (x > 0 && !is_alive(left_below)
-            || x < W - 1 && !is_alive(right_below)) {
-                if (x > 0 && (rand() % 2 || x == W - 1)) {
+        bool can_go_left = x > 0 && !is_alive(left_below),
+             can_go_right = x < W - 1 && !is_alive(right_below);
+        if (can_go_left || can_go_right) {
+                if (can_go_left && can_go_right) {
+                        if (rand() % 2) {
+                                *right_below = *cell;
+                        } else {
+                                *left_below = *cell;
+                        }
+                } else if (can_go_right) {
                         *right_below = *cell;
-                } else {
+                } else if (can_go_left) {
                         *left_below = *cell;
                 }
+
                 *cell = (cell_t) {0};
                 return;
         }
+
+        // iterate cells in either direction if there are any present 
+        int l = x - 1;
+        int r = x + 1;
+        while (l >= 0 || r < W) {
+                if (r < W && x < W - 1 && r - x <= SAND_HORIZONTAL_SEEK) {
+                        right_below = target_cells + (y + 1) * W + r;
+                        if (!is_alive(right_below) && !is_alive(target_cells + y * W + x + 1)) {
+                                *(target_cells + y * W + x + 1) = *cell;
+                                *cell = (cell_t) {0};
+                                return;
+                        }
+                }
+                if (l >= 0 && x > 0 && x - l <= SAND_HORIZONTAL_SEEK) {
+                        left_below = target_cells + (y + 1) * W + l;
+                        if (!is_alive(left_below) && !is_alive(target_cells + y * W + x - 1)) {
+                                *(target_cells + y * W + x - 1) = *cell;
+                                *cell = (cell_t) {0};
+                                return;
+                        }
+                } 
+		++r, --l;
+        }
 }
 
+
+/*
+ * The loop goes from bottom to top to allow cells to fall one layer and leave their spot open.
+ * Then it goes from right to left to allow cells to go to the right and leave theirs.
+ * This is based on the assumption that code is more frequent on the left of the screen.
+ */ 
 void falling_sand(cell_t *cells, const int W, const int H) {
         cell_t *target_cells = malloc((H - 1) * W * sizeof(cell_t));
         memcpy(target_cells, cells, (H - 1) * W * sizeof(cell_t));
         for (int y = H - 3; y >= 0; --y) {  // skipping bottom layer
-                for (int x = W - 1; x >= 0; --x) {
+                for (int x = W - 1; x >= 0; --x) { 
                         sand_iterate_cell_at(cells, target_cells, x, y, W, H);
                 }
         }
