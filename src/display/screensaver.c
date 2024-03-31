@@ -250,7 +250,7 @@ list_typedef(dyn_cells, const cell_t *);
 
 // i am aware this has a lot of arguments and yes, I could make a 2d point struct but i dont wanna
 void life_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
-                     const int y, const int W, const int H) {
+                          const int y, const int W, const int H) { 
         int total_alive = 0;
         const cell_t *cell = cells + y * W + x;
         cell_t *target_cell = target_cells + y * W + x;

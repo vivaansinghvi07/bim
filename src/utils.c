@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "list.h"
 
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -104,3 +105,13 @@ const char *num_to_str(const int n) {
         sprintf(buf, "%d", n);
         return buf;
 }
+
+void set_timer(struct timespec *timer) {
+        clock_gettime(CLOCK_MONOTONIC, timer);
+}
+double get_ms_elapsed(const struct timespec *start) {
+        struct timespec end;
+        clock_gettime(CLOCK_MONOTONIC, &end);
+        return (end.tv_sec - start->tv_sec) * 1e3 + (end.tv_nsec - start->tv_nsec) / 1e6;
+}
+

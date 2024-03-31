@@ -19,8 +19,6 @@
  */
 
 
-
-
 #include "src/list.h"
 #include "src/utils.h"
 #include "src/buf.h"
@@ -32,20 +30,16 @@
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <time.h>
 #include <unistd.h>
 #include <stdbool.h>
 
 #define POLL_TIMEOUT_MS 20
 #define MAX_TIME_INACTIVE_MS 1000
 
-void set_timer(struct timespec *timer) {
-        clock_gettime(CLOCK_MONOTONIC, timer);
-}
-double get_ms_elapsed(const struct timespec *start) {
-        struct timespec end;
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        return (end.tv_sec - start->tv_sec) * 1e3 + (end.tv_nsec - start->tv_nsec) / 1e6;
+void handle_normal_input(editor_state_t *state, char c) {
+        switch (c) {
+                case 'j': display_buffer(state);
+        }
 }
 
 void setup_state(editor_state_t *state, const buf_list *buffers, const char *cwd) {
@@ -110,6 +104,7 @@ int main(int argc, char **argv) {
         
                 switch (state.mode) {
                         case NORMAL: 
+                                handle_normal_input(&state, c);
                         case FILES:
                         case EDIT: break;
                 }
