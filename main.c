@@ -1,24 +1,3 @@
-/*
- *
- *
- *
- *
- *
- * TODO: FIX MEMORY LEAKS
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- *
- */
-
-
 #include "src/list.h"
 #include "src/utils.h"
 #include "src/buf.h"
