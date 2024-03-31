@@ -1,6 +1,5 @@
 #include "display.h"
 #include "../buf.h"
-#include "../list.h"
 #include "../utils.h"
 
 #include <assert.h>
@@ -273,8 +272,7 @@ char *apply_syntax_highlighting(const dyn_str *line, const display_state_t *stat
 
 /*
  * Returns an entire string that will be printed to the screen while editing.
- * This includes the bar at the bottom.
- *
+ * The string will be null-terminated.
  */
 char *get_displayed_buffer_string(const editor_state_t *state) {
         
@@ -296,16 +294,14 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
                         len += 2;
                         continue;
                 } 
-                const dyn_str *line = buffer->lines.items + buffer->screen_top_line - 1 + i;
-                dyn_str limited_line = *line; 
-                if (line->len + 1 > W) {
-                        limited_line.len = W - 1;
+                dyn_str line = buffer->lines.items[buffer->screen_top_line - 1 + i];
+                if (line.len + 1 > W) {
+                        line.len = W - 1;
                 }
 
                 // after doing a benchmark, i found that strlen + memcpy seems to be faster  
-                // for small strings than using snprintf. however, until this becomes an issue 
-                // i will not implement it
-                char *formatted_line = apply_syntax_highlighting(&limited_line, &state->display_state, W);
+                // for small strings than using snprintf
+                char *formatted_line = apply_syntax_highlighting(&line, &state->display_state, W);
                 size_t formatted_len = strlen(formatted_line);
                 memcpy(output + len, formatted_line, formatted_len);
                 memcpy(output + (len += formatted_len), "\n\r", 2);
