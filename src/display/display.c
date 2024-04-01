@@ -229,11 +229,13 @@ char *apply_syntax_highlighting(const dyn_str *line, const display_state_t *stat
  */
 char *get_displayed_buffer_string(const editor_state_t *state) {
         
-        const file_buf *buffer = state->buffers->items[state->buf_curr];
-
         // determine information about the screen
         const struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
+        const file_buf *buffer = state->buffers->items[state->buf_curr];
+        char blank[ANSI_ESCAPE_LEN + 2];
+        snprintf(blank, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 0, 0, 0, 22);
+        blank[ANSI_ESCAPE_LEN] = ' ';
 
         // creating a big string in which lines are printed into
         // so that screensaver functions can access the string without it being printed 
@@ -241,8 +243,10 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         int len = 0;
         for (int i = 0; i < H - 1; ++i) { 
                 if (buffer->screen_top_line - 1 + i >= buffer->lines.len) {  // no lines left 
-                        memcpy(output + len, "\n\r", 2);
-                        len += 2;
+                        for (size_t j = 0; j < W; ++j) {
+                                memcpy(output + len, blank, ANSI_ESCAPE_LEN + 1);
+                                len += ANSI_ESCAPE_LEN + 1;
+                        }
                         continue;
                 } 
                 dyn_str line = buffer->lines.items[buffer->screen_top_line - 1 + i];
@@ -255,15 +259,17 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
                 char *formatted_line = apply_syntax_highlighting(&line, &state->display_state, W);
                 size_t formatted_len = strlen(formatted_line);
                 memcpy(output + len, formatted_line, formatted_len);
-                memcpy(output + (len += formatted_len), "\n\r", 2);
-                len += 2;
+                len += formatted_len;
+                for (size_t j = 0; j < W - formatted_len / (ANSI_ESCAPE_LEN + 1); ++j) {
+                        memcpy(output + len, blank, ANSI_ESCAPE_LEN + 1);
+                        len += ANSI_ESCAPE_LEN + 1;
+                }
                 free(formatted_line); 
         }
 
         output[len] = '\0';
         return output;
 }
-
 
 /*
  * Determine the current cursor position, 
@@ -278,7 +284,6 @@ void display_buffer(const editor_state_t *state) {
         char *bar = get_bottom_bar(w.ws_col, state);
 
         move_to_top_left();
-        clear_screen();
         printf("%s\033[0m%s", buffer_output, bar);
         move_cursor_to(buffer->cursor_line - buffer->screen_top_line, buffer->cursor_col);
         free(bar);

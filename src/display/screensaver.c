@@ -121,23 +121,13 @@ cell_t *build_cells(const char *buf_str) {
         // it will use so many assumptions about string structure, so changing something 
         // in how the `get_displayed_buffer_string` function works prob breaks this
         size_t line_count = 0, col_count = 0, curr = 0;
-        while (line_count < H - 1) {
-
-                // line breaks are always in the form of '\n\r', so skip curr by two
-                if (buf_str[curr] == '\n') {
-                        ++line_count;
-                        col_count = 0;
-                        curr += 2;
-                        continue;
+        for (size_t i = 0; i < H - 1; ++i) {
+                for (size_t j = 0; j < W; ++j) {
+                        cell_t *cell = cells + i * W + j;
+                        cell->c = buf_str[(i * W + j) * (ANSI_ESCAPE_LEN + 1) + ANSI_ESCAPE_LEN];
+                        cell->ansi_code = (const char *) buf_str + (i * W + j) * (ANSI_ESCAPE_LEN + 1);
+                        cell->group = determine_color_group(cell->ansi_code);
                 }
-
-                cell_t *cell = cells + line_count * W + col_count;
-                cell->c = buf_str[curr + ANSI_ESCAPE_LEN];
-                cell->ansi_code = (const char *) buf_str + curr;
-                cell->group = determine_color_group(cell->ansi_code);
-
-                ++col_count;
-                curr += ANSI_ESCAPE_LEN + 1;
         }
         return cells;      
 } 
