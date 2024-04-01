@@ -4,6 +4,7 @@
 #include "src/state.h"
 #include "src/display/screensaver.h"
 #include "src/display/display.h"
+#include "src/input/normal.h"
 
 #include <poll.h>
 #include <limits.h>
@@ -14,12 +15,6 @@
 
 #define POLL_TIMEOUT_MS 20
 #define MAX_TIME_INACTIVE_MS 1000
-
-void handle_normal_input(editor_state_t *state, char c) {
-        switch (c) {
-                case 'j': display_buffer(state);
-        }
-}
 
 void setup_state(editor_state_t *state, const buf_list *buffers, const char *cwd) {
 
@@ -38,7 +33,7 @@ void init(editor_state_t *state) {
         set_timer(&state->inactive_timer);
 }
 
-int main(int argc, char **argv) {
+int main(const int argc, const char **argv) {
 
         input_set_tty_raw();
 
@@ -89,5 +84,6 @@ int main(int argc, char **argv) {
                 }
         }
 
+        buf_free_list(state.buffers);
         return input_restore_tty();
 }

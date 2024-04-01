@@ -29,53 +29,6 @@ struct winsize get_window_size(void) {
 }
 
 /*
- * stores the position of the cursor in the given integer pointers,
- * with 1, 1 representing the top left
- * https://stackoverflow.com/a/50888457
- */
-int store_cursor_pos(int *y, int *x) {
-
-        struct termios term, restore;
-        char buf[30] = {0};
-
-        // controlling terminal status to avoid displaying
-        tcgetattr(0, &term);
-        tcgetattr(0, &restore);
-        term.c_lflag &= ~(ICANON|ECHO);
-        tcsetattr(0, TCSANOW, &term);
-        write(1, "\033[6n", 4);
-
-        // get response in the form ^[[xx;xxR
-        int curr;
-        char ch;
-        for(curr = 0, ch = 0; ch != 'R'; ++curr) {
-                if (!read(0, &ch, 1)) {
-                        tcsetattr(0, TCSANOW, &restore);
-                        return 1;
-                }
-                buf[curr] = ch;
-        }
-
-        // invalid response, there is not enough information given
-        if (curr <= 6) {
-                tcsetattr(0, TCSANOW, &restore);
-                return 1;
-        }
-
-        *y = 0; *x = 0;
-        int pow;
-        for(curr -= 2, pow = 1; buf[curr] != ';'; curr--, pow *= 10) {  // parsing the second number
-                *x = *x + (buf[curr] - '0') * pow;
-        }
-        for(curr--, pow = 1; buf[curr] != '['; curr--, pow *= 10) {  // parsing the first number
-                *y = *y + (buf[curr] - '0') * pow;
-        }
-
-        tcsetattr(0, TCSANOW, &restore);
-        return 0;
-}
-
-/*
 * Creates a bottom bar like so: 
 *   == MODE ==                                       filename.ext | curr/len 
 * The length of the bar is guaranteed to be <width>
@@ -281,8 +234,6 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         // determine information about the screen
         const struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
-        int cursor_y, cursor_x;
-        store_cursor_pos(&cursor_y, &cursor_x);
 
         // creating a big string in which lines are printed into
         // so that screensaver functions can access the string without it being printed 
@@ -313,13 +264,23 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         return output;
 }
 
+
+/*
+ * Determine the current cursor position, 
+ *   display a buffer (meaning we are in the normal or edit mode),
+ *   and return the cursor to the old position.
+ */
 void display_buffer(const editor_state_t *state) {
 
+        const file_buf *buffer = state->buffers->items[state->buf_curr];
         const struct winsize w = get_window_size();
         char *buffer_output = get_displayed_buffer_string(state);
         char *bar = get_bottom_bar(w.ws_col, state);
 
+        move_to_top_left();
+        clear_screen();
         printf("%s\033[0m%s", buffer_output, bar);
+        move_cursor_to(buffer->cursor_line - buffer->screen_top_line, buffer->cursor_col);
         free(bar);
         free(buffer_output);
         fflush(stdout);
