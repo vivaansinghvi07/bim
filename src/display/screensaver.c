@@ -173,7 +173,6 @@ void run_screensaver(editor_state_t *state) {
                         getchar(); // this is here to get rid of what's in the poll
 
                         show_cursor();
-                        clear_screen();
                         display_buffer(state);
 
                         free((char *) buf_str);

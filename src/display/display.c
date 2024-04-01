@@ -33,16 +33,16 @@ struct winsize get_window_size(void) {
 *   == MODE ==                                       filename.ext | curr/len 
 * The length of the bar is guaranteed to be <width>
 */
-char *get_bottom_bar(const int width, const editor_state_t *state) {
+char *get_bottom_bar(const int W, const editor_state_t *state) {
 
         const char *mode_text = "edit";
         int mode_len = 4;
-        char *bar = malloc(width * sizeof(char));  // TOFREE
-        memset(bar, ' ', width * sizeof(char));
+        char *bar = malloc(W * sizeof(char));  // TOFREE
+        memset(bar, ' ', W * sizeof(char));
 
         // prevent a bar that is overflowing
-        if (width < 10) {
-                memset(bar, '=', width * sizeof(char));
+        if (W < 10) {
+                memset(bar, '=', W * sizeof(char));
                 return bar;
         }
 
@@ -76,24 +76,24 @@ char *get_bottom_bar(const int width, const editor_state_t *state) {
                         const size_t total_lines_len = strlen(total_lines_str);
 
                         // space_in_beginning + curr + "/" + total + "  "
-                        if (used_up_front_space + curr_line_len + 1 + total_lines_len + 2 > width) {
+                        if (used_up_front_space + curr_line_len + 1 + total_lines_len + 2 > W) {
                                 return bar;  // return as is - forget about adding anything else
                         }
         
                         // fill the string with the fraction of the file read
-                        memcpy(bar + width - 2 - total_lines_len, total_lines_str, total_lines_len);
-                        bar[width - 2 - total_lines_len - 1] = '/';
-                        memcpy(bar + width - 2 - total_lines_len - 1 - curr_line_len, curr_line_str, curr_line_len);
+                        memcpy(bar + W - 2 - total_lines_len, total_lines_str, total_lines_len);
+                        bar[W - 2 - total_lines_len - 1] = '/';
+                        memcpy(bar + W - 2 - total_lines_len - 1 - curr_line_len, curr_line_str, curr_line_len);
 
                         // check if there is space for the pipe operator and the filename
                         int used_up_back_space = curr_line_len + total_lines_len + 3;
-                        if (width - used_up_front_space - used_up_back_space - 3 - filename_len < 0) {  
+                        if (W - used_up_front_space - used_up_back_space - 3 - filename_len < 0) {  
                                 return bar;
                         }
         
                         // copy the filename and the straight line
-                        memcpy(bar + width - used_up_back_space - 3, " | ", 3);
-                        memcpy(bar + width - used_up_back_space - 3 - filename_len, filename, filename_len);
+                        memcpy(bar + W - used_up_back_space - 3, " | ", 3);
+                        memcpy(bar + W - used_up_back_space - 3 - filename_len, filename, filename_len);
 
                 case FILES:
                         break;  // TODO
@@ -151,31 +151,78 @@ uint8_t get_style_from_style_enum(const text_style_mode mode) {
         return ANSI_NORMAL;
 }
 
-char *get_highlighting_for_token(const dyn_str *line, const token_t t, const display_state_t *state, const int width) {
+typedef struct {
+        const dyn_str *line;
+        const int W, H, line_index;
+} gradient_line_info_t;
+
+void fill_gradient_rgb(ansi_code_t *rgb_style, const gradient_line_info_t *info, const token_t t, const display_state_t *state) {
+        rgb_t left = state->gradient_color.left, right = state->gradient_color.right;
+        rgb_style->style = get_style_from_style_enum(state->text_style_mode);
+
+        switch (state->gradient_angle) {
+                case GRAD_ANG_180: {
+                        rgb_t temp = right; right = left; left = temp;
+                }
+                case GRAD_ANG_0: {
+                        rgb_style->rgb.r = (double) (right.r - left.r) * t.start / info->line->len + left.r;  
+                        rgb_style->rgb.b = (double) (right.b - left.b) * t.start / info->line->len + left.b;  
+                        rgb_style->rgb.g = (double) (right.g - left.g) * t.start / info->line->len + left.g;
+                } return;
+                case GRAD_ANG_90: {
+                        rgb_t temp = right; right = left; left = temp;
+                }
+                case GRAD_ANG_270: {
+                        rgb_style->rgb.r = (double) (right.r - left.r) * info->line_index / (info->H - 1) + left.r;
+                        rgb_style->rgb.g = (double) (right.g - left.g) * info->line_index / (info->H - 1) + left.g;
+                        rgb_style->rgb.b = (double) (right.b - left.b) * info->line_index / (info->H - 1) + left.b;
+                } return;
+                case GRAD_ANG_135: {
+                        rgb_t temp = right; right = left; left = temp;
+                }
+                case GRAD_ANG_315: {
+                        rgb_style->rgb.r = (double) (right.r - left.r) * info->line_index / (info->H - 1) / 2 + 
+                                           (double) (right.r - left.r) * t.start / info->line->len / 2 + left.r;
+                        rgb_style->rgb.g = (double) (right.g - left.g) * info->line_index / (info->H - 1) / 2 + 
+                                           (double) (right.g - left.g) * t.start / info->line->len / 2 + left.g;
+                        rgb_style->rgb.b = (double) (right.b - left.b) * info->line_index / (info->H - 1) / 2 + 
+                                           (double) (right.b - left.b) * t.start / info->line->len / 2 + left.b;
+                } return;
+                case GRAD_ANG_225: {
+                        rgb_t temp = right; right = left; left = temp;
+                }
+                case GRAD_ANG_45: {
+                        rgb_style->rgb.r = (double) (right.r - left.r) * (info->H - info->line_index) / (info->H - 1) / 2 + 
+                                           (double) (right.r - left.r) * t.start / info->line->len / 2 + left.r;
+                        rgb_style->rgb.g = (double) (right.g - left.g) * (info->H - info->line_index) / (info->H - 1) / 2 + 
+                                           (double) (right.g - left.g) * t.start / info->line->len / 2 + left.g;
+                        rgb_style->rgb.b = (double) (right.b - left.b) * (info->H - info->line_index) / (info->H - 1) / 2 + 
+                                           (double) (right.b - left.b) * t.start / info->line->len / 2 + left.b;
+                }
+        }
+}
+
+char *get_highlighting_for_token(const gradient_line_info_t *info, const token_t t, const display_state_t *state) {
         char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
         ansi_code_t rgb_style = {0};
         switch (state->syntax_mode) {
                 case HIGH_NONE: {
                         rgb_style.rgb = (rgb_t) {255, 255, 255};
                         rgb_style.style = get_style_from_style_enum(state->text_style_mode);
-                }
+                } break;
                 case HIGH_RANDOM: {
-                        rgb_style.style = line->items[t.start] == ' ' ? 22 
+                        rgb_style.style = info->line->items[t.start] == ' ' ? 22 
                                 : get_ansi_style(rand() % ANSI_STYLE_VARIATION);
-                        rgb_style.rgb.r = rand() % 256;  // TODO: possible forcing of this to be > 100
-                        rgb_style.rgb.g = rand() % 256;
-                        rgb_style.rgb.b = rand() % 256;
+                        rgb_style.rgb.r = rand() % 156 + 100;
+                        rgb_style.rgb.g = rand() % 156 + 100;
+                        rgb_style.rgb.b = rand() % 156 + 100;
                 } break;
                 case HIGH_ALPHA: {
-                        rgb_style = ANSI_COLOR_TABLE[line->items[t.start]];
+                        rgb_style = ANSI_COLOR_TABLE[info->line->items[t.start]];
                         rgb_style.style = get_ansi_style(rgb_style.style);
                 } break;
                 case HIGH_GRADIENT: {
-                        rgb_t left = state->gradient_color.left, right = state->gradient_color.right;
-                        rgb_style.style = get_style_from_style_enum(state->text_style_mode);
-                        rgb_style.rgb.r = (double) (right.r - left.r) * t.start / line->len + left.r;  
-                        rgb_style.rgb.b = (double) (right.b - left.b) * t.start / line->len + left.b;  
-                        rgb_style.rgb.g = (double) (right.g - left.g) * t.start / line->len + left.g;  
+                        fill_gradient_rgb(&rgb_style, info, t, state);
                 } break;
         }
         snprintf(code, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 
@@ -184,37 +231,37 @@ char *get_highlighting_for_token(const dyn_str *line, const token_t t, const dis
 }
 
 // applies syntax highlighting one of the following strategies:
-char *apply_syntax_highlighting(const dyn_str *line, const display_state_t *state, const int width) {
+char *apply_syntax_highlighting(const gradient_line_info_t *info, const display_state_t *state) {
 
         // assuming one code per character, allocate enough to fill everything + \0
-        char *output = malloc(((ANSI_ESCAPE_LEN + 1) * line->len + 1) * sizeof(char));
-        token_t tokens[line->len + 1];
+        char *output = malloc(((ANSI_ESCAPE_LEN + 1) * info->line->len + 1) * sizeof(char));
+        token_t tokens[info->line->len + 1];
         size_t t = 0;
 
         // fill up tokens - treat every series of [_a-zA-Z0-9] or punctuation as a unique token
         // alternatively, when the highlighting mode is a gradient, each character is a token
         tokens[t].start = 0;
-        for (size_t c = 0; c < line->len; ++c) {
+        for (size_t c = 0; c < info->line->len; ++c) {
                 if (state->syntax_mode == HIGH_GRADIENT 
-                    || !is_name_char(*(line->items + c)) 
-                    || (c < line->len - 1 && !is_name_char(*(line->items + c + 1)))) {
+                    || !is_name_char(*(info->line->items + c)) 
+                    || (c < info->line->len - 1 && !is_name_char(*(info->line->items + c + 1)))) {
                         tokens[t++].end = c + 1;
                         tokens[t].start = c + 1;
                 }
         }
-        tokens[t].end = line->len;
+        tokens[t].end = info->line->len;
 
-        // for each token in the line, build a new string with syntax highlighting
+        // for each token in the info->line, build a new string with syntax highlighting
         size_t len = 0;
         for (size_t i = 0; i <= t; ++i) {
                 token_t *tok = tokens + i;
                 if (tok->start == tok->end) {
                         continue;
                 }
-                char *code = get_highlighting_for_token(line, *tok, state, width);
+                char *code = get_highlighting_for_token(info, *tok, state);
                 for (size_t j = tok->start; j < tok->end; ++j, ++len) {
                         memcpy(output + len, code, ANSI_ESCAPE_LEN);
-                        output[len += ANSI_ESCAPE_LEN] = line->items[j];
+                        output[len += ANSI_ESCAPE_LEN] = info->line->items[j];
                 }
                 free(code);
         }
@@ -256,7 +303,10 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
 
                 // after doing a benchmark, i found that strlen + memcpy seems to be faster  
                 // for small strings than using snprintf
-                char *formatted_line = apply_syntax_highlighting(&line, &state->display_state, W);
+                const gradient_line_info_t info = {
+                        .W = W, .H = H, .line = &line, .line_index = i
+                };
+                char *formatted_line = apply_syntax_highlighting(&info, &state->display_state);
                 size_t formatted_len = strlen(formatted_line);
                 memcpy(output + len, formatted_line, formatted_len);
                 len += formatted_len;
@@ -285,7 +335,7 @@ void display_buffer(const editor_state_t *state) {
 
         move_to_top_left();
         printf("%s\033[0m%s", buffer_output, bar);
-        move_cursor_to(buffer->cursor_line - buffer->screen_top_line, buffer->cursor_col);
+        move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1, buffer->cursor_col);
         free(bar);
         free(buffer_output);
         fflush(stdout);

@@ -34,6 +34,11 @@ typedef struct {
         rgb_t left, right;
 } gradient_color_t;
 
+typedef enum {
+        GRAD_ANG_0, GRAD_ANG_45, GRAD_ANG_90, GRAD_ANG_135,
+        GRAD_ANG_180, GRAD_ANG_225, GRAD_ANG_270, GRAD_ANG_315
+} gradient_angle_mode;
+
 typedef struct {
         highlighting_mode syntax_mode;
         text_style_mode text_style_mode;
@@ -41,6 +46,7 @@ typedef struct {
 
         // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
         gradient_color_t gradient_color;  
+        gradient_angle_mode gradient_angle;
 } display_state_t;
 
 typedef struct {

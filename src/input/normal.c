@@ -10,20 +10,20 @@
 
 void handle_c_move_up(file_buf *buf) {
         if (buf->cursor_line > 1) {
-                --buf->cursor_line;
                 if (buf->screen_top_line == buf->cursor_line) { 
                         --buf->screen_top_line;
                 } 
+                --buf->cursor_line;
         }
 }
 
 void handle_c_move_down(file_buf *buf) {
         struct winsize w = get_window_size();
         if (buf->cursor_line < buf->lines.len) {
-                ++buf->cursor_line;
                 if (buf->screen_top_line + w.ws_row - 2 == buf->cursor_line) {
                         ++buf->screen_top_line;
                 }
+                ++buf->cursor_line;
         }
 }
 

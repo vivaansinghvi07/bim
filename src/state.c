@@ -16,6 +16,7 @@
 #define TEXT_STYLE_SETTING "text_style"
 #define HIGHLIGHT_MODE_SETTING "highlight_mode"
 #define SCREENSAVER_MODE_SETTING "screensaver_mode"
+#define GRADIENT_ANGLE_SETTING "gradient_angle"
 
 const char *HIGH_STR_OPTS[] = {"GRADIENT", "LEXICAL", "RANDOM", "NONE"};
 const highlighting_mode HIGH_ENUM_OPTS[] = {HIGH_GRADIENT, HIGH_ALPHA, HIGH_RANDOM, HIGH_NONE};
@@ -28,19 +29,38 @@ const char *SS_STR_OPTS[] = {"LEFT_SLIDE", "RIGHT_SLIDE", "TOP_SLIDE", "BOTTOM_S
 const screensaver_mode SS_ENUM_OPTS[] = {SS_LEFT, SS_RIGHT, SS_TOP, SS_BOTTOM,
                                          SS_RPS, SS_LIFE, SS_SAND};
 
+const char *GRAD_ANG_STR_OPTS[] = {"0", "45", "90", "135", "180", "225", "270", "315"};
+const gradient_angle_mode GRAD_ANG_ENUM_OPTS[] = {GRAD_ANG_0, GRAD_ANG_45, GRAD_ANG_90, GRAD_ANG_135,
+                                                  GRAD_ANG_180, GRAD_ANG_225, GRAD_ANG_270, GRAD_ANG_315};
+
 #define DEFAULT_GRAD_LEFT {255, 0, 0}
 #define DEFAULT_GRAD_RIGHT {0, 0, 255}
 
-#define parse_text_opts(val_to_set, str_opts_arr, enum_opts_arr, info)                              \
+#define parse_text_opts(setting, val_to_set, str_opts_arr, enum_opts_arr, info)                     \
         do {                                                                                        \
                 const char *ending_str = (info).line->items + (info).equal_index + 1;               \
                 size_t len = (info).line->len - (info).equal_index - 1;                             \
                 for (size_t i = (info).line->len - 1; (info).line->items[i] == ' '; --i, --len) {}  \
                                                                                                     \
-                for (int i = 0; i < sizeof(str_opts_arr) / sizeof(*str_opts_arr); ++i) {            \
+                int i;                                                                              \
+                for (i = 0; i < sizeof(str_opts_arr) / sizeof(*str_opts_arr); ++i) {                \
                         if (!strncmp(ending_str, str_opts_arr[i], len)) {                           \
                                 val_to_set = enum_opts_arr[i];                                      \
+                                break;                                                              \
                         }                                                                           \
+                }                                                                                   \
+                                                                                                    \
+                if (i == sizeof(str_opts_arr) / sizeof(*str_opts_arr)) {                            \
+                        char invalid[len + 1];                                                      \
+                        memcpy(invalid, ending_str, len);                                           \
+                        invalid[len] = '\0';                                                        \
+                        printf("Invalid setting for '%s' detected: %s.\n\r", setting, invalid);     \
+                        printf("Possible options include:\n\r");                                    \
+                        for (i = 0; i < sizeof(str_opts_arr) / sizeof(*str_opts_arr); ++i) {        \
+                                printf(" - %s\n\r", str_opts_arr[i]);                               \
+                        }                                                                           \
+                        input_restore_tty();                                                        \
+                        exit(1);                                                                    \
                 }                                                                                   \
         } while (0)
 
@@ -124,11 +144,13 @@ void parse_gradient_right(const struct parse_info *info, editor_state_t *state) 
         state->display_state.gradient_color.right = color;
 }
 
+// :)
 void load_default_config(editor_state_t *state) {
         state->display_state.syntax_mode = HIGH_NONE;
         state->display_state.text_style_mode = STYLE_NORMAL;
         state->display_state.gradient_color.left = (rgb_t) DEFAULT_GRAD_LEFT;
         state->display_state.gradient_color.right = (rgb_t) DEFAULT_GRAD_RIGHT;
+        state->display_state.gradient_angle = GRAD_ANG_0;
         state->display_state.screensaver_mode = SS_RPS;
 }
 
@@ -160,17 +182,24 @@ void parse_config_file(editor_state_t *state) {
                 struct parse_info info = {line, key_len};
                 if (!strncmp(line->items, GRADIENT_LEFT_SETTING, key_len)) {
                         parse_gradient_left(&info, state);
+
                 } else if (!strncmp(line->items, GRADIENT_RIGHT_SETTING, key_len)) {
                         parse_gradient_right(&info, state);
+
                 } else if (!strncmp(line->items, HIGHLIGHT_MODE_SETTING, key_len)) {
-                        parse_text_opts(state->display_state.syntax_mode,
+                        parse_text_opts(HIGHLIGHT_MODE_SETTING, state->display_state.syntax_mode,
                                         HIGH_STR_OPTS, HIGH_ENUM_OPTS, info);
+
                 } else if (!strncmp(line->items, TEXT_STYLE_SETTING, key_len)) {
-                        parse_text_opts(state->display_state.text_style_mode,
+                        parse_text_opts(TEXT_STYLE_SETTING, state->display_state.text_style_mode,
                                         STYLE_STR_OPTS, STYLE_ENUM_OPTS, info);
+
                 } else if (!strncmp(line->items, SCREENSAVER_MODE_SETTING, key_len)) {
-                        parse_text_opts(state->display_state.screensaver_mode,
+                        parse_text_opts(SCREENSAVER_MODE_SETTING, state->display_state.screensaver_mode,
                                         SS_STR_OPTS, SS_ENUM_OPTS, info);
+                } else if (!strncmp(line->items, GRADIENT_ANGLE_SETTING, key_len)) {
+                        parse_text_opts(GRADIENT_ANGLE_SETTING, state->display_state.gradient_angle,
+                                        GRAD_ANG_STR_OPTS, GRAD_ANG_ENUM_OPTS, info);
                 }
 
         next_line:;
