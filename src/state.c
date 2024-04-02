@@ -3,6 +3,7 @@
 #include "utils.h"
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,6 +18,8 @@
 #define HIGHLIGHT_MODE_SETTING "highlight_mode"
 #define SCREENSAVER_MODE_SETTING "screensaver_mode"
 #define GRADIENT_ANGLE_SETTING "gradient_angle"
+#define SCREENSAVER_MS_INACTIVE "screensaver_ms_inactive"
+#define SCREENSAVER_FRAME_LENGTH_SETTING "screensaver_frame_length_ms"
 
 const char *HIGH_STR_OPTS[] = {"GRADIENT", "LEXICAL", "RANDOM", "NONE"};
 const highlighting_mode HIGH_ENUM_OPTS[] = {HIGH_GRADIENT, HIGH_ALPHA, HIGH_RANDOM, HIGH_NONE};
@@ -33,8 +36,8 @@ const char *GRAD_ANG_STR_OPTS[] = {"0", "45", "90", "135", "180", "225", "270", 
 const gradient_angle_mode GRAD_ANG_ENUM_OPTS[] = {GRAD_ANG_0, GRAD_ANG_45, GRAD_ANG_90, GRAD_ANG_135,
                                                   GRAD_ANG_180, GRAD_ANG_225, GRAD_ANG_270, GRAD_ANG_315};
 
-#define DEFAULT_GRAD_LEFT {255, 0, 0}
-#define DEFAULT_GRAD_RIGHT {0, 0, 255}
+#define DEFAULT_GRAD_LEFT {255, 255, 0}
+#define DEFAULT_GRAD_RIGHT {0, 255, 255}
 
 #define parse_text_opts(setting, val_to_set, str_opts_arr, enum_opts_arr, info)                     \
         do {                                                                                        \
@@ -119,7 +122,7 @@ rgb_t parse_color(const struct parse_info *info) {
         for (size_t i = info->equal_index + 2, j = 0; i < info->line->len && j < 6; ++i, ++j) {
                 char c = info->line->items[i];
                 if (!is_valid_color_char(c)) {
-                        exit_error("Invalid charatcer detected in line");
+                        exit_error("Invalid character detected in hexadecimal color.");
                 }
                 switch (j) {
                         case 0: ret.r = get_hex_value(c) << 4; break;
@@ -133,6 +136,15 @@ rgb_t parse_color(const struct parse_info *info) {
         return ret;
 }
 
+int parse_number(const struct parse_info *info) {
+
+        // creating a new buffer here to that the strtol function doesn't overflow
+        size_t len = info->line->len - info->equal_index - 1;
+        char buf[len + 1];
+        buf[len] = '\0';
+        memcpy(buf, info->line->items + info->equal_index + 1, len);
+        return strtol(buf, NULL, 10);
+}
 
 void parse_gradient_left(const struct parse_info *info, editor_state_t *state) {
         rgb_t color = parse_color(info);
@@ -144,14 +156,27 @@ void parse_gradient_right(const struct parse_info *info, editor_state_t *state) 
         state->display_state.gradient_color.right = color;
 }
 
+void parse_screensaver_frame_length(const struct parse_info *info, editor_state_t *state) {
+        state->display_state.screensaver_frame_length_ms = parse_number(info);
+}
+
+void parse_screensaver_ms_inactive(const struct parse_info *info, editor_state_t *state) {
+        state->display_state.screensaver_ms_inactive = parse_number(info);
+}
+
 // :)
 void load_default_config(editor_state_t *state) {
+
         state->display_state.syntax_mode = HIGH_NONE;
         state->display_state.text_style_mode = STYLE_NORMAL;
+
         state->display_state.gradient_color.left = (rgb_t) DEFAULT_GRAD_LEFT;
         state->display_state.gradient_color.right = (rgb_t) DEFAULT_GRAD_RIGHT;
         state->display_state.gradient_angle = GRAD_ANG_0;
+
         state->display_state.screensaver_mode = SS_RPS;
+        state->display_state.screensaver_ms_inactive = 5000;
+        state->display_state.screensaver_frame_length_ms = 20;
 }
 
 void parse_config_file(editor_state_t *state) {
@@ -179,27 +204,28 @@ void parse_config_file(editor_state_t *state) {
                 }
 
                 // key_len is now the index of the '='
+                // literal spaghetti code lmao
                 struct parse_info info = {line, key_len};
                 if (!strncmp(line->items, GRADIENT_LEFT_SETTING, key_len)) {
                         parse_gradient_left(&info, state);
-
                 } else if (!strncmp(line->items, GRADIENT_RIGHT_SETTING, key_len)) {
                         parse_gradient_right(&info, state);
-
                 } else if (!strncmp(line->items, HIGHLIGHT_MODE_SETTING, key_len)) {
                         parse_text_opts(HIGHLIGHT_MODE_SETTING, state->display_state.syntax_mode,
                                         HIGH_STR_OPTS, HIGH_ENUM_OPTS, info);
-
                 } else if (!strncmp(line->items, TEXT_STYLE_SETTING, key_len)) {
                         parse_text_opts(TEXT_STYLE_SETTING, state->display_state.text_style_mode,
                                         STYLE_STR_OPTS, STYLE_ENUM_OPTS, info);
-
                 } else if (!strncmp(line->items, SCREENSAVER_MODE_SETTING, key_len)) {
                         parse_text_opts(SCREENSAVER_MODE_SETTING, state->display_state.screensaver_mode,
                                         SS_STR_OPTS, SS_ENUM_OPTS, info);
                 } else if (!strncmp(line->items, GRADIENT_ANGLE_SETTING, key_len)) {
                         parse_text_opts(GRADIENT_ANGLE_SETTING, state->display_state.gradient_angle,
                                         GRAD_ANG_STR_OPTS, GRAD_ANG_ENUM_OPTS, info);
+                } else if (!strncmp(line->items, SCREENSAVER_FRAME_LENGTH_SETTING, key_len)) {
+                        parse_screensaver_frame_length(&info, state);
+                } else if (!strncmp(line->items, SCREENSAVER_MS_INACTIVE, key_len)) {
+                        parse_screensaver_ms_inactive(&info, state);
                 }
 
         next_line:;

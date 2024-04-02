@@ -14,7 +14,6 @@
 #include <stdbool.h>
 
 #define POLL_TIMEOUT_MS 20
-#define MAX_TIME_INACTIVE_MS 1000
 
 void setup_state(editor_state_t *state, const buf_list *buffers, const char *cwd) {
 
@@ -57,7 +56,7 @@ int main(const int argc, const char **argv) {
 
                 set_timer(&state.timer);
                 if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
-                        if (get_ms_elapsed(&state.inactive_timer) > MAX_TIME_INACTIVE_MS) {
+                        if (get_ms_elapsed(&state.inactive_timer) > state.display_state.screensaver_ms_inactive) {
                                 run_screensaver(&state);
                                 set_timer(&state.inactive_timer);
                         }

@@ -18,9 +18,6 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-// TODO: make this a setting too prob
-#define FRAME_LENGTH_MS 20
-
 // in the rock-paper-scissors mode, needs at least this many winning neighbors to change
 #define RPS_LOSING_THRESH 3
 
@@ -169,7 +166,7 @@ void run_screensaver(editor_state_t *state) {
 
         struct pollfd in = {.fd = 0, .events = POLLIN};
         while (true) {
-                if (poll(&in, 1, FRAME_LENGTH_MS)) {
+                if (poll(&in, 1, state->display_state.screensaver_frame_length_ms)) {
                         getchar(); // this is here to get rid of what's in the poll
 
                         show_cursor();

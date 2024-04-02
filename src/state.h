@@ -42,7 +42,10 @@ typedef enum {
 typedef struct {
         highlighting_mode syntax_mode;
         text_style_mode text_style_mode;
+
         screensaver_mode screensaver_mode;
+        int screensaver_frame_length_ms;
+        int screensaver_ms_inactive;
 
         // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
         gradient_color_t gradient_color;  
