@@ -91,10 +91,10 @@ char *get_config_path(void) {
 }
 
 // making this a struct so that i can change it if needed
-struct parse_info {
+typedef struct {
         dyn_str *line; 
         size_t equal_index;
-};
+} parse_info_t;
 
 bool is_valid_color_char(const char c) {
         return isdigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
@@ -111,7 +111,7 @@ uint8_t get_hex_value(const char c) {
         }
 }
  
-rgb_t parse_color(const struct parse_info *info) {
+rgb_t parse_color(const parse_info_t *info) {
         if (info->line->items[info->equal_index + 1] != '#') {
                 exit_error("Color must begin with a hex code.");
         } else if (info->line->len - info->equal_index - 2 < 6) {
@@ -136,7 +136,7 @@ rgb_t parse_color(const struct parse_info *info) {
         return ret;
 }
 
-int parse_number(const struct parse_info *info) {
+int parse_number(const parse_info_t *info) {
 
         // creating a new buffer here to that the strtol function doesn't overflow
         size_t len = info->line->len - info->equal_index - 1;
@@ -146,21 +146,21 @@ int parse_number(const struct parse_info *info) {
         return strtol(buf, NULL, 10);
 }
 
-void parse_gradient_left(const struct parse_info *info, editor_state_t *state) {
+void parse_gradient_left(const parse_info_t *info, editor_state_t *state) {
         rgb_t color = parse_color(info);
         state->display_state.gradient_color.left = color;
 }
 
-void parse_gradient_right(const struct parse_info *info, editor_state_t *state) {
+void parse_gradient_right(const parse_info_t *info, editor_state_t *state) {
         rgb_t color = parse_color(info);
         state->display_state.gradient_color.right = color;
 }
 
-void parse_screensaver_frame_length(const struct parse_info *info, editor_state_t *state) {
+void parse_screensaver_frame_length(const parse_info_t *info, editor_state_t *state) {
         state->display_state.screensaver_frame_length_ms = parse_number(info);
 }
 
-void parse_screensaver_ms_inactive(const struct parse_info *info, editor_state_t *state) {
+void parse_screensaver_ms_inactive(const parse_info_t *info, editor_state_t *state) {
         state->display_state.screensaver_ms_inactive = parse_number(info);
 }
 
@@ -205,7 +205,7 @@ void parse_config_file(editor_state_t *state) {
 
                 // key_len is now the index of the '='
                 // literal spaghetti code lmao
-                struct parse_info info = {line, key_len};
+                parse_info_t info = {line, key_len};
                 if (!strncmp(line->items, GRADIENT_LEFT_SETTING, key_len)) {
                         parse_gradient_left(&info, state);
                 } else if (!strncmp(line->items, GRADIENT_RIGHT_SETTING, key_len)) {
