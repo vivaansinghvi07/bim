@@ -20,6 +20,8 @@
 #define GRADIENT_ANGLE_SETTING "gradient_angle"
 #define SCREENSAVER_MS_INACTIVE "screensaver_ms_inactive"
 #define SCREENSAVER_FRAME_LENGTH_SETTING "screensaver_frame_length_ms"
+#define GRADIENT_CYCLE_DURATION_MS "gradient_cycle_duration_ms"
+#define TAB_WIDTH_SETTING "tab_width"
 
 const char *HIGH_STR_OPTS[] = {"GRADIENT", "LEXICAL", "RANDOM", "NONE"};
 const highlighting_mode HIGH_ENUM_OPTS[] = {HIGH_GRADIENT, HIGH_ALPHA, HIGH_RANDOM, HIGH_NONE};
@@ -164,29 +166,39 @@ void parse_screensaver_ms_inactive(const parse_info_t *info, editor_state_t *sta
         state->display_state.screensaver_ms_inactive = parse_number(info);
 }
 
+void parse_gradient_cycle_duration_ms(const parse_info_t *info, editor_state_t *state) {
+        state->display_state.gradient_cycle_duration_ms = parse_number(info);
+}
+
+void parse_tab_width(const parse_info_t *info, editor_state_t *state) {
+        state->tab_width = parse_number(info);
+}
+
 // :)
 void load_default_config(editor_state_t *state) {
 
+        state->tab_width = 4;
         state->display_state.syntax_mode = HIGH_NONE;
         state->display_state.text_style_mode = STYLE_NORMAL;
 
         state->display_state.gradient_color.left = (rgb_t) DEFAULT_GRAD_LEFT;
         state->display_state.gradient_color.right = (rgb_t) DEFAULT_GRAD_RIGHT;
         state->display_state.gradient_angle = GRAD_ANG_0;
+        state->display_state.gradient_cycle_duration_ms = 0;
 
         state->display_state.screensaver_mode = SS_RPS;
         state->display_state.screensaver_ms_inactive = 5000;
         state->display_state.screensaver_frame_length_ms = 20;
 }
 
-void parse_config_file(editor_state_t *state) {
+void load_config(editor_state_t *state) {
 
         char *config_path = get_config_path();
         load_default_config(state);
         if (!config_path) {
                 return;
         }
-        file_buf *buf = buf_open(config_path);
+        file_buf *buf = buf_open(config_path, state->tab_width);  // tab_width here doesn't really matter
         free(config_path);
 
         for (size_t l = 0; l < buf->lines.len; ++l) {
@@ -226,9 +238,14 @@ void parse_config_file(editor_state_t *state) {
                         parse_screensaver_frame_length(&info, state);
                 } else if (!strncmp(line->items, SCREENSAVER_MS_INACTIVE, key_len)) {
                         parse_screensaver_ms_inactive(&info, state);
+                } else if (!strncmp(line->items, GRADIENT_CYCLE_DURATION_MS, key_len)) {
+                        parse_gradient_cycle_duration_ms(&info, state);
+                } else if (!strncmp(line->items, TAB_WIDTH_SETTING, key_len)) {
+                        parse_tab_width(&info, state);
                 }
 
         next_line:;
         }
-        free(buf);
+
+        buf_free(buf);
 }

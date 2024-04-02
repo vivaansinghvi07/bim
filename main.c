@@ -15,10 +15,23 @@
 
 #define POLL_TIMEOUT_MS 20
 
-void setup_state(editor_state_t *state, const buf_list *buffers, const char *cwd) {
+void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
         fill_ansi_color_table();
-        parse_config_file(state);
+        load_config(state);
+
+        // open all buffers passed in cli
+        if (argc == 1) {
+                exit_error("Must pass in a filename to run this editor.");
+        }
+        buf_list *buffers = malloc(sizeof(buf_list));
+        *buffers = list_init(buf_list, argc);   // NOLINT
+        for (uint8_t i = 1; i < argc; ++i) {
+                list_append(*buffers, buf_open(argv[i], state->tab_width));  // NOLINT
+        }
+
+        // according to the man pages, if NULL, space is allocated for it and a pointer to it is returned
+        const char *cwd = getcwd(NULL, PATH_MAX + 1);  
 
         state->cwd = (char *) cwd;
         state->input_history = list_init(dyn_str, 128);
@@ -28,33 +41,39 @@ void setup_state(editor_state_t *state, const buf_list *buffers, const char *cwd
 }
 
 void init(editor_state_t *state) {
+        input_set_tty_raw();
         display_buffer(state);
         set_timer(&state->inactive_timer);
+        set_timer(&state->gradient_rotating_timer);
+}
+
+void display_by_mode(const editor_state_t *state) {
+        switch (state->mode) {
+                case NORMAL:
+                case EDIT: {
+                        display_buffer(state);
+                } break;
+        }
 }
 
 int main(const int argc, const char **argv) {
 
-        input_set_tty_raw();
-
-        // open all the buffers, storing them in a list of buffers
-        if (argc == 1) {
-                exit_error("Must pass in a filename to run this editor.");
-        }
-        buf_list buffers = list_init(buf_list, argc);   // NOLINT
-        for (uint8_t i = 1; i < argc; ++i) {
-                list_append(buffers, buf_open(argv[i]));  // NOLINT
-        }
-
-        // according to the man pages, if NULL, space is allocated for it and a pointer to it is returned
-        char *cwd = getcwd(NULL, PATH_MAX + 1);  
-        struct pollfd in = {.fd = 0, .events = POLLIN};
         editor_state_t state;
+        struct pollfd in = {.fd = 0, .events = POLLIN};
 
-        setup_state(&state, &buffers, cwd);
+        setup_state(&state, argc, argv);
         init(&state);
         while (true) {
 
                 set_timer(&state.timer);
+                if (state.display_state.gradient_cycle_duration_ms > 0 
+                    && get_ms_elapsed(&state.gradient_rotating_timer)
+                       > state.display_state.gradient_cycle_duration_ms) {
+                        increment_gradient(&state);
+                        set_timer(&state.gradient_rotating_timer);
+                        display_by_mode(&state);
+                }
+
                 if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
                         if (get_ms_elapsed(&state.inactive_timer) > state.display_state.screensaver_ms_inactive) {
                                 run_screensaver(&state);
@@ -76,13 +95,14 @@ int main(const int argc, const char **argv) {
                 }
         
                 switch (state.mode) {
-                        case NORMAL: 
-                                handle_normal_input(&state, c);
+                        case NORMAL: handle_normal_input(&state, c); break;
                         case FILES:
                         case EDIT: break;
                 }
+                display_by_mode(&state);
         }
 
         buf_free_list(state.buffers);
+        move_to_top_left();
         return input_restore_tty();
 }

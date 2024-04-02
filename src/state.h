@@ -50,13 +50,17 @@ typedef struct {
         // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
         gradient_color_t gradient_color;  
         gradient_angle_mode gradient_angle;
+        int gradient_cycle_duration_ms;
 } display_state_t;
 
 typedef struct {
 
         struct timespec timer; 
         struct timespec inactive_timer; 
+        struct timespec gradient_rotating_timer;
 
+        int tab_width;
+        
         size_t buf_curr;
         buf_list *buffers;
 
@@ -68,6 +72,6 @@ typedef struct {
 } editor_state_t;
 
 uint8_t get_hex_value(char c);
-void parse_config_file(editor_state_t *state);
+void load_config(editor_state_t *state);
 
 #endif // !EDITOR_STATE

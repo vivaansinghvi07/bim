@@ -34,7 +34,7 @@ void buf_save(const file_buf *buf) {
         fclose(file);
 }
 
-file_buf *buf_open(const char *filename) {
+file_buf *buf_open(const char *filename, const int tab_width) {
 
         FILE *file = fopen(filename, "r");
         file_buf *return_buffer = malloc(sizeof(file_buf));
@@ -60,6 +60,10 @@ file_buf *buf_open(const char *filename) {
         for (char *curr = buf; *curr; ++curr) {
                 if (*curr == '\n') {
                         list_append(return_buffer->lines, list_init(dyn_str, 128));
+                } else if (*curr == '\t') { 
+                        for (int i = 0; i < tab_width; ++i) { 
+                                list_append(return_buffer->lines.items[return_buffer->lines.len - 1], ' ');
+                        }
                 } else {
                         list_append(return_buffer->lines.items[return_buffer->lines.len - 1], *curr);
                 }

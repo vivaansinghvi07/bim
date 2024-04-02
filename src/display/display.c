@@ -156,6 +156,16 @@ typedef struct {
         const int W, H, line_index;
 } gradient_line_info_t;
 
+void increment_gradient(editor_state_t *state) {
+        state->display_state.gradient_angle++;
+        state->display_state.gradient_angle %= 8;
+}
+
+void decrement_gradient(editor_state_t *state) {
+        state->display_state.gradient_angle += 7;
+        state->display_state.gradient_angle %= 8;
+}
+
 void fill_gradient_rgb(ansi_code_t *rgb_style, const gradient_line_info_t *info, const token_t t, const display_state_t *state) {
         rgb_t left = state->gradient_color.left, right = state->gradient_color.right;
         rgb_style->style = get_style_from_style_enum(state->text_style_mode);
@@ -334,8 +344,10 @@ void display_buffer(const editor_state_t *state) {
         char *bar = get_bottom_bar(w.ws_col, state);
 
         move_to_top_left();
+        hide_cursor();
         printf("%s\033[0m%s", buffer_output, bar);
         move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1, buffer->cursor_col);
+        show_cursor();
         free(bar);
         free(buffer_output);
         fflush(stdout);

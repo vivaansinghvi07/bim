@@ -10,6 +10,23 @@
 
 #define C_GRAD_ANG_INCRE '['
 #define C_GRAD_ANG_DECRE ']'
+#define C_BUF_INCRE '+'
+#define C_BUF_DECRE '-'
+
+
+// this is here in order to mimic the behavior of "saving" a column upon going up and down in files
+int prev_col = 0;
+void handle_new_line_col(file_buf *buf) {
+        if (prev_col == 0) {
+                prev_col = buf->cursor_col;
+        }
+        int curr_line_len = buf->lines.items[buf->cursor_line - 1].len;
+        if (prev_col > curr_line_len) {
+                buf->cursor_col = curr_line_len;
+        } else {
+                buf->cursor_col = prev_col;
+        }
+}
 
 void handle_c_move_up(file_buf *buf) {
         if (buf->cursor_line > 1) {
@@ -17,6 +34,7 @@ void handle_c_move_up(file_buf *buf) {
                         --buf->screen_top_line;
                 } 
                 --buf->cursor_line;
+                handle_new_line_col(buf);
         }
 }
 
@@ -27,27 +45,44 @@ void handle_c_move_down(file_buf *buf) {
                         ++buf->screen_top_line;
                 }
                 ++buf->cursor_line;
+                handle_new_line_col(buf);
         }
+}
+
+void handle_c_move_left(file_buf *buf) {
+        if (buf->cursor_col > 1) {
+                --buf->cursor_col;
+                prev_col = 0;
+        } 
+}
+
+void handle_c_move_right(file_buf *buf) {
+        if (buf->cursor_col < buf->lines.items[buf->cursor_line - 1].len) {
+                ++buf->cursor_col;
+                prev_col = 0;
+        }
+}
+
+void handle_c_buf_incre(editor_state_t *state) {
+        state->buf_curr++; 
+        state->buf_curr %= state->buffers->len;
+}
+
+void handle_c_buf_decre(editor_state_t *state) {
+        state->buf_curr += state->buffers->len - 1; 
+        state->buf_curr %= state->buffers->len;
 }
 
 void handle_normal_input(editor_state_t *state, char c) {
 
-        int x, y;
-        store_cursor_pos(&y, &x);
         file_buf *buf = state->buffers->items[state->buf_curr];
 
         switch (c) {
                 case C_MOVE_UP: handle_c_move_up(buf); break;
                 case C_MOVE_DOWN: handle_c_move_down(buf); break;
-                case C_GRAD_ANG_INCRE:
-                        state->display_state.gradient_angle++;
-                        state->display_state.gradient_angle %= 8;
-                        break;
-                case C_GRAD_ANG_DECRE: 
-                        state->display_state.gradient_angle += 7;
-                        state->display_state.gradient_angle %= 8;
-                        break;
+                case C_MOVE_RIGHT: handle_c_move_right(buf); break;
+                case C_MOVE_LEFT: handle_c_move_left(buf); break;
+                case C_GRAD_ANG_INCRE: increment_gradient(state); break;
+                case C_GRAD_ANG_DECRE: decrement_gradient(state); break;
         }
-
-        display_buffer(state);
 }
