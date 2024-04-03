@@ -127,5 +127,8 @@ void handle_normal_input(editor_state_t *state, char c) {
 
                 case C_GRAD_ANG_INCRE: increment_gradient(state); break;
                 case C_GRAD_ANG_DECRE: decrement_gradient(state); break;
+
+                case C_BUF_INCRE: handle_c_buf_incre(state); break;
+                case C_BUF_DECRE: handle_c_buf_decre(state); break;
         }
 }
