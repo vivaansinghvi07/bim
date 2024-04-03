@@ -17,6 +17,7 @@
 #define C_GRAD_ANG_DECRE  ']'
 #define C_BUF_INCRE       '+'
 #define C_BUF_DECRE       '-'
+#define C_ENTER_EDIT      'e'
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
 int prev_col = 0;
@@ -130,5 +131,6 @@ void handle_normal_input(editor_state_t *state, char c) {
 
                 case C_BUF_INCRE: handle_c_buf_incre(state); break;
                 case C_BUF_DECRE: handle_c_buf_decre(state); break;
+                case C_ENTER_EDIT: state->mode = EDIT; break;
         }
 }

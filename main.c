@@ -5,6 +5,7 @@
 #include "src/display/screensaver.h"
 #include "src/display/display.h"
 #include "src/input/normal.h"
+#include "src/input/edit.h"
 
 #include <poll.h>
 #include <limits.h>
@@ -84,7 +85,7 @@ int main(const int argc, const char **argv) {
                 }
                 set_timer(&state.inactive_timer);
                 char c = getchar(); 
-                if (c == 'q') {
+                if (state.mode == NORMAL && c == 'q') {
                         break;
                 }
 
@@ -97,8 +98,8 @@ int main(const int argc, const char **argv) {
         
                 switch (state.mode) {
                         case NORMAL: handle_normal_input(&state, c); break;
-                        case FILES:
-                        case EDIT: break;
+                        case FILES: 
+                        case EDIT: handle_edit_input(&state, c); break;
                 }
                 display_by_mode(&state);
         }

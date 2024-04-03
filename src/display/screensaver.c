@@ -434,7 +434,7 @@ void sand_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x
                                 return;
                         }
                 } 
-		++r, --l;
+                ++r, --l;
         }
 }
 

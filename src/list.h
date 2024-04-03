@@ -39,7 +39,7 @@
 // assure there is enough space for <space> more items
 #define list_create_space(list, space)                                                                      \
         do {                                                                                                \
-                while ((list).cap + space < (list).len) {                                                   \
+                while ((list).len + space > (list).cap) {                                                   \
                         (list).cap *= 2;                                                                    \
                         (list).items = realloc((list).items, (list).cap * sizeof(*(list).items));           \
                 }                                                                                           \
