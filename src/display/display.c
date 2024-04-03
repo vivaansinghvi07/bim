@@ -202,11 +202,11 @@ void fill_gradient_rgb(ansi_code_t *rgb_style, const gradient_line_info_t *info,
                         rgb_t temp = right; right = left; left = temp;
                 }
                 case GRAD_ANG_45: {
-                        rgb_style->rgb.r = (double) (right.r - left.r) * (info->H - info->line_index) / (info->H - 1) / 2 + 
+                        rgb_style->rgb.r = (double) (right.r - left.r) * (info->H - info->line_index - 1) / (info->H - 1) / 2 + 
                                            (double) (right.r - left.r) * t.start / info->line->len / 2 + left.r;
-                        rgb_style->rgb.g = (double) (right.g - left.g) * (info->H - info->line_index) / (info->H - 1) / 2 + 
+                        rgb_style->rgb.g = (double) (right.g - left.g) * (info->H - info->line_index - 1) / (info->H - 1) / 2 + 
                                            (double) (right.g - left.g) * t.start / info->line->len / 2 + left.g;
-                        rgb_style->rgb.b = (double) (right.b - left.b) * (info->H - info->line_index) / (info->H - 1) / 2 + 
+                        rgb_style->rgb.b = (double) (right.b - left.b) * (info->H - info->line_index - 1) / (info->H - 1) / 2 + 
                                            (double) (right.b - left.b) * t.start / info->line->len / 2 + left.b;
                 }
         }

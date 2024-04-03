@@ -1,3 +1,4 @@
+#include "../utils.h"
 #include "screensaver.h"
 #include "display.h"
 
@@ -14,9 +15,6 @@
  * Note: BECAUSE W AND H REPRESENT THE DIMENSIONS OF THE SCREEN, 
  * AND THERE EXISTS A BOTTOM BAR, THE DIMENSIONS OF <cells> IS ALWAYS W BY H - 1
  */
-
-#define max(a, b) ((a) > (b) ? (a) : (b))
-#define min(a, b) ((a) < (b) ? (a) : (b))
 
 // in the rock-paper-scissors mode, needs at least this many winning neighbors to change
 #define RPS_LOSING_THRESH 3

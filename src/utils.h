@@ -6,6 +6,9 @@
 #ifndef EDITOR_UTILS
 #define EDITOR_UTILS
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
 // i'm not good enough at C to understand why this typedef makes
 // clangd warnings go away in the main.c file, but it does
 typedef struct timespec _;

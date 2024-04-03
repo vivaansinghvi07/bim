@@ -22,7 +22,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
         // open all buffers passed in cli
         if (argc == 1) {
-                exit_error("Must pass in a filename to run this editor.");
+                exit_error("Must pass in a filename to run this editor.\n\r");
         }
         buf_list *buffers = malloc(sizeof(buf_list));
         *buffers = list_init(buf_list, argc);   // NOLINT
@@ -41,7 +41,6 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
 }
 
 void init(editor_state_t *state) {
-        input_set_tty_raw();
         display_buffer(state);
         set_timer(&state->inactive_timer);
         set_timer(&state->gradient_rotating_timer);
@@ -58,6 +57,7 @@ void display_by_mode(const editor_state_t *state) {
 
 int main(const int argc, const char **argv) {
 
+        input_set_tty_raw();
         editor_state_t state;
         struct pollfd in = {.fd = 0, .events = POLLIN};
 
@@ -66,7 +66,8 @@ int main(const int argc, const char **argv) {
         while (true) {
 
                 set_timer(&state.timer);
-                if (state.display_state.gradient_cycle_duration_ms > 0 
+                if (state.display_state.syntax_mode == HIGH_GRADIENT
+                    && state.display_state.gradient_cycle_duration_ms > 0 
                     && get_ms_elapsed(&state.gradient_rotating_timer)
                        > state.display_state.gradient_cycle_duration_ms) {
                         increment_gradient(&state);
