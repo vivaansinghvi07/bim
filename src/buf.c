@@ -27,9 +27,11 @@ void buf_free(file_buf *buf) {
 
 void buf_save(const file_buf *buf) {
         FILE *file = fopen(buf->filename, "w");
+        const char newline = '\n';
         for (size_t i = 0; i < buf->lines.len; ++i) {
                 dyn_str *line = buf->lines.items + i;
                 fwrite(line->items, sizeof(char), line->len, file);
+                fwrite(&newline, sizeof(char), 1, file);
         }
         fclose(file);
 }
@@ -39,8 +41,8 @@ file_buf *buf_open(const char *filename, const int tab_width) {
         FILE *file = fopen(filename, "r");
         file_buf *return_buffer = malloc(sizeof(file_buf));
         return_buffer->filename = filename;
-        return_buffer->lines = list_init(dyn_contents, 128);
-	list_append(return_buffer->lines, list_init(dyn_str, 128));
+        return_buffer->lines = list_init(dyn_contents, MIN_NEW_LINE_LEN);
+	list_append(return_buffer->lines, list_init(dyn_str, MIN_NEW_LINE_LEN));
         return_buffer->cursor_line = 
                 return_buffer->screen_top_line = 
                         return_buffer->cursor_col = 1;

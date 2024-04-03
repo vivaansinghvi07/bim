@@ -4,6 +4,8 @@
 #ifndef EDITOR_BUF
 #define EDITOR_BUF
 
+#define MIN_NEW_LINE_LEN 128
+
 list_typedef(dyn_contents, dyn_str);
 
 typedef struct {
