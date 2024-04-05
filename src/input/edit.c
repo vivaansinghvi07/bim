@@ -23,7 +23,7 @@ void insert_tab(file_buf *buf, dyn_str *line, const int tab_width) {
         int col = buf->cursor_col - 1;
         size_t spaces_to_add = tab_width - (col % tab_width);
         list_create_space(*line, spaces_to_add);
-        memcpy(line->items + col, line->items + col + spaces_to_add, (line->len - col) * sizeof(*line->items));
+        memcpy(line->items + col + spaces_to_add, line->items + col, (line->len - col) * sizeof(*line->items));
         memset(line->items + col, ' ', spaces_to_add * sizeof(*line->items));
         buf->cursor_col += spaces_to_add;
 }

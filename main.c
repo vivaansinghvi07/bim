@@ -55,6 +55,7 @@ int main(const int argc, const char **argv) {
 
         setup_state(&state, argc, argv);
         init(&state);
+        char c;
         while (true) {
 
                 set_timer(&state.timer);
@@ -75,37 +76,21 @@ int main(const int argc, const char **argv) {
                         continue;
                 }
                 set_timer(&state.inactive_timer);
-                char c = getchar(); 
+                read(0, &c, 1);
                 if (state.mode == NORMAL && c == 'q') {
                         break;
                 }
 
-                if (state.input_history.items[state.input_history.len - 1] == '\033'
-                    && c == '[') {
-                        while (poll(&in, 1, 0)) {
-                                getchar();
-                        }
-                        return input_restore_tty();
-                        continue;
+                if (c == '\033') {
+                        // weird way of writing this but i need to continue only if polled
+                        if (poll(&in, 1, 0)) {  
+                                do {
+                                        read(0, &c, 1);
+                                } while (poll(&in, 1, 0));
+                                continue;
+                        } 
                 }
-
-                // if (get_ms_elapsed(&state.timer) < 1) {
-                //
-                //         if (state.input_history.items[state.input_history.len - 2] == '\033') {
-                //                 editor_log("%d %d %d\n", state.input_history.items[state.input_history.len - 2], state.input_history.items[state.input_history.len - 1], c);
-                //         } else if (state.input_history.items[state.input_history.len - 1] == '\033') {
-                //                 editor_log("a: %d %d %d\n", state.input_history.items[state.input_history.len - 2], state.input_history.items[state.input_history.len - 1], c);
-                //         }
-                //
-                //         // if the input was received soon enough after the previous one, 
-                //         // it is reasonable to assume that it is from some escape char combo
-                //         // therefore, if detected, wait for all inputs to pass by, super quick, then leave
-                //         if (state.input_history.items[state.input_history.len - 1] == '\033' 
-                //             && c == '[') {
-                //                 continue;
-                //         }
-                // }
-        
+                       
                 switch (state.mode) {
                         case NORMAL: 
                                 handle_normal_input(&state, c);
