@@ -134,5 +134,8 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_BUF_DECRE: handle_c_buf_decre(state); break;
                 case C_ENTER_EDIT: state->mode = EDIT; break;
                 case C_SAVE: buf_save(buf); break;
+
+                default: return;
         }
+        display_by_mode(state);
 }

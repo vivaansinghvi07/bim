@@ -20,6 +20,15 @@
 #define ANSI_STRIKETHROUGH 9
 #define ANSI_BLINKING 5
 
+void display_by_mode(const editor_state_t *state) {
+        switch (state->mode) {
+                case NORMAL:
+                case EDIT: {
+                        display_buffer(state);
+                } break;
+        }
+}
+
 struct winsize get_window_size(void) {
         struct winsize w;
         if (ioctl(0, TIOCGWINSZ, &w) == -1) {

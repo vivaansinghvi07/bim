@@ -22,6 +22,7 @@
 // in the falling sand mode, this is how many spaces the program is allowed to look in horizontal
 #define SAND_HORIZONTAL_SEEK 12
 
+// i hate function pointer syntax
 void (*get_ss_func(editor_state_t *state))(cell_t *, const int, const int) {
         switch (state->display_state.screensaver_mode) {
                 case SS_LEFT: return &left_slide;

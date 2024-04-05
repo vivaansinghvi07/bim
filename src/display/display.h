@@ -16,6 +16,7 @@ typedef struct {
         uint8_t style;
 } ansi_code_t;
 
+void display_by_mode(const editor_state_t *state);
 struct winsize get_window_size(void);
 char *get_displayed_buffer_string(const editor_state_t *state);
 char *get_bottom_bar(const int W, const editor_state_t *state);

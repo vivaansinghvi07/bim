@@ -47,15 +47,6 @@ void init(editor_state_t *state) {
         set_timer(&state->gradient_rotating_timer);
 }
 
-void display_by_mode(const editor_state_t *state) {
-        switch (state->mode) {
-                case NORMAL:
-                case EDIT: {
-                        display_buffer(state);
-                } break;
-        }
-}
-
 int main(const int argc, const char **argv) {
 
         input_set_tty_raw();
@@ -89,19 +80,40 @@ int main(const int argc, const char **argv) {
                         break;
                 }
 
-                // if the input was received soon enough after the previous one, 
-                // it is reasonable to assume that it is the 27-91-XX combo from hitting arrow keys
-                // or another possible input that could mess things up
-                if (get_ms_elapsed(&state.timer) < 1) {
+                if (state.input_history.items[state.input_history.len - 1] == '\033'
+                    && c == '[') {
+                        while (poll(&in, 1, 0)) {
+                                getchar();
+                        }
+                        return input_restore_tty();
                         continue;
                 }
+
+                // if (get_ms_elapsed(&state.timer) < 1) {
+                //
+                //         if (state.input_history.items[state.input_history.len - 2] == '\033') {
+                //                 editor_log("%d %d %d\n", state.input_history.items[state.input_history.len - 2], state.input_history.items[state.input_history.len - 1], c);
+                //         } else if (state.input_history.items[state.input_history.len - 1] == '\033') {
+                //                 editor_log("a: %d %d %d\n", state.input_history.items[state.input_history.len - 2], state.input_history.items[state.input_history.len - 1], c);
+                //         }
+                //
+                //         // if the input was received soon enough after the previous one, 
+                //         // it is reasonable to assume that it is from some escape char combo
+                //         // therefore, if detected, wait for all inputs to pass by, super quick, then leave
+                //         if (state.input_history.items[state.input_history.len - 1] == '\033' 
+                //             && c == '[') {
+                //                 continue;
+                //         }
+                // }
         
                 switch (state.mode) {
-                        case NORMAL: handle_normal_input(&state, c); break;
+                        case NORMAL: 
+                                handle_normal_input(&state, c);
+                                list_append(state.input_history, c);
+                                break;
                         case FILES: 
                         case EDIT: handle_edit_input(&state, c); break;
                 }
-                display_by_mode(&state);
         }
 
         buf_free_list(state.buffers);

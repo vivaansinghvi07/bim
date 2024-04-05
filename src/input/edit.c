@@ -87,9 +87,11 @@ void handle_edit_input(editor_state_t *state, char c) {
                 case CHAR_NEWLINE: insert_newline(buf, line); break;
                 case CHAR_BACKSPACE: delete_single_character(buf, line); break;
                 default: {
-                        if (isprint(c)) {
-                                insert_single_character(buf, line, c);
+                        if (!isprint(c)) {
+                                return;
                         }
+                        insert_single_character(buf, line, c);
                 }
         }
+        display_by_mode(state);
 }
