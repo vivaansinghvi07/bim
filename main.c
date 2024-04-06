@@ -45,6 +45,25 @@ void init(editor_state_t *state) {
         display_buffer(state);
         set_timer(&state->inactive_timer);
         set_timer(&state->gradient_rotating_timer);
+        set_timer(&state->rgb_cycle_timer);
+}
+
+void iterate_animated_displays(editor_state_t *state) {
+        if (state->display_state.syntax_mode == HIGH_GRADIENT
+            && state->display_state.gradient_cycle_duration_ms > 0 
+            && get_ms_elapsed(&state->gradient_rotating_timer)
+               > state->display_state.gradient_cycle_duration_ms) {
+                increment_gradient(state);
+                set_timer(&state->gradient_rotating_timer);
+        } else if (state->display_state.syntax_mode == HIGH_RGB
+                   && state->display_state.rgb_cycle_duration_ms > 0 
+                   && get_ms_elapsed(&state->rgb_cycle_timer)
+                      > state->display_state.rgb_cycle_duration_ms) {
+                editor_log("Incrementing rgb...");
+                set_timer(&state->rgb_cycle_timer);
+                step_rgb_state(state);
+        }
+        display_by_mode(state);
 }
 
 int main(const int argc, const char **argv) {
@@ -59,14 +78,7 @@ int main(const int argc, const char **argv) {
         while (true) {
 
                 set_timer(&state.timer);
-                if (state.display_state.syntax_mode == HIGH_GRADIENT
-                    && state.display_state.gradient_cycle_duration_ms > 0 
-                    && get_ms_elapsed(&state.gradient_rotating_timer)
-                       > state.display_state.gradient_cycle_duration_ms) {
-                        increment_gradient(&state);
-                        set_timer(&state.gradient_rotating_timer);
-                        display_by_mode(&state);
-                }
+                iterate_animated_displays(&state);
 
                 if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
                         if (get_ms_elapsed(&state.inactive_timer) > state.display_state.screensaver_ms_inactive) {

@@ -16,7 +16,7 @@ typedef enum {
 } editor_mode;
 
 typedef enum {
-        HIGH_ALPHA, HIGH_RANDOM, HIGH_GRADIENT, HIGH_NONE
+        HIGH_ALPHA, HIGH_RANDOM, HIGH_GRADIENT, HIGH_NONE, HIGH_RGB
 } highlighting_mode;
 
 // this will only be used in certain scenarios, such as when 
@@ -47,16 +47,29 @@ typedef struct {
         int screensaver_frame_length_ms;
         int screensaver_ms_inactive;
 
-        // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
-        gradient_color_t gradient_color;  
-        gradient_angle_mode gradient_angle;
-        int gradient_cycle_duration_ms;
+        // union here to get marginal memory gains lol
+        union {
+
+                // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
+                struct {
+                        gradient_color_t gradient_color;  
+                        gradient_angle_mode gradient_angle;
+                        int gradient_cycle_duration_ms;
+                };
+                // when syntax_mode is HIGH_RGB, these are the things that are used
+                struct {
+                        int rgb_cycle_duration_ms;
+                        int rgb_state;  // represents how far along we are in rgb process
+                };
+        };
+
 } display_state_t;
 
 typedef struct {
 
         struct timespec timer; 
         struct timespec inactive_timer; 
+        struct timespec rgb_cycle_timer;
         struct timespec gradient_rotating_timer;
 
         int tab_width;

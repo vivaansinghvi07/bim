@@ -21,10 +21,11 @@
 #define SCREENSAVER_MS_INACTIVE "screensaver_ms_inactive"
 #define SCREENSAVER_FRAME_LENGTH_SETTING "screensaver_frame_length_ms"
 #define GRADIENT_CYCLE_DURATION_MS "gradient_cycle_duration_ms"
+#define RGB_CYCLE_DURATION_MS "rgb_cycle_duration_ms"
 #define TAB_WIDTH_SETTING "tab_width"
 
-const char *HIGH_STR_OPTS[] = {"GRADIENT", "LEXICAL", "RANDOM", "NONE"};
-const highlighting_mode HIGH_ENUM_OPTS[] = {HIGH_GRADIENT, HIGH_ALPHA, HIGH_RANDOM, HIGH_NONE};
+const char *HIGH_STR_OPTS[] = {"GRADIENT", "LEXICAL", "RANDOM", "NONE", "RGB"};
+const highlighting_mode HIGH_ENUM_OPTS[] = {HIGH_GRADIENT, HIGH_ALPHA, HIGH_RANDOM, HIGH_NONE, HIGH_RGB};
 
 const char *STYLE_STR_OPTS[] = {"BOLD", "NORMAL", "ITALIC"};
 const text_style_mode STYLE_ENUM_OPTS[] = {STYLE_BOLD, STYLE_NORMAL, STYLE_ITALIC};
@@ -170,6 +171,10 @@ void parse_gradient_cycle_duration_ms(const parse_info_t *info, editor_state_t *
         state->display_state.gradient_cycle_duration_ms = parse_number(info);
 }
 
+void parse_rgb_cycle_duration_ms(const parse_info_t *info, editor_state_t *state) {
+        state->display_state.rgb_cycle_duration_ms = parse_number(info);
+}
+
 void parse_tab_width(const parse_info_t *info, editor_state_t *state) {
         state->tab_width = parse_number(info);
 }
@@ -189,6 +194,9 @@ void load_default_config(editor_state_t *state) {
         state->display_state.screensaver_mode = SS_RPS;
         state->display_state.screensaver_ms_inactive = 5000;
         state->display_state.screensaver_frame_length_ms = 20;
+
+        state->display_state.rgb_cycle_duration_ms = 20;
+        state->display_state.rgb_state = 0;
 }
 
 void load_config(editor_state_t *state) {
@@ -242,6 +250,8 @@ void load_config(editor_state_t *state) {
                         parse_gradient_cycle_duration_ms(&info, state);
                 } else if (!strncmp(line->items, TAB_WIDTH_SETTING, key_len)) {
                         parse_tab_width(&info, state);
+                } else if (!strncmp(line->items, RGB_CYCLE_DURATION_MS, key_len)) {
+                        parse_rgb_cycle_duration_ms(&info, state);
                 }
 
         next_line:;

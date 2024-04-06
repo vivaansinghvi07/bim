@@ -163,10 +163,10 @@ uint8_t get_style_from_style_enum(const text_style_mode mode) {
 typedef struct {
         const dyn_str *line;
         const int W, H, line_index, col_start; 
-} gradient_line_info_t;
+} highlighting_info_t;
 
 void increment_gradient(editor_state_t *state) {
-        state->display_state.gradient_angle++;
+        ++state->display_state.gradient_angle;
         state->display_state.gradient_angle %= 8;
 }
 
@@ -175,9 +175,9 @@ void decrement_gradient(editor_state_t *state) {
         state->display_state.gradient_angle %= 8;
 }
 
-void fill_gradient_rgb(ansi_code_t *rgb_style, const gradient_line_info_t *info, const token_t t, const display_state_t *state) {
+void fill_gradient_rgb(ansi_code_t *rgb_style, const highlighting_info_t *info,
+                       const token_t t, const display_state_t *state) {
         rgb_t left = state->gradient_color.left, right = state->gradient_color.right;
-        rgb_style->style = get_style_from_style_enum(state->text_style_mode);
 
         switch (state->gradient_angle) {
                 case GRAD_ANG_180: {
@@ -221,7 +221,67 @@ void fill_gradient_rgb(ansi_code_t *rgb_style, const gradient_line_info_t *info,
         }
 }
 
-char *get_highlighting_for_token(const gradient_line_info_t *info, const token_t t, const display_state_t *state) {
+/*
+ * generated from https://colordesigner.io/gradient-generator, with the following settings:
+ * 40 steps, HSL mode, longer path, with start and end both set to #ff0000
+ */
+const rgb_t RGB_PROGRESSION[] = {
+        (rgb_t) {255, 0, 0},
+        (rgb_t) {255, 39, 0},
+        (rgb_t) {255, 78, 0},
+        (rgb_t) {255, 118, 0},
+        (rgb_t) {255, 157, 0},
+        (rgb_t) {255, 196, 0},
+        (rgb_t) {255, 235, 0},
+        (rgb_t) {235, 255, 0},
+        (rgb_t) {196, 255, 0},
+        (rgb_t) {157, 255, 0},
+        (rgb_t) {118, 255, 0},
+        (rgb_t) {78, 255, 0},
+        (rgb_t) {39, 255, 0},
+        (rgb_t) {0, 255, 0},
+        (rgb_t) {0, 255, 39},
+        (rgb_t) {0, 255, 78},
+        (rgb_t) {0, 255, 118},
+        (rgb_t) {0, 255, 157},
+        (rgb_t) {0, 255, 196},
+        (rgb_t) {0, 255, 235},
+        (rgb_t) {0, 235, 255},
+        (rgb_t) {0, 196, 255},
+        (rgb_t) {0, 157, 255},
+        (rgb_t) {0, 118, 255},
+        (rgb_t) {0, 78, 255},
+        (rgb_t) {0, 39, 255},
+        (rgb_t) {0, 0, 255},
+        (rgb_t) {39, 0, 255},
+        (rgb_t) {78, 0, 255},
+        (rgb_t) {118, 0, 255},
+        (rgb_t) {157, 0, 255},
+        (rgb_t) {196, 0, 255},
+        (rgb_t) {235, 0, 255},
+        (rgb_t) {255, 0, 235},
+        (rgb_t) {255, 0, 196},
+        (rgb_t) {255, 0, 157},
+        (rgb_t) {255, 0, 118},
+        (rgb_t) {255, 0, 78},
+        (rgb_t) {255, 0, 39},
+};
+const uint8_t RGB_PROGRESSION_LEN = sizeof(RGB_PROGRESSION) / sizeof(rgb_t);
+
+void step_rgb_state(editor_state_t *state) {
+        ++state->display_state.rgb_state;
+        state->display_state.rgb_state %= RGB_PROGRESSION_LEN;
+}
+
+void fill_rgb_mode_rgb(ansi_code_t *rgb_style, const highlighting_info_t *info,
+                       const token_t t, const display_state_t *state) {
+        const int half_rgb_prog = RGB_PROGRESSION_LEN / 2;
+        uint8_t prog_index = (double) t.start / info->W * half_rgb_prog
+                             + (double) info->line_index / (info->H - 1) * half_rgb_prog;
+        rgb_style->rgb = RGB_PROGRESSION[(prog_index + state->rgb_state) % RGB_PROGRESSION_LEN];
+}
+
+char *get_highlighting_for_token(const highlighting_info_t *info, const token_t t, const display_state_t *state) {
         char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
         ansi_code_t rgb_style = {0};
         switch (state->syntax_mode) {
@@ -241,15 +301,20 @@ char *get_highlighting_for_token(const gradient_line_info_t *info, const token_t
                         rgb_style.style = get_ansi_style(rgb_style.style);
                 } break;
                 case HIGH_GRADIENT: {
+                        rgb_style.style = get_style_from_style_enum(state->text_style_mode);
                         fill_gradient_rgb(&rgb_style, info, t, state);
                 } break;
+                case HIGH_RGB: {
+                        rgb_style.style = get_style_from_style_enum(state->text_style_mode);
+                        fill_rgb_mode_rgb(&rgb_style, info, t, state);
+                }
         }
         snprintf(code, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 
                  rgb_style.rgb.r, rgb_style.rgb.g, rgb_style.rgb.b, rgb_style.style);
         return code;
 }
 
-const char *apply_syntax_highlighting(const gradient_line_info_t *info, const display_state_t *state) {
+const char *apply_syntax_highlighting(const highlighting_info_t *info, const display_state_t *state) {
 
         // assuming one code per character, allocate enough to fill everything + \0
         char *output = malloc(((ANSI_ESCAPE_LEN + 1) * info->W) * sizeof(char));
@@ -326,7 +391,7 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
 
                 // after doing a benchmark, i found that strlen + memcpy seems to be faster  
                 // for small strings than using snprintf
-                const gradient_line_info_t info = {
+                const highlighting_info_t info = {
                         .W = W, .H = H, .line = line, .line_index = i, .col_start = buf->screen_left_col
                 };
                 const char *formatted_line = apply_syntax_highlighting(&info, &state->display_state);
