@@ -59,7 +59,6 @@ void iterate_animated_displays(editor_state_t *state) {
                    && state->display_state.rgb_cycle_duration_ms > 0 
                    && get_ms_elapsed(&state->rgb_cycle_timer)
                       > state->display_state.rgb_cycle_duration_ms) {
-                editor_log("Incrementing rgb...");
                 set_timer(&state->rgb_cycle_timer);
                 step_rgb_state(state);
         }

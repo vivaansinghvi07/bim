@@ -60,6 +60,7 @@ file_buf *buf_open(const char *filename, const int tab_width) {
 
         char buf[file_length + 1];
         fread(buf, sizeof(char), file_length, file);
+        buf[file_length] = '\0';
         fclose(file);
 
         for (char *curr = buf; *curr; ++curr) {
