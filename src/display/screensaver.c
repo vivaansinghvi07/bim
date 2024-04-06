@@ -1,6 +1,6 @@
-#include "../utils.h"
 #include "screensaver.h"
 #include "display.h"
+#include "../utils.h"
 
 #include <unistd.h>
 #include <poll.h>
@@ -171,7 +171,7 @@ void run_screensaver(editor_state_t *state) {
                         show_cursor();
                         display_buffer(state);
 
-                        free((char *) buf_str);
+                        free((void *) buf_str);
                         free(cells);
 
                         break;

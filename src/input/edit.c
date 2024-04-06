@@ -1,7 +1,9 @@
+#include "edit.h"
+
+#include "normal.h"
 #include "../list.h"
 #include "../state.h"
 #include "../display/display.h"
-#include "normal.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -28,7 +30,7 @@ void insert_tab(file_buf *buf, dyn_str *line, const int tab_width) {
         buf->cursor_col += spaces_to_add;
 }
 
-void insert_newline(file_buf *buf, dyn_str *line) {
+void insert_newline(file_buf *buf, dyn_str *line, const int H) {
         int col = buf->cursor_col - 1;
         size_t split_text_len = line->len - col;
         size_t new_len = max(MIN_NEW_LINE_LEN, split_text_len * 2);   // times 2 for some leeway
@@ -40,14 +42,14 @@ void insert_newline(file_buf *buf, dyn_str *line) {
         memset(line->items + col, 0, split_text_len * sizeof(*line->items));
         next_line->len = split_text_len;
         line->len = col;
-        handle_c_move_down(buf); 
+        handle_c_move_down(buf, H); 
         handle_c_big_move_left(buf);
 }
 
-void insert_single_character(file_buf *buf, dyn_str *line, char c) {
+void insert_single_character(file_buf *buf, dyn_str *line, char c, const int W) {
         int col = buf->cursor_col - 1;
         list_insert(*line, col, c);
-        handle_c_move_right(buf);
+        handle_c_move_right(buf, W);
 }
 
 void delete_single_character(file_buf *buf, dyn_str *line) {
@@ -80,17 +82,17 @@ void handle_edit_input(editor_state_t *state, char c) {
         switch (c) {
                 case CHAR_CTRL_W: handle_c_move_up(buf); break;
                 case CHAR_CTRL_A: handle_c_move_left(buf); break; 
-                case CHAR_CTRL_S: handle_c_move_down(buf); break;
-                case CHAR_CTRL_D: handle_c_move_right(buf); break; 
+                case CHAR_CTRL_S: handle_c_move_down(buf, H); break;
+                case CHAR_CTRL_D: handle_c_move_right(buf, W); break; 
                 case CHAR_ESCAPE: state->mode = NORMAL; break;
                 case CHAR_TAB: insert_tab(buf, line, state->tab_width); break;
-                case CHAR_NEWLINE: insert_newline(buf, line); break;
+                case CHAR_NEWLINE: insert_newline(buf, line, H); break;
                 case CHAR_BACKSPACE: delete_single_character(buf, line); break;
                 default: {
                         if (!isprint(c)) {
                                 return;
                         }
-                        insert_single_character(buf, line, c);
+                        insert_single_character(buf, line, c, W);
                 }
         }
         display_by_mode(state);

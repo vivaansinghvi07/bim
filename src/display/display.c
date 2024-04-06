@@ -200,11 +200,11 @@ void fill_gradient_rgb(ansi_code_t *rgb_style, const gradient_line_info_t *info,
                         rgb_t temp = right; right = left; left = temp;
                 }
                 case GRAD_ANG_315: {
-                        rgb_style->rgb.r = (double) (right.r - left.r) * info->line_index / (info->H - 1) / 2 + 
+                        rgb_style->rgb.r = (double) (right.r - left.r) * info->line_index / (info->H - 1) / 2 +
                                            (double) (right.r - left.r) * t.start / info->line->len / 2 + left.r;
-                        rgb_style->rgb.g = (double) (right.g - left.g) * info->line_index / (info->H - 1) / 2 + 
+                        rgb_style->rgb.g = (double) (right.g - left.g) * info->line_index / (info->H - 1) / 2 +
                                            (double) (right.g - left.g) * t.start / info->line->len / 2 + left.g;
-                        rgb_style->rgb.b = (double) (right.b - left.b) * info->line_index / (info->H - 1) / 2 + 
+                        rgb_style->rgb.b = (double) (right.b - left.b) * info->line_index / (info->H - 1) / 2 +
                                            (double) (right.b - left.b) * t.start / info->line->len / 2 + left.b;
                 } return;
                 case GRAD_ANG_225: {
@@ -249,21 +249,21 @@ char *get_highlighting_for_token(const gradient_line_info_t *info, const token_t
         return code;
 }
 
-char *apply_syntax_highlighting(const gradient_line_info_t *info, const display_state_t *state) {
+const char *apply_syntax_highlighting(const gradient_line_info_t *info, const display_state_t *state) {
 
         // assuming one code per character, allocate enough to fill everything + \0
-        char *output = malloc(((ANSI_ESCAPE_LEN + 1) * info->line->len + 1) * sizeof(char));
+        char *output = malloc(((ANSI_ESCAPE_LEN + 1) * info->W) * sizeof(char));
         token_t tokens[info->line->len + 1];
         size_t t = 0;
 
         // fill up tokens - treat every series of [_a-zA-Z0-9] or punctuation as a unique token
         // alternatively, when the highlighting mode is a gradient, each character is a token
-        tokens[t].start = 0;
+        tokens[t].start = info->col_start - 1;
         for (size_t c = info->col_start - 1, i = 0; c < info->line->len && i < info->W; ++c, ++i) {
                 bool current_token_ending = c < info->line->len - 1 
-                                            && !is_name_char(*(info->line->items + c + 1));
+                                            && !is_name_char(info->line->items[c + 1]);
                 if (state->syntax_mode == HIGH_GRADIENT 
-                    || !is_name_char(*(info->line->items + c)) 
+                    || !is_name_char(info->line->items[c]) 
                     || current_token_ending) {
                         tokens[t++].end = c + 1;
                         tokens[t].start = c + 1;
@@ -276,9 +276,12 @@ char *apply_syntax_highlighting(const gradient_line_info_t *info, const display_
         size_t len = 0;
         for (size_t i = 0; i <= t; ++i) {
                 token_t *tok = tokens + i;
+
+                // not sure exactly why I need this, but I think it skips an invalid token at the end of a line
                 if (tok->start == tok->end) {
                         continue;
                 }
+
                 char *code = get_highlighting_for_token(info, *tok, state);
                 for (size_t j = tok->start; j < tok->end; ++j, ++len) {
                         memcpy(output + len, code, ANSI_ESCAPE_LEN);
@@ -290,7 +293,6 @@ char *apply_syntax_highlighting(const gradient_line_info_t *info, const display_
         return output;
 }
 
-
 /*
  * Returns an entire string that will be printed to the screen while editing.
  * The string will be null-terminated.
@@ -301,20 +303,20 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         const struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
         const file_buf *buf = state->buffers->items[state->buf_curr];
-        char blank[ANSI_ESCAPE_LEN + 2];
-        snprintf(blank, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 0, 0, 0, 22);
-        blank[ANSI_ESCAPE_LEN] = ' ';
+        char blank_space_block[ANSI_ESCAPE_LEN + 2];
+        snprintf(blank_space_block, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 0, 0, 0, 22);
+        blank_space_block[ANSI_ESCAPE_LEN] = ' ';
 
         // creating a big string in which lines are printed into
         // so that screensaver functions can access the string without it being printed 
-        char *output = malloc(H * (W + 1) * (ANSI_ESCAPE_LEN + 1) * sizeof(char));  // W + 1 accounting for \n
-        int len = 0;
+        char *output = malloc(H * (W + 1) * (ANSI_ESCAPE_LEN + 1) * sizeof(char));
+        size_t len = 0;
         for (int i = 0; i < H - 1; ++i) { 
 
                 // no lines left 
                 if (buf->screen_top_line - 1 + i >= buf->lines.len) {
                         for (size_t j = 0; j < W; ++j) {
-                                memcpy(output + len, blank, ANSI_ESCAPE_LEN + 1);
+                                memcpy(output + len, blank_space_block, ANSI_ESCAPE_LEN + 1);
                                 len += ANSI_ESCAPE_LEN + 1;
                         }
                         continue;
@@ -327,15 +329,15 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
                 const gradient_line_info_t info = {
                         .W = W, .H = H, .line = line, .line_index = i, .col_start = buf->screen_left_col
                 };
-                char *formatted_line = apply_syntax_highlighting(&info, &state->display_state);
+                const char *formatted_line = apply_syntax_highlighting(&info, &state->display_state);
                 const size_t formatted_len = strlen(formatted_line);
                 memcpy(output + len, formatted_line, formatted_len);
                 len += formatted_len;
                 for (size_t j = 0; j < W - formatted_len / (ANSI_ESCAPE_LEN + 1); ++j) {
-                        memcpy(output + len, blank, ANSI_ESCAPE_LEN + 1);
+                        memcpy(output + len, blank_space_block, ANSI_ESCAPE_LEN + 1);
                         len += ANSI_ESCAPE_LEN + 1;
                 }
-                free(formatted_line); 
+                free((void *) formatted_line); 
         }
 
         output[len] = '\0';
@@ -351,8 +353,8 @@ void display_buffer(const editor_state_t *state) {
 
         const file_buf *buffer = state->buffers->items[state->buf_curr];
         const struct winsize w = get_window_size();
-        char *buffer_output = get_displayed_buffer_string(state);
-        char *bar = get_bottom_bar(w.ws_col, state);
+        const char *buffer_output = get_displayed_buffer_string(state);
+        const char *bar = get_bottom_bar(w.ws_col, state);
 
         move_to_top_left();
         hide_cursor();
@@ -360,8 +362,7 @@ void display_buffer(const editor_state_t *state) {
         move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1,
                        buffer->cursor_col - buffer->screen_left_col + 1);
         show_cursor();
-        free(bar);
-        free(buffer_output);
+        free((void *) bar);
+        free((void *) buffer_output);
         fflush(stdout);
 }
-

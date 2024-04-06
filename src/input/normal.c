@@ -1,3 +1,5 @@
+#include "normal.h"
+
 #include "../utils.h"
 #include "../state.h"
 #include "../display/display.h"
@@ -87,7 +89,7 @@ void handle_c_move_left(file_buf *buf) {
 }
 
 void handle_c_big_move_left(file_buf *buf) {
-        buf->cursor_col = 1;
+        buf->cursor_col = buf->screen_left_col = 1;
         prev_col = 0;
 }
 
