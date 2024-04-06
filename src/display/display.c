@@ -125,10 +125,10 @@ bool is_name_char(const char c) {
 ansi_code_t ANSI_COLOR_TABLE[256];
 void fill_ansi_color_table(void) {
         for (uint16_t i = 0; i < 256; ++i) {
-                ANSI_COLOR_TABLE[i].rgb.r = rand() % 256;
-                ANSI_COLOR_TABLE[i].rgb.g = rand() % 256;
-                ANSI_COLOR_TABLE[i].rgb.b = rand() % 256;
-                ANSI_COLOR_TABLE[i].style = rand() % ANSI_STYLE_VARIATION;
+                ANSI_COLOR_TABLE[i].rgb.r = arc4random_uniform(256);
+                ANSI_COLOR_TABLE[i].rgb.g = arc4random_uniform(256);
+                ANSI_COLOR_TABLE[i].rgb.b = arc4random_uniform(256);
+                ANSI_COLOR_TABLE[i].style = arc4random_uniform(ANSI_STYLE_VARIATION);
         }
 }
 
@@ -274,10 +274,10 @@ char *get_highlighting_for_token(const highlighting_info_t *info, const token_t 
                 } break;
                 case HIGH_RANDOM: {
                         rgb_style.style = info->line->items[t.start] == ' ' ? 22 
-                                : get_ansi_style(rand() % ANSI_STYLE_VARIATION);
-                        rgb_style.rgb.r = rand() % 156 + 100;
-                        rgb_style.rgb.g = rand() % 156 + 100;
-                        rgb_style.rgb.b = rand() % 156 + 100;
+                                : get_ansi_style(arc4random_uniform(ANSI_STYLE_VARIATION));
+                        rgb_style.rgb.r = arc4random_uniform(156) + 100;
+                        rgb_style.rgb.g = arc4random_uniform(156) + 100;
+                        rgb_style.rgb.b = arc4random_uniform(156) + 100;
                 } break;
                 case HIGH_ALPHA: {
                         rgb_style = ANSI_COLOR_TABLE[info->line->items[t.start]];

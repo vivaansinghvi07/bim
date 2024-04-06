@@ -2,15 +2,12 @@
 
 #include <stdint.h>
 #include <string.h>
-
-#ifdef _WIN32
-
-#include <windows.h>
-
-#endif /* ifdef _WIN32 */
-
 #include <stdlib.h>
 #include <limits.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#endif /* ifdef _WIN32 */
 
 /*
  * Plays a sound file in the WAV format.

@@ -256,7 +256,7 @@ void life_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x
         }
         
         if (!is_alive(cell) && total_alive == 3) {
-                *target_cell = *alive_neighbors.items[rand() % alive_neighbors.len];
+                *target_cell = *alive_neighbors.items[arc4random_uniform(alive_neighbors.len)];
         } else if (is_alive(cell) && (total_alive < 2 || total_alive > 3)) {
                 *target_cell = (cell_t) {0};
         } else {
@@ -351,12 +351,12 @@ void rps_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x,
                         }    
                 }
 
-                color_group winner = winning_groups.items[rand() % winning_groups.len];
+                color_group winner = winning_groups.items[arc4random_uniform(winning_groups.len)];
                 dyn_cells *possible_cells = winners_by_group + winner;
-                *target_cell = *possible_cells->items[rand() % possible_cells->len];
+                *target_cell = *possible_cells->items[arc4random_uniform(possible_cells->len)];
         } else if (is_alive(cell) && winners_by_group[cell->group].len) { 
                 dyn_cells *possible_cells = winners_by_group + cell->group;
-                *target_cell = *possible_cells->items[rand() % possible_cells->len];
+                *target_cell = *possible_cells->items[arc4random_uniform(possible_cells->len)];
         }
 
         for (int g = 0; g < COLOR_GROUP_COUNT; ++g) {
@@ -400,7 +400,7 @@ void sand_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x
              can_go_right = x < W - 1 && !is_alive(right_below);
         if (can_go_left || can_go_right) {
                 if (can_go_left && can_go_right) {
-                        if (rand() % 2) {
+                        if (arc4random_uniform(2)) {
                                 *right_below = *cell;
                         } else {
                                 *left_below = *cell;
