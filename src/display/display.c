@@ -162,7 +162,7 @@ uint8_t get_style_from_style_enum(const text_style_mode mode) {
 
 typedef struct {
         const dyn_str *line;
-        const int W, H, line_index;
+        const int W, H, line_index, col_start; 
 } gradient_line_info_t;
 
 void increment_gradient(editor_state_t *state) {
@@ -249,7 +249,6 @@ char *get_highlighting_for_token(const gradient_line_info_t *info, const token_t
         return code;
 }
 
-// applies syntax highlighting one of the following strategies:
 char *apply_syntax_highlighting(const gradient_line_info_t *info, const display_state_t *state) {
 
         // assuming one code per character, allocate enough to fill everything + \0
@@ -260,15 +259,18 @@ char *apply_syntax_highlighting(const gradient_line_info_t *info, const display_
         // fill up tokens - treat every series of [_a-zA-Z0-9] or punctuation as a unique token
         // alternatively, when the highlighting mode is a gradient, each character is a token
         tokens[t].start = 0;
-        for (size_t c = 0; c < info->line->len; ++c) {
+        for (size_t c = info->col_start - 1, i = 0; c < info->line->len && i < info->W; ++c, ++i) {
+                bool current_token_ending = c < info->line->len - 1 
+                                            && !is_name_char(*(info->line->items + c + 1));
                 if (state->syntax_mode == HIGH_GRADIENT 
                     || !is_name_char(*(info->line->items + c)) 
-                    || (c < info->line->len - 1 && !is_name_char(*(info->line->items + c + 1)))) {
+                    || current_token_ending) {
                         tokens[t++].end = c + 1;
                         tokens[t].start = c + 1;
                 }
         }
-        tokens[t].end = info->line->len;
+        tokens[t].end = info->line->len - (info->col_start - 1) < info->W 
+                        ? info->line->len : info->col_start - 1 + info->W - 1;
 
         // for each token in the info->line, build a new string with syntax highlighting
         size_t len = 0;
@@ -298,7 +300,7 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         // determine information about the screen
         const struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
-        const file_buf *buffer = state->buffers->items[state->buf_curr];
+        const file_buf *buf = state->buffers->items[state->buf_curr];
         char blank[ANSI_ESCAPE_LEN + 2];
         snprintf(blank, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 0, 0, 0, 22);
         blank[ANSI_ESCAPE_LEN] = ' ';
@@ -308,25 +310,25 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         char *output = malloc(H * (W + 1) * (ANSI_ESCAPE_LEN + 1) * sizeof(char));  // W + 1 accounting for \n
         int len = 0;
         for (int i = 0; i < H - 1; ++i) { 
-                if (buffer->screen_top_line - 1 + i >= buffer->lines.len) {  // no lines left 
+
+                // no lines left 
+                if (buf->screen_top_line - 1 + i >= buf->lines.len) {
                         for (size_t j = 0; j < W; ++j) {
                                 memcpy(output + len, blank, ANSI_ESCAPE_LEN + 1);
                                 len += ANSI_ESCAPE_LEN + 1;
                         }
                         continue;
                 } 
-                dyn_str line = buffer->lines.items[buffer->screen_top_line - 1 + i];
-                if (line.len + 1 > W) {
-                        line.len = W - 1;
-                }
+
+                const dyn_str *line = buf->lines.items + buf->screen_top_line - 1 + i;
 
                 // after doing a benchmark, i found that strlen + memcpy seems to be faster  
                 // for small strings than using snprintf
                 const gradient_line_info_t info = {
-                        .W = W, .H = H, .line = &line, .line_index = i
+                        .W = W, .H = H, .line = line, .line_index = i, .col_start = buf->screen_left_col
                 };
                 char *formatted_line = apply_syntax_highlighting(&info, &state->display_state);
-                size_t formatted_len = strlen(formatted_line);
+                const size_t formatted_len = strlen(formatted_line);
                 memcpy(output + len, formatted_line, formatted_len);
                 len += formatted_len;
                 for (size_t j = 0; j < W - formatted_len / (ANSI_ESCAPE_LEN + 1); ++j) {
@@ -355,7 +357,8 @@ void display_buffer(const editor_state_t *state) {
         move_to_top_left();
         hide_cursor();
         printf("%s\033[0m%s", buffer_output, bar);
-        move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1, buffer->cursor_col);
+        move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1,
+                       buffer->cursor_col - buffer->screen_left_col + 1);
         show_cursor();
         free(bar);
         free(buffer_output);

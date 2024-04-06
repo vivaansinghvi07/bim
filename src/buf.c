@@ -40,12 +40,15 @@ file_buf *buf_open(const char *filename, const int tab_width) {
 
         FILE *file = fopen(filename, "r");
         file_buf *return_buffer = malloc(sizeof(file_buf));
-        return_buffer->filename = filename;
-        return_buffer->lines = list_init(dyn_contents, MIN_NEW_LINE_LEN);
+        *return_buffer = (file_buf) {
+                .filename = filename, 
+                .cursor_col = 1,
+                .cursor_line = 1,
+                .screen_left_col = 1,
+                .screen_top_line = 1,
+                .lines = list_init(dyn_contents, MIN_NEW_LINE_LEN)
+        };
 	list_append(return_buffer->lines, list_init(dyn_str, MIN_NEW_LINE_LEN));
-        return_buffer->cursor_line = 
-                return_buffer->screen_top_line = 
-                        return_buffer->cursor_col = 1;
 
         if (file == NULL) {
                 return return_buffer;

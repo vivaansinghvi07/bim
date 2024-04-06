@@ -9,13 +9,21 @@
 list_typedef(dyn_contents, dyn_str);
 
 typedef struct {
-        // THIS IS ONE-INDEXED!!!
+
+        /* 
+         * THESE ARE ONE-INDEXED!!!
+         *   <cursor_line> represents what line number the cursor is on. 
+         *   <screen_top_line> represents the line number at the top of the screen.
+         *   <cursor_col> represents what column number the cursor is on.
+         *   <screen_left_col> represents the column number at the left of the screen.
+         */
         size_t cursor_line;  
-        size_t cursor_col;
         size_t screen_top_line;
+        size_t cursor_col;
+        size_t screen_left_col;
 
         const char *filename;
-        dyn_contents lines;  // i believe it's okay to not use a pointer of this type
+        dyn_contents lines;
 } file_buf;
 
 list_typedef(buf_list, file_buf *);

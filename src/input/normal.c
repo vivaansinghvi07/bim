@@ -78,9 +78,12 @@ void handle_c_big_move_down(file_buf *buf, const int H) {
 
 void handle_c_move_left(file_buf *buf) {
         if (buf->cursor_col > 1) {
+                if (buf->screen_left_col == buf->cursor_col) {
+                        --buf->screen_left_col;
+                }
                 --buf->cursor_col;
                 prev_col = 0;
-        } 
+        }
 }
 
 void handle_c_big_move_left(file_buf *buf) {
@@ -88,15 +91,21 @@ void handle_c_big_move_left(file_buf *buf) {
         prev_col = 0;
 }
 
-void handle_c_move_right(file_buf *buf) {
+void handle_c_move_right(file_buf *buf, const int W) {
         if (buf->cursor_col < buf->lines.items[buf->cursor_line - 1].len + 1) {
+                if (buf->cursor_col - buf->screen_left_col == W - 1) {
+                        ++buf->screen_left_col;
+                }
                 ++buf->cursor_col;
                 prev_col = 0;
         }
 }
 
-void handle_c_big_move_right(file_buf *buf) {
+void handle_c_big_move_right(file_buf *buf, const int W) {
         buf->cursor_col = buf->lines.items[buf->cursor_line - 1].len + 1;
+        if (buf->cursor_col - buf->screen_left_col > W - 1) {
+                buf->screen_left_col = buf->cursor_col - W + 1;
+        }
         prev_col = 0;
 }
 
@@ -119,12 +128,12 @@ void handle_normal_input(editor_state_t *state, char c) {
         switch (c) {
                 case C_MOVE_UP: handle_c_move_up(buf); break;
                 case C_MOVE_DOWN: handle_c_move_down(buf, H); break;
-                case C_MOVE_RIGHT: handle_c_move_right(buf); break;
+                case C_MOVE_RIGHT: handle_c_move_right(buf, W); break;
                 case C_MOVE_LEFT: handle_c_move_left(buf); break;
 
                 case C_BIG_MOVE_UP: handle_c_big_move_up(buf, H); break;
                 case C_BIG_MOVE_DOWN: handle_c_big_move_down(buf, H); break;
-                case C_BIG_MOVE_RIGHT: handle_c_big_move_right(buf); break;
+                case C_BIG_MOVE_RIGHT: handle_c_big_move_right(buf, W); break;
                 case C_BIG_MOVE_LEFT: handle_c_big_move_left(buf); break;
 
                 case C_GRAD_ANG_INCRE: increment_gradient(state); break;
