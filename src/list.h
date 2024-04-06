@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 #ifndef EDITOR_LIST
 #define EDITOR_LIST

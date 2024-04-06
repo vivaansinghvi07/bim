@@ -223,7 +223,7 @@ void fill_gradient_rgb(ansi_code_t *rgb_style, const highlighting_info_t *info,
 
 /*
  * generated from https://colordesigner.io/gradient-generator, with the following settings:
- *   from #ff0000 to #00eaff HSL strategy, longer route 40 steps, plus 
+ *   from #ff0000 to #00eaff HSL strategy, longer route 40 steps: plus 
  *   from #00eaff to #ff0000 OKLCH strategy, longer route 40 steps
  */
 const rgb_t RGB_PROGRESSION[] = {

@@ -1,5 +1,6 @@
 #include "normal.h"
 
+#include "../list.h"
 #include "../utils.h"
 #include "../state.h"
 #include "../display/display.h"
@@ -21,6 +22,9 @@
 #define C_BUF_DECRE       '-'
 #define C_ENTER_EDIT      'e'
 #define C_SAVE            'z'
+
+#define C_DELETE_LINE     'R'
+#define C_DELETE_ONE      'r'
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
 int prev_col = 0;
@@ -121,6 +125,28 @@ void handle_c_buf_decre(editor_state_t *state) {
         state->buf_curr %= state->buffers->len;
 }
 
+void handle_c_delete_line(file_buf *buf) {
+        if (buf->lines.len > 1) {
+                free_list_items(1, buf->lines.items + buf->cursor_line - 1);
+
+                // this moves first and then deletes in case deleting messes with the moving
+                list_pop(buf->lines, buf->cursor_line - 1);
+                if (buf->cursor_line > buf->lines.len) {
+                        handle_c_move_up(buf);
+                }
+        }
+}
+
+void handle_c_delete_one(file_buf *buf) {
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        if (line->len > 0) {
+                list_pop(*line, buf->cursor_col - 1);
+                if (buf->cursor_col > line->len) {
+                        handle_c_move_left(buf);
+                }
+        }
+}
+
 void handle_normal_input(editor_state_t *state, char c) {
 
         struct winsize w = get_window_size();
@@ -146,7 +172,11 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_ENTER_EDIT: state->mode = EDIT; break;
                 case C_SAVE: buf_save(buf); break;
 
+                case C_DELETE_LINE: handle_c_delete_line(buf); break;
+                case C_DELETE_ONE: handle_c_delete_one(buf); break;
+
                 default: return;
         }
         display_by_mode(state);
 }
+

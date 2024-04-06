@@ -31,7 +31,9 @@ void buf_save(const file_buf *buf) {
         for (size_t i = 0; i < buf->lines.len; ++i) {
                 dyn_str *line = buf->lines.items + i;
                 fwrite(line->items, sizeof(char), line->len, file);
-                fwrite(&newline, sizeof(char), 1, file);
+                if (i < buf->lines.len - 1) {
+                        fwrite(&newline, sizeof(char), 1, file);
+                }
         }
         fclose(file);
 }
