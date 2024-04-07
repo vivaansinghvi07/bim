@@ -61,6 +61,8 @@ void iterate_animated_displays(editor_state_t *state) {
                       > state->display_state.rgb_cycle_duration_ms) {
                 set_timer(&state->rgb_cycle_timer);
                 step_rgb_state(state);
+        } else {
+                return;
         }
         display_by_mode(state);
 }

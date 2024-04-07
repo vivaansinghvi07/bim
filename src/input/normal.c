@@ -55,7 +55,14 @@ void handle_c_move_up(file_buf *buf) {
  * but moves the buffer one screen-width up.
  */
 void handle_c_big_move_up(file_buf *buf, const int H) {
-        int lines_to_move = min(H - 1, buf->screen_top_line - 1);
+        
+        // if there are no more "pages" to move up by
+        if (buf->screen_top_line <= 1) {
+                buf->cursor_line = 1;
+                return;
+        }
+
+        int lines_to_move = min(H - 5, buf->screen_top_line - 1);
         buf->screen_top_line -= lines_to_move;
         buf->cursor_line -= lines_to_move;
         restore_prev_col(buf);
@@ -76,7 +83,14 @@ void handle_c_move_down(file_buf *buf, const int H) {
  * but moves the buffer one screen-width down.
  */
 void handle_c_big_move_down(file_buf *buf, const int H) {
-        int lines_to_move = min(H - 1, buf->lines.len - (buf->screen_top_line + H - 2));
+
+        // already at the bottom-most "page" 
+        if (buf->screen_top_line + H - 2 >= buf->lines.len) {
+                buf->cursor_line = buf->lines.len;
+                return;       
+        }
+
+        int lines_to_move = min(H - 5, buf->lines.len - (buf->screen_top_line + H - 2));
         buf->screen_top_line += lines_to_move;
         buf->cursor_line += lines_to_move;
         restore_prev_col(buf);
