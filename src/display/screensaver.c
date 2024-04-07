@@ -20,7 +20,7 @@
 #define RPS_LOSING_THRESH 3
 
 // in the falling sand mode, this is how many spaces the program is allowed to look in horizontal
-#define SAND_HORIZONTAL_SEEK 12
+#define SAND_HORIZONTAL_SEEK 6
 
 // i hate function pointer syntax
 void (*get_ss_func(editor_state_t *state))(cell_t *, const int, const int) {
@@ -419,9 +419,11 @@ void sand_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x
         int l = x - 1;
         int r = x + 1;
         while (l >= 0 || r < W) {
+                bool go_to_right, go_to_left;
                 if (r < W && x < W - 1 && r - x <= SAND_HORIZONTAL_SEEK) {
                         right_below = target_cells + (y + 1) * W + r;
-                        if (!is_alive(right_below) && !is_alive(target_cells + y * W + x + 1)) {
+                        go_to_right = !is_alive(right_below) && !is_alive(target_cells + y * W + x + 1);
+                        if (go_to_right) {
                                 *(target_cells + y * W + x + 1) = *cell;
                                 *cell = (cell_t) {0};
                                 return;
@@ -429,7 +431,8 @@ void sand_iterate_cell_at(const cell_t *cells, cell_t *target_cells, const int x
                 }
                 if (l >= 0 && x > 0 && x - l <= SAND_HORIZONTAL_SEEK) {
                         left_below = target_cells + (y + 1) * W + l;
-                        if (!is_alive(left_below) && !is_alive(target_cells + y * W + x - 1)) {
+                        go_to_left = !is_alive(left_below) && !is_alive(target_cells + y * W + x - 1);
+                        if (go_to_left) {
                                 *(target_cells + y * W + x - 1) = *cell;
                                 *cell = (cell_t) {0};
                                 return;
