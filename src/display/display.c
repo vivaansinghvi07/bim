@@ -125,9 +125,9 @@ bool is_name_char(const char c) {
 ansi_code_t ANSI_COLOR_TABLE[256];
 void fill_ansi_color_table(void) {
         for (uint16_t i = 0; i < 256; ++i) {
-                ANSI_COLOR_TABLE[i].rgb.r = arc4random_uniform(256);
-                ANSI_COLOR_TABLE[i].rgb.g = arc4random_uniform(256);
-                ANSI_COLOR_TABLE[i].rgb.b = arc4random_uniform(256);
+                ANSI_COLOR_TABLE[i].rgb.r = arc4random_uniform(156) + 100;
+                ANSI_COLOR_TABLE[i].rgb.g = arc4random_uniform(156) + 100;
+                ANSI_COLOR_TABLE[i].rgb.b = arc4random_uniform(156) + 100;
                 ANSI_COLOR_TABLE[i].style = arc4random_uniform(ANSI_STYLE_VARIATION);
         }
 }
