@@ -78,13 +78,14 @@ typedef struct {
         buf_list *buffers;
 
         dyn_str input_history;
+        char *copy_register;
+        size_t copy_register_len;
         editor_mode mode;
         char *cwd;
 
         display_state_t display_state;
 } editor_state_t;
 
-uint8_t get_hex_value(char c);
 void load_config(editor_state_t *state);
 
 #endif // !EDITOR_STATE

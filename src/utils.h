@@ -41,4 +41,6 @@ double get_ms_elapsed(const struct timespec *start);
 
 int store_cursor_pos(int *y, int *x);
 
+uint8_t get_hex_value(char c);
+
 #endif // !EDITOR_UTILS

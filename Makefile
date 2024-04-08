@@ -1,2 +1,2 @@
 main:
-	gcc main.c src/*.c src/*/*.c
+	gcc main.c src/*.c src/*/*.c -o editor

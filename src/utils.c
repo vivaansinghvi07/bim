@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "list.h"
 
+#include <ctype.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -166,3 +167,16 @@ int store_cursor_pos(int *y, int *x) {
         tcsetattr(0, TCSANOW, &restore);
         return 0;
 }
+
+
+// assumes c matches [A-Fa-f0-9]
+uint8_t get_hex_value(const char c) {
+        if (isdigit(c)) {
+                return c - '0';
+        } else if (islower(c)) {
+                return c - 'a' + 10;
+        } else {
+                return c - 'A' + 10;
+        }
+}
+ 

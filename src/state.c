@@ -103,17 +103,6 @@ bool is_valid_color_char(const char c) {
         return isdigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
 }
 
-// assumes c matches [A-Fa-z0-9]
-uint8_t get_hex_value(const char c) {
-        if (isdigit(c)) {
-                return c - '0';
-        } else if (islower(c)) {
-                return c - 'a' + 10;
-        } else {
-                return c - 'A' + 10;
-        }
-}
- 
 rgb_t parse_color(const parse_info_t *info) {
         if (info->line->items[info->equal_index + 1] != '#') {
                 exit_error("Color must begin with a hex code.");

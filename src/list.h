@@ -56,7 +56,7 @@
                 }                                                                                           \
         } while (0)
 
-// assure there is enough space for <space> more items
+// assure there is enough space for <space> more items and add <space> to the length of the list
 #define list_create_space(list, space)                                                                      \
         do {                                                                                                \
                 while ((list).len + space > (list).cap) {                                                   \
