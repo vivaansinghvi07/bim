@@ -106,7 +106,8 @@ void handle_esc_delete_key(file_buf *buf, dyn_str *line) {
                 }
                 dyn_str *next_line = buf->lines.items + buf->cursor_line;
                 list_create_space(*line, next_line->len);
-                memcpy(line->items + buf->cursor_col, next_line->items, next_line->len * sizeof(*line->items)); 
+                memcpy(line->items + col, next_line->items,
+                       next_line->len * sizeof(*line->items)); 
                 free_list_items(1, next_line);
                 list_pop(buf->lines, buf->cursor_line);
         } else {

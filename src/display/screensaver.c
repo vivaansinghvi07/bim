@@ -116,7 +116,6 @@ cell_t *build_cells(const char *buf_str) {
         // i am about to write the most god-awful code in order to traverse this string 
         // it will use so many assumptions about string structure, so changing something 
         // in how the `get_displayed_buffer_string` function works prob breaks this
-        size_t line_count = 0, col_count = 0, curr = 0;
         for (size_t i = 0; i < H - 1; ++i) {
                 for (size_t j = 0; j < W; ++j) {
                         cell_t *cell = cells + i * W + j;
