@@ -1,5 +1,6 @@
 #include "normal.h"
 
+#include "esc.h"
 #include "../list.h"
 #include "../utils.h"
 #include "../state.h"
@@ -192,9 +193,10 @@ void handle_c_paste_inline(editor_state_t *state, file_buf *buf, const int W) {
                 return;
         }
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        size_t prev_len = line->len;
         list_create_space(*line, state->copy_register_len);
         memcpy(line->items + buf->cursor_col - 1 + state->copy_register_len,
-               line->items + buf->cursor_col - 1, (line->len - buf->cursor_col + 1) * sizeof(*line->items));
+               line->items + buf->cursor_col - 1, (prev_len - buf->cursor_col + 1) * sizeof(*line->items));
         memcpy(line->items + buf->cursor_col - 1, state->copy_register,
                state->copy_register_len * sizeof(*line->items));
         for (size_t i = 0; i < state->copy_register_len; ++i) {
@@ -247,5 +249,21 @@ void handle_normal_input(editor_state_t *state, char c) {
                 default: return;
         }
         display_by_mode(state);
+}
+
+void handle_normal_escape_sequence_input(editor_state_t *state, escape_sequence sequence) {
+
+        struct winsize w = get_window_size();
+        const int W = w.ws_col, H = w.ws_row;
+        file_buf *buf = state->buffers->items[state->buf_curr];
+
+        switch (sequence) {
+                case ESC_UP_ARROW: handle_c_move_up(buf); break;
+                case ESC_DOWN_ARROW: handle_c_move_down(buf, H); break;
+                case ESC_LEFT_ARROW: handle_c_move_left(buf); break;
+                case ESC_RIGHT_ARROW: handle_c_move_right(buf, W); break;
+                case ESC_DELETE_KEY:
+                case ESC_NONE: break;
+        }
 }
 

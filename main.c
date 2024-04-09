@@ -1,3 +1,4 @@
+#include "src/input/esc.h"
 #include "src/list.h"
 #include "src/utils.h"
 #include "src/buf.h"
@@ -69,6 +70,21 @@ void iterate_animated_displays(editor_state_t *state) {
         display_by_mode(state);
 }
 
+void handle_escape_sequences(editor_state_t *state, struct pollfd *in) {
+        dyn_str sequence_str = list_init(dyn_str, 20);
+        char c;
+        do {
+                read(0, &c, 1);
+                list_append(sequence_str, c);
+        } while (poll(in, 1, 0));
+        escape_sequence sequence = parse_escape_sequence(sequence_str.items, sequence_str.len);
+        free_list_items(1, &sequence_str);
+        switch (state->mode) {
+                case NORMAL: handle_normal_escape_sequence_input(state, sequence); break;
+                case EDIT: handle_edit_escape_sequence_input(state, sequence); break;
+        }
+}
+
 int main(const int argc, const char **argv) {
 
         input_set_tty_raw();
@@ -97,20 +113,17 @@ int main(const int argc, const char **argv) {
                 }
 
                 if (c == '\033') {
-                        // weird way of writing this but i need to continue only if polled
                         if (poll(&in, 1, 0)) {  
-                                do {
-                                        read(0, &c, 1);
-                                } while (poll(&in, 1, 0));
+                                handle_escape_sequences(&state, &in);
                                 continue;
-                        } 
+                        }
                 }
                        
                 switch (state.mode) {
-                        case NORMAL: 
+                        case NORMAL: {
                                 handle_normal_input(&state, c);
                                 list_append(state.input_history, c);
-                                break;
+                        } break;
                         case FILES: 
                         case EDIT: handle_edit_input(&state, c); break;
                 }

@@ -26,7 +26,7 @@
                         (list).items = realloc((list).items, (list).cap * sizeof(*(list).items));           \
                         assert((list).items && "Needs more memory");                                        \
                 }                                                                                           \
-                (list).items[(list).len - 1] = item;                                                        \
+                (list).items[(list).len - 1] = (item);                                                      \
         } while (0)                                                                              
 
 // initialize a new list of type <type> and size <size> 
@@ -43,7 +43,7 @@
                 list_create_space((list), 1);                                                             \
                 memcpy((list).items + (index) + 1, (list).items + (index),                                \
                        ((list).len - (index) - 1) * sizeof(*(list).items));                               \
-                (list).items[(index)] = value;                                                            \
+                (list).items[(index)] = (value);                                                          \
         } while(0)
 
 // remove a value from a list at the index <index>, pulling all values backward
@@ -59,11 +59,11 @@
 // assure there is enough space for <space> more items and add <space> to the length of the list
 #define list_create_space(list, space)                                                                      \
         do {                                                                                                \
-                while ((list).len + space > (list).cap) {                                                   \
+                while ((list).len + (space) > (list).cap) {                                                 \
                         (list).cap *= 2;                                                                    \
                         (list).items = realloc((list).items, (list).cap * sizeof(*(list).items));           \
                 }                                                                                           \
-                (list).len += space;                                                                        \
+                (list).len += (space);                                                                      \
         } while(0)
 
 void free_list_items(int n, ...);

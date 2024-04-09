@@ -1,5 +1,6 @@
 #include "edit.h"
 
+#include "esc.h"
 #include "normal.h"
 #include "../list.h"
 #include "../state.h"
@@ -66,7 +67,6 @@ void delete_single_character(file_buf *buf, dyn_str *line) {
                 list_pop(buf->lines, buf->cursor_line - 1);
                 handle_c_move_up(buf);
                 buf->cursor_col = prev_line_prev_len + 1;
-                return;
         } else {
                 list_pop(*line, col);
                 handle_c_move_left(buf);
@@ -96,4 +96,37 @@ void handle_edit_input(editor_state_t *state, char c) {
                 }
         }
         display_by_mode(state);
+}
+
+void handle_esc_delete_key(file_buf *buf, dyn_str *line) {
+        int col = buf->cursor_col - 1;
+        if (col == line->len) {
+                if (buf->cursor_line == buf->lines.len) {
+                        return;
+                }
+                dyn_str *next_line = buf->lines.items + buf->cursor_line;
+                list_create_space(*line, next_line->len);
+                memcpy(line->items + buf->cursor_col, next_line->items, next_line->len * sizeof(*line->items)); 
+                free_list_items(1, next_line);
+                list_pop(buf->lines, buf->cursor_line);
+        } else {
+                list_pop(*line, col);
+        }
+}
+
+void handle_edit_escape_sequence_input(editor_state_t *state, escape_sequence sequence) {
+
+        struct winsize w = get_window_size();
+        const int W = w.ws_col, H = w.ws_row;
+        file_buf *buf = state->buffers->items[state->buf_curr];
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+
+        switch (sequence) {
+                case ESC_UP_ARROW: handle_c_move_up(buf); break;
+                case ESC_DOWN_ARROW: handle_c_move_down(buf, H); break;
+                case ESC_LEFT_ARROW: handle_c_move_left(buf); break;
+                case ESC_RIGHT_ARROW: handle_c_move_right(buf, W); break;
+                case ESC_DELETE_KEY: handle_esc_delete_key(buf, line); break;
+                case ESC_NONE: break;
+        }
 }
