@@ -214,6 +214,15 @@ void handle_c_paste_newline(editor_state_t *state, file_buf *buf, const int H) {
         handle_c_move_down(buf, H);
 }
 
+const char *get_search_keyword(void) {
+        // prob display the buffer each time we call this
+        // also add a feature to have error messages etc to be displayed
+}
+
+void handle_c_search(editor_state_t *state, file_buf *buf) {
+        
+}
+
 void handle_normal_input(editor_state_t *state, char c) {
 
         struct winsize w = get_window_size();
