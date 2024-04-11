@@ -78,8 +78,8 @@ typedef struct {
         buf_list *buffers;
 
         dyn_str input_history;
-        char *copy_register;
-        size_t copy_register_len;
+        dyn_str copy_register;
+        dyn_str search_register;
         editor_mode mode;
         char *cwd;
 

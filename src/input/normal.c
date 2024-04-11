@@ -31,6 +31,8 @@
 #define C_PASTE_NEWLINE   'P'
 #define C_PASTE_INLINE    'p'
 
+#define C_SEARCH          ':'
+
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
 int prev_col = 0;
 void restore_prev_col(file_buf *buf) {
@@ -143,12 +145,12 @@ void handle_c_buf_decre(editor_state_t *state) {
 }
 
 void add_to_copy_register(editor_state_t *state, const char *to_copy, const size_t n) {
-        if (state->copy_register) {
-                free(state->copy_register);
+        if (state->copy_register.len) {
+                free_list_items(1, &state->copy_register);
         }
-        state->copy_register = malloc(n * sizeof(char));
-        strncpy(state->copy_register, to_copy, n);
-        state->copy_register_len = n;
+        state->copy_register.items = malloc(n * sizeof(char));
+        strncpy(state->copy_register.items, to_copy, n);
+        state->copy_register.len = n;
 }
 
 void handle_c_delete_line(editor_state_t *state, file_buf *buf) {
@@ -189,34 +191,33 @@ void handle_c_copy_one(editor_state_t *state, file_buf *buf) {
 }
 
 void handle_c_paste_inline(editor_state_t *state, file_buf *buf, const int W) {
-        if (!state->copy_register) {
+        if (!state->copy_register.len) {
                 return;
         }
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
         size_t prev_len = line->len;
-        list_create_space(*line, state->copy_register_len);
-        memcpy(line->items + buf->cursor_col - 1 + state->copy_register_len,
+        list_create_space(*line, state->copy_register.len);
+        memcpy(line->items + buf->cursor_col - 1 + state->copy_register.len,
                line->items + buf->cursor_col - 1, (prev_len - buf->cursor_col + 1) * sizeof(*line->items));
-        memcpy(line->items + buf->cursor_col - 1, state->copy_register,
-               state->copy_register_len * sizeof(*line->items));
-        for (size_t i = 0; i < state->copy_register_len; ++i) {
+        memcpy(line->items + buf->cursor_col - 1, state->copy_register.items,
+               state->copy_register.len * sizeof(*line->items));
+        for (size_t i = 0; i < state->copy_register.len; ++i) {
                 handle_c_move_right(buf, W);
         }
 }
 
 void handle_c_paste_newline(editor_state_t *state, file_buf *buf, const int H) {
-        if (!state->copy_register) {
+        if (!state->copy_register.len) {
                 return;
         }
-        list_insert(buf->lines, buf->cursor_line, list_init(dyn_str, state->copy_register_len));
-        list_create_space(buf->lines.items[buf->cursor_line], state->copy_register_len);
-        memcpy(buf->lines.items[buf->cursor_line].items, state->copy_register, state->copy_register_len);
+        list_insert(buf->lines, buf->cursor_line, list_init(dyn_str, state->copy_register.len));
+        list_create_space(buf->lines.items[buf->cursor_line], state->copy_register.len);
+        memcpy(buf->lines.items[buf->cursor_line].items, state->copy_register.items, state->copy_register.len);
         handle_c_move_down(buf, H);
 }
 
 const char *get_search_keyword(void) {
-        // prob display the buffer each time we call this
-        // also add a feature to have error messages etc to be displayed
+        
 }
 
 void handle_c_search(editor_state_t *state, file_buf *buf) {
