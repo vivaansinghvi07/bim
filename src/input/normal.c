@@ -23,6 +23,7 @@
 #define C_BUF_DECRE       '['
 #define C_ENTER_EDIT      'e'
 #define C_SAVE            'z'
+#define C_SAVE_ALL        'Z'
 
 #define C_DELETE_LINE     'R'
 #define C_DELETE_ONE      'r'
@@ -153,6 +154,12 @@ void add_to_copy_register(editor_state_t *state, const char *to_copy, const size
         state->copy_register.len = n;
 }
 
+void handle_c_save_all(editor_state_t *state) {
+        for (size_t i = 0; i < state->buffers->len; ++i) {
+                buf_save(state->buffers->items[i]);
+        }
+}
+
 void handle_c_delete_line(editor_state_t *state, file_buf *buf) {
         if (buf->lines.len > 1) {
                 dyn_str *line = buf->lines.items + buf->cursor_line - 1;
@@ -248,6 +255,7 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_BUF_DECRE: handle_c_buf_decre(state); break;
                 case C_ENTER_EDIT: state->mode = EDIT; break;
                 case C_SAVE: buf_save(buf); break;
+                case C_SAVE_ALL: handle_c_save_all(state); break;
 
                 case C_DELETE_LINE: handle_c_delete_line(state, buf); break;
                 case C_DELETE_ONE: handle_c_delete_one(state, buf); break;
