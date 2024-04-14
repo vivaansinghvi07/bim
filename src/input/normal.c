@@ -6,7 +6,9 @@
 #include "../state.h"
 #include "../display/display.h"
 
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #define C_MOVE_UP         'w'
@@ -34,6 +36,8 @@
 #define C_PASTE_INLINE    'p'
 
 #define C_SEARCH          ':'
+#define C_JUMP_NEXT       'j'
+#define C_JUMP_PREVIOUS   'J'
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
 int prev_col = 0;
@@ -146,14 +150,10 @@ void handle_c_buf_decre(editor_state_t *state) {
         state->buf_curr %= state->buffers->len;
 }
 
-// i don't think i actually need to free and malloc again here, but i don't wanna touch this
 void add_to_copy_register(editor_state_t *state, const char *to_copy, const size_t n) {
-        if (state->copy_register.len) {
-                free_list_items(1, &state->copy_register);
-        }
-        state->copy_register.items = malloc(n * sizeof(char));
-        strncpy(state->copy_register.items, to_copy, n);
-        state->copy_register.len = n;
+        state->copy_register.len = 0;
+        list_create_space(state->copy_register, n);
+        memcpy(state->copy_register.items, to_copy, n * sizeof(*state->copy_register.items));
 }
 
 void handle_c_save_all(editor_state_t *state) {
@@ -232,12 +232,60 @@ void handle_c_search(editor_state_t *state) {
         state->mode = SEARCH;
 }
 
-void handle_c_jump_next(editor_state_t *state, file_buf *buf) {
-        for (size_t i = 0; i < buf->lines.len; ++i) {
-                if (buf->lines.items[i].len < state->search_target.len) {
+typedef struct {
+        size_t line, col;  // 0 indexed to work with the following loop
+} text_pos_t;
+list_typedef(dyn_pos, text_pos_t);
+
+void handle_jump(const editor_state_t *state, file_buf *buf, const int H, const int W, const bool reverse) {
+
+        const dyn_str *target = &state->search_target;
+        if (!target->len) {
+                return;
+        }
+
+        // fill positions of possible matches based off of checking first and last chars
+        dyn_pos positions = list_init(dyn_pos, 64);
+        for (size_t i = 0; i <= buf->lines.len; ++i) {
+
+                size_t line_index = (i + buf->cursor_line - 1) % buf->lines.len;
+                dyn_str *line = buf->lines.items + line_index;
+                size_t start = (i == 0) ? buf->cursor_col : 0;
+                size_t end = (i == buf->lines.len) ? min(buf->cursor_col, line->len) : line->len;
+
+                if (end < target->len) {
                         continue;
                 }
+
+                // there is something very wrong with this so that needs some fixing
+                for (size_t j = start; j < end - target->len + 1; ++j) {
+                        bool first_char_match = line->items[j] == target->items[0];
+                        bool last_char_match = line->items[j + target->len - 1] == target->items[target->len - 1];
+                        if (first_char_match && last_char_match) {
+                                list_append(positions, ((text_pos_t) {.line = line_index, .col = j}));
+                        }
+                }
         }
+
+        // now check for real match - jump if found
+        for (size_t i = (reverse ? positions.len - 1 : 0); i >= 0 && i < positions.len; (reverse ? --i : ++i)) {
+                text_pos_t *pos = positions.items + i;
+                if (!strncmp(target->items, buf->lines.items[pos->line].items + pos->col, target->len)) {
+                        buf->cursor_line = pos->line + 1;
+                        buf->screen_top_line = max(1, buf->cursor_line - H / 2);
+                        buf->cursor_col = pos->col + 1;
+                        buf->screen_left_col = pos->col > W - 1 ? pos->col - W / 2 : 1;
+                        return;
+                }
+        }
+}
+
+void handle_c_jump_next(const editor_state_t *state, file_buf *buf, const int H, const int W) {
+        handle_jump(state, buf, H, W, false);
+}
+
+void handle_c_jump_previous(const editor_state_t *state, file_buf *buf, const int H, const int W) {
+        handle_jump(state, buf, H, W, true);
 }
 
 void handle_normal_input(editor_state_t *state, char c) {
@@ -274,10 +322,11 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_PASTE_NEWLINE: handle_c_paste_newline(state, buf, H); break;
 
                 case C_SEARCH: handle_c_search(state); break;
+                case C_JUMP_NEXT: handle_c_jump_next(state, buf, H, W); break;
+                case C_JUMP_PREVIOUS: handle_c_jump_previous(state, buf, H, W); break;
 
                 default: return;  // nothing changes, don't waste time displaying
         }
-        display_by_mode(state);
 }
 
 void handle_normal_escape_sequence_input(editor_state_t *state, escape_sequence sequence) {
@@ -292,7 +341,7 @@ void handle_normal_escape_sequence_input(editor_state_t *state, escape_sequence 
                 case ESC_LEFT_ARROW: handle_c_move_left(buf); break;
                 case ESC_RIGHT_ARROW: handle_c_move_right(buf, W); break;
                 case ESC_DELETE_KEY:
-                case ESC_NONE: break;
+                case ESC_NONE:
+                default: return;
         }
 }
-

@@ -95,7 +95,6 @@ void handle_edit_input(editor_state_t *state, char c) {
                         insert_single_character(buf, line, c, W);
                 }
         }
-        display_by_mode(state);
 }
 
 void handle_esc_delete_key(file_buf *buf, dyn_str *line) {
@@ -128,6 +127,7 @@ void handle_edit_escape_sequence_input(editor_state_t *state, escape_sequence se
                 case ESC_LEFT_ARROW: handle_c_move_left(buf); break;
                 case ESC_RIGHT_ARROW: handle_c_move_right(buf, W); break;
                 case ESC_DELETE_KEY: handle_esc_delete_key(buf, line); break;
-                case ESC_NONE: break;
+                case ESC_NONE: 
+                default: return;
         }
 }

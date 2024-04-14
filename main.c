@@ -84,6 +84,7 @@ void handle_escape_sequences(editor_state_t *state, struct pollfd *in) {
                 case NORMAL: handle_normal_escape_sequence_input(state, sequence); break;
                 case EDIT: handle_edit_escape_sequence_input(state, sequence); break;
         }
+        display_by_mode(state);
 }
 
 int main(const int argc, const char **argv) {
@@ -109,7 +110,7 @@ int main(const int argc, const char **argv) {
                 }
                 set_timer(&state.inactive_timer);
                 read(0, &c, 1);
-                if (state.mode == NORMAL && c == 'q') {
+                if (state.mode == NORMAL && c == 'q') {  // putting this here early
                         break;
                 }
 
@@ -129,6 +130,7 @@ int main(const int argc, const char **argv) {
                         case EDIT: handle_edit_input(&state, c); break;
                         case SEARCH: handle_search_input(&state, c); break;
                 }
+                display_by_mode(&state);
         }
 
         buf_free_list(state.buffers);

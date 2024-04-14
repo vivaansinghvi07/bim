@@ -414,7 +414,9 @@ void display_buffer(const editor_state_t *state) {
         printf("%s\033[0m%s", buffer_output, bar);
         move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1,
                        buffer->cursor_col - buffer->screen_left_col + 1);
-        show_cursor();
+        if (state->mode != SEARCH) {
+                show_cursor();
+        }
         free((void *) bar);
         free((void *) buffer_output);
         fflush(stdout);
