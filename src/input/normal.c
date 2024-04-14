@@ -7,6 +7,7 @@
 #include "../display/display.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
 #define C_MOVE_UP         'w'
 #define C_MOVE_LEFT       'a'
@@ -145,6 +146,7 @@ void handle_c_buf_decre(editor_state_t *state) {
         state->buf_curr %= state->buffers->len;
 }
 
+// i don't think i actually need to free and malloc again here, but i don't wanna touch this
 void add_to_copy_register(editor_state_t *state, const char *to_copy, const size_t n) {
         if (state->copy_register.len) {
                 free_list_items(1, &state->copy_register);
@@ -223,12 +225,19 @@ void handle_c_paste_newline(editor_state_t *state, file_buf *buf, const int H) {
         handle_c_move_down(buf, H);
 }
 
-const char *get_search_keyword(void) {
-        
+void handle_c_search(editor_state_t *state) {
+        if (state->search_target.len) {
+                state->search_target.len = 0;  // effectively clears the list
+        }
+        state->mode = SEARCH;
 }
 
-void handle_c_search(editor_state_t *state, file_buf *buf) {
-        
+void handle_c_jump_next(editor_state_t *state, file_buf *buf) {
+        for (size_t i = 0; i < buf->lines.len; ++i) {
+                if (buf->lines.items[i].len < state->search_target.len) {
+                        continue;
+                }
+        }
 }
 
 void handle_normal_input(editor_state_t *state, char c) {
@@ -264,7 +273,9 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_PASTE_INLINE: handle_c_paste_inline(state, buf, W); break;
                 case C_PASTE_NEWLINE: handle_c_paste_newline(state, buf, H); break;
 
-                default: return;
+                case C_SEARCH: handle_c_search(state); break;
+
+                default: return;  // nothing changes, don't waste time displaying
         }
         display_by_mode(state);
 }

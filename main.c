@@ -7,6 +7,7 @@
 #include "src/display/display.h"
 #include "src/input/normal.h"
 #include "src/input/edit.h"
+#include "src/input/search.h"
 
 #include <poll.h>
 #include <limits.h>
@@ -37,6 +38,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
         state->cwd = (char *) cwd;
         state->input_history = list_init(dyn_str, 128);
+        state->search_target = list_init(dyn_str, 128);
         state->copy_register = list_init(dyn_str, 256);
         state->buf_curr = buffers->len - 1;
         state->buffers = (buf_list *) buffers;
@@ -125,6 +127,7 @@ int main(const int argc, const char **argv) {
                         } break;
                         case FILES: 
                         case EDIT: handle_edit_input(&state, c); break;
+                        case SEARCH: handle_search_input(&state, c); break;
                 }
         }
 

@@ -22,6 +22,7 @@
 
 void display_by_mode(const editor_state_t *state) {
         switch (state->mode) {
+                case SEARCH:
                 case NORMAL:
                 case EDIT: {
                         display_buffer(state);
@@ -41,13 +42,16 @@ struct winsize get_window_size(void) {
 * Creates a bottom bar like so: 
 *   == MODE ==                                       filename.ext | curr/len 
 * The length of the bar is guaranteed to be <width>
+* Alternatively, if there is a message, it returns this:
+*   MESSAGE...............................................................
 */
 char *get_bottom_bar(const int W, const editor_state_t *state) {
 
-        const char *mode_text = "edit";
-        int mode_len = 4;
         char *bar = malloc(W * sizeof(char));  // TOFREE
         memset(bar, ' ', W * sizeof(char));
+
+        const char *mode_text = "edit";
+        int mode_len = 4;
 
         // prevent a bar that is overflowing
         if (W < 10) {
@@ -57,25 +61,26 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
 
         // set the == mode_text == in the bar
         switch (state->mode) {
-                case NORMAL:
-                        mode_text = "normal", mode_len = 6;
-                        break;
-                case FILES: 
-                        mode_text = "file";
-                case EDIT: 
-                        break;
+                case SEARCH: mode_text = "search", mode_len = 6; break;
+                case NORMAL: mode_text = "normal", mode_len = 6; break;
+                case FILES: mode_text = "file";
+                case EDIT: break;
         }
 
         memcpy(bar + 2               , "== ", 3);
         memcpy(bar + 2 + 3           , mode_text, mode_len);
         memcpy(bar + 2 + 3 + mode_len, " ==", 3);
-        int used_up_front_space = mode_len + 10;  
+        size_t used_up_front_space = mode_len + 10;  
 
         // add information about the filename and lines and stuff
         // in file mode, add information about the current directory
         switch (state->mode) {
-                case NORMAL:
-                case EDIT:;
+                case SEARCH: {
+                        int length = min(state->search_target.len, W - 4 - used_up_front_space);
+                        memcpy(bar + used_up_front_space + 2, state->search_target.items, max(0, length));  // cap so its not negative
+                } break;
+                case NORMAL: 
+                case EDIT: {
                         const file_buf *buf = state->buffers->items[state->buf_curr];
                         const char *filename = buf->filename;
                         const char *curr_line_str = num_to_str(buf->cursor_line);
@@ -95,7 +100,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                         memcpy(bar + W - 2 - total_lines_len - 1 - curr_line_len, curr_line_str, curr_line_len);
 
                         // check if there is space for the pipe operator and the filename
-                        int used_up_back_space = curr_line_len + total_lines_len + 3;
+                        size_t used_up_back_space = curr_line_len + total_lines_len + 3;
                         if (W - used_up_front_space - used_up_back_space - 3 - filename_len < 0) {  
                                 return bar;
                         }
@@ -103,7 +108,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                         // copy the filename and the straight line
                         memcpy(bar + W - used_up_back_space - 3, " | ", 3);
                         memcpy(bar + W - used_up_back_space - 3 - filename_len, filename, filename_len);
-
+                } break;
                 case FILES:
                         break;  // TODO
         }
@@ -227,26 +232,26 @@ void fill_gradient_rgb(ansi_code_t *rgb_style, const highlighting_info_t *info,
  *   from #00eaff to #ff0000 OKLCH strategy, longer route 40 steps
  */
 const rgb_t RGB_PROGRESSION[] = {
-        (rgb_t) {255, 0, 0}, (rgb_t) {255, 20, 0}, (rgb_t) {255, 40, 0}, (rgb_t) {255, 60, 0},
-        (rgb_t) {255, 81, 0}, (rgb_t) {255, 101, 0}, (rgb_t) {255, 121, 0}, (rgb_t) {255, 141, 0},
-        (rgb_t) {255, 161, 0}, (rgb_t) {255, 181, 0}, (rgb_t) {255, 202, 0}, (rgb_t) {255, 222, 0},
-        (rgb_t) {255, 242, 0}, (rgb_t) {248, 255, 0}, (rgb_t) {228, 255, 0}, (rgb_t) {208, 255, 0},
-        (rgb_t) {188, 255, 0}, (rgb_t) {167, 255, 0}, (rgb_t) {147, 255, 0}, (rgb_t) {127, 255, 0},
-        (rgb_t) {107, 255, 0}, (rgb_t) {87, 255, 0}, (rgb_t) {67, 255, 0}, (rgb_t) {46, 255, 0},
-        (rgb_t) {26, 255, 0}, (rgb_t) {6, 255, 0}, (rgb_t) {0, 255, 14}, (rgb_t) {0, 255, 34},
-        (rgb_t) {0, 255, 54}, (rgb_t) {0, 255, 74}, (rgb_t) {0, 255, 95}, (rgb_t) {0, 255, 115},
-        (rgb_t) {0, 255, 135}, (rgb_t) {0, 255, 155}, (rgb_t) {0, 255, 175}, (rgb_t) {0, 255, 195},
-        (rgb_t) {0, 255, 216}, (rgb_t) {0, 255, 236}, (rgb_t) {0, 254, 255}, (rgb_t) {0, 234, 255},
-        (rgb_t) {0, 231, 255}, (rgb_t) {0, 228, 255}, (rgb_t) {36, 223, 255}, (rgb_t) {67, 219, 255},
-        (rgb_t) {85, 214, 255}, (rgb_t) {97, 210, 255}, (rgb_t) {107, 205, 255}, (rgb_t) {115, 201, 255},
-        (rgb_t) {122, 197, 255}, (rgb_t) {128, 193, 255}, (rgb_t) {134, 189, 255}, (rgb_t) {140, 184, 255},
-        (rgb_t) {146, 180, 255}, (rgb_t) {151, 175, 255}, (rgb_t) {157, 170, 255}, (rgb_t) {163, 165, 255},
-        (rgb_t) {169, 159, 255}, (rgb_t) {175, 153, 255}, (rgb_t) {182, 146, 255}, (rgb_t) {190, 138, 255},
-        (rgb_t) {198, 129, 255}, (rgb_t) {206, 122, 255}, (rgb_t) {212, 116, 255}, (rgb_t) {218, 110, 247},
-        (rgb_t) {224, 104, 237}, (rgb_t) {229, 97, 227}, (rgb_t) {234, 91, 216}, (rgb_t) {238, 85, 204},
-        (rgb_t) {242, 78, 192}, (rgb_t) {246, 72, 180}, (rgb_t) {249, 65, 166}, (rgb_t) {252, 58, 152},
-        (rgb_t) {254, 51, 138}, (rgb_t) {255, 43, 123}, (rgb_t) {255, 35, 107}, (rgb_t) {255, 26, 90},
-        (rgb_t) {255, 17, 71}, (rgb_t) {255, 7, 47},
+        (rgb_t){255, 0, 0},     (rgb_t){255, 20, 0},    (rgb_t){255, 40, 0},    (rgb_t){255, 60, 0},
+        (rgb_t){255, 81, 0},    (rgb_t){255, 101, 0},   (rgb_t){255, 121, 0},   (rgb_t){255, 141, 0},
+        (rgb_t){255, 161, 0},   (rgb_t){255, 181, 0},   (rgb_t){255, 202, 0},   (rgb_t){255, 222, 0},
+        (rgb_t){255, 242, 0},   (rgb_t){248, 255, 0},   (rgb_t){228, 255, 0},   (rgb_t){208, 255, 0},
+        (rgb_t){188, 255, 0},   (rgb_t){167, 255, 0},   (rgb_t){147, 255, 0},   (rgb_t){127, 255, 0},
+        (rgb_t){107, 255, 0},   (rgb_t){87, 255, 0},    (rgb_t){67, 255, 0},    (rgb_t){46, 255, 0},
+        (rgb_t){26, 255, 0},    (rgb_t){6, 255, 0},     (rgb_t){0, 255, 14},    (rgb_t){0, 255, 34},
+        (rgb_t){0, 255, 54},    (rgb_t){0, 255, 74},    (rgb_t){0, 255, 95},    (rgb_t){0, 255, 115},
+        (rgb_t){0, 255, 135},   (rgb_t){0, 255, 155},   (rgb_t){0, 255, 175},   (rgb_t){0, 255, 195},
+        (rgb_t){0, 255, 216},   (rgb_t){0, 255, 236},   (rgb_t){0, 254, 255},   (rgb_t){0, 234, 255},
+        (rgb_t){0, 231, 255},   (rgb_t){0, 228, 255},   (rgb_t){36, 223, 255},  (rgb_t){67, 219, 255},
+        (rgb_t){85, 214, 255},  (rgb_t){97, 210, 255},  (rgb_t){107, 205, 255}, (rgb_t){115, 201, 255},
+        (rgb_t){122, 197, 255}, (rgb_t){128, 193, 255}, (rgb_t){134, 189, 255}, (rgb_t){140, 184, 255},
+        (rgb_t){146, 180, 255}, (rgb_t){151, 175, 255}, (rgb_t){157, 170, 255}, (rgb_t){163, 165, 255},
+        (rgb_t){169, 159, 255}, (rgb_t){175, 153, 255}, (rgb_t){182, 146, 255}, (rgb_t){190, 138, 255},
+        (rgb_t){198, 129, 255}, (rgb_t){206, 122, 255}, (rgb_t){212, 116, 255}, (rgb_t){218, 110, 247},
+        (rgb_t){224, 104, 237}, (rgb_t){229, 97, 227},  (rgb_t){234, 91, 216},  (rgb_t){238, 85, 204},
+        (rgb_t){242, 78, 192},  (rgb_t){246, 72, 180},  (rgb_t){249, 65, 166},  (rgb_t){252, 58, 152},
+        (rgb_t){254, 51, 138},  (rgb_t){255, 43, 123},  (rgb_t){255, 35, 107},  (rgb_t){255, 26, 90},
+        (rgb_t){255, 17, 71},   (rgb_t){255, 7, 47},
 };
 
 const uint8_t RGB_PROGRESSION_LEN = sizeof(RGB_PROGRESSION) / sizeof(rgb_t);

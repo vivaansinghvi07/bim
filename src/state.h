@@ -12,7 +12,7 @@ typedef struct {
 } rgb_t;
 
 typedef enum {
-        NORMAL, FILES, EDIT  // files is plural b/c FILE is a kw
+        NORMAL, FILES, EDIT, SEARCH
 } editor_mode;
 
 typedef enum {
@@ -71,19 +71,20 @@ typedef struct {
         struct timespec inactive_timer; 
         struct timespec rgb_cycle_timer;
         struct timespec gradient_rotating_timer;
-
-        int tab_width;
         
         size_t buf_curr;
         buf_list *buffers;
 
         dyn_str input_history;
         dyn_str copy_register;
-        dyn_str search_register;
+        dyn_str search_target;
+
         editor_mode mode;
         char *cwd;
+        int tab_width;
 
         display_state_t display_state;
+
 } editor_state_t;
 
 void load_config(editor_state_t *state);
