@@ -8,6 +8,7 @@
 #include "src/input/normal.h"
 #include "src/input/edit.h"
 #include "src/input/search.h"
+#include "src/input/files.h"
 
 #include <poll.h>
 #include <limits.h>
@@ -83,6 +84,7 @@ void handle_escape_sequences(editor_state_t *state, struct pollfd *in) {
         switch (state->mode) {
                 case NORMAL: handle_normal_escape_sequence_input(state, sequence); break;
                 case EDIT: handle_edit_escape_sequence_input(state, sequence); break;
+                case FILES: handle_files_escape_sequence_input(state, sequence); break;
         }
         display_by_mode(state);
 }
@@ -126,7 +128,7 @@ int main(const int argc, const char **argv) {
                                 handle_normal_input(&state, c);
                                 list_append(state.input_history, c);
                         } break;
-                        case FILES: 
+                        case FILES: handle_files_input(&state, c); break;
                         case EDIT: handle_edit_input(&state, c); break;
                         case SEARCH: handle_search_input(&state, c); break;
                 }
