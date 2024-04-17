@@ -76,12 +76,12 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         // in file mode, add information about the current directory
         switch (state->mode) {
                 case SEARCH: {
-                        int length = min(state->search_target.len, W - 4 - used_up_front_space);
-                        memcpy(bar + used_up_front_space + 2, state->search_target.items, max(0, length));  // cap so its not negative
+                        int length = min(state->command_target.len, W - 4 - used_up_front_space);
+                        memcpy(bar + used_up_front_space + 2, state->command_target.items, max(0, length));  // cap so its not negative
                 } break;
                 case NORMAL: 
                 case EDIT: {
-                        const file_buf *buf = state->buffers->items[state->buf_curr];
+                        const buf_t *buf = state->buffers->items[state->buf_curr];
                         const char *filename = buf->filename;
                         const char *curr_line_str = num_to_str(buf->cursor_line);
                         const char *total_lines_str = num_to_str(buf->lines.len);
@@ -355,7 +355,7 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         // determine information about the screen
         const struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
-        const file_buf *buf = state->buffers->items[state->buf_curr];
+        const buf_t *buf = state->buffers->items[state->buf_curr];
         char blank_space_block[ANSI_ESCAPE_LEN + 2];
         snprintf(blank_space_block, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 0, 0, 0, 22);
         blank_space_block[ANSI_ESCAPE_LEN] = ' ';
@@ -404,7 +404,7 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
  */
 void display_buffer(const editor_state_t *state) {
 
-        const file_buf *buffer = state->buffers->items[state->buf_curr];
+        const buf_t *buffer = state->buffers->items[state->buf_curr];
         const struct winsize w = get_window_size();
         const char *buffer_output = get_displayed_buffer_string(state);
         const char *bar = get_bottom_bar(w.ws_col, state);

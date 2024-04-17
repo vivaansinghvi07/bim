@@ -195,7 +195,7 @@ void load_config(editor_state_t *state) {
         if (!config_path) {
                 return;
         }
-        file_buf *buf = buf_open(config_path, state->tab_width);  // tab_width here doesn't really matter
+        buf_t *buf = buf_open(config_path, state->tab_width);  // tab_width here doesn't really matter
         free(config_path);
 
         for (size_t l = 0; l < buf->lines.len; ++l) {

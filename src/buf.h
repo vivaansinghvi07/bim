@@ -24,13 +24,13 @@ typedef struct {
 
         const char *filename;
         dyn_contents lines;
-} file_buf;
+} buf_t;
 
-list_typedef(buf_list, file_buf *);
+list_typedef(buf_list, buf_t *);
 
 void buf_free_list(buf_list *buffers);
-void buf_free(file_buf *buf);
-void buf_save(const file_buf *buf);
-file_buf *buf_open(const char *filename, const int tab_width);
+void buf_free(buf_t *buf);
+void buf_save(const buf_t *buf);
+buf_t *buf_open(const char *filename, const int tab_width);
 
 #endif // !EDITOR_BUF

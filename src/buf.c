@@ -17,7 +17,7 @@ void buf_free_list(buf_list *buffers) {
 }
 
 // because buf_open always allocates memory, it is freed in this function
-void buf_free(file_buf *buf) {
+void buf_free(buf_t *buf) {
         for (size_t i = 0; i < buf->lines.len; ++i) {
                 free_list_items(1, buf->lines.items + i); 
         }
@@ -25,7 +25,7 @@ void buf_free(file_buf *buf) {
         free(buf);
 }
 
-void buf_save(const file_buf *buf) {
+void buf_save(const buf_t *buf) {
         FILE *file = fopen(buf->filename, "w");
         const char newline = '\n';
         for (size_t i = 0; i < buf->lines.len; ++i) {
@@ -38,11 +38,11 @@ void buf_save(const file_buf *buf) {
         fclose(file);
 }
 
-file_buf *buf_open(const char *filename, const int tab_width) {
+buf_t *buf_open(const char *filename, const int tab_width) {
 
         FILE *file = fopen(filename, "r");
-        file_buf *return_buffer = malloc(sizeof(file_buf));
-        *return_buffer = (file_buf) {
+        buf_t *return_buffer = malloc(sizeof(buf_t));
+        *return_buffer = (buf_t) {
                 .filename = filename, 
                 .cursor_col = 1,
                 .cursor_line = 1,

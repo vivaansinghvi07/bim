@@ -22,7 +22,7 @@
 #define CHAR_ESCAPE 27
 #define CHAR_BACKSPACE 127
 
-void insert_tab(file_buf *buf, dyn_str *line, const int tab_width) {
+void insert_tab(buf_t *buf, dyn_str *line, const int tab_width) {
         int col = buf->cursor_col - 1;
         size_t spaces_to_add = tab_width - (col % tab_width);
         list_create_space(*line, spaces_to_add);
@@ -31,7 +31,7 @@ void insert_tab(file_buf *buf, dyn_str *line, const int tab_width) {
         buf->cursor_col += spaces_to_add;
 }
 
-void insert_newline(file_buf *buf, dyn_str *line, const int H) {
+void insert_newline(buf_t *buf, dyn_str *line, const int H) {
         int col = buf->cursor_col - 1;
         size_t split_text_len = line->len - col;
         size_t new_len = max(MIN_NEW_LINE_LEN, split_text_len * 2);   // times 2 for some leeway
@@ -47,13 +47,13 @@ void insert_newline(file_buf *buf, dyn_str *line, const int H) {
         handle_c_big_move_left(buf);
 }
 
-void insert_single_character(file_buf *buf, dyn_str *line, char c, const int W) {
+void insert_single_character(buf_t *buf, dyn_str *line, char c, const int W) {
         int col = buf->cursor_col - 1;
         list_insert(*line, col, c);
         handle_c_move_right(buf, W);
 }
 
-void delete_single_character(file_buf *buf, dyn_str *line) {
+void delete_single_character(buf_t *buf, dyn_str *line) {
         int col = buf->cursor_col - 2;
         if (col < 0) {
                 if (buf->cursor_line == 1) {
@@ -76,7 +76,7 @@ void delete_single_character(file_buf *buf, dyn_str *line) {
 void handle_edit_input(editor_state_t *state, char c) {
         struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
-        file_buf *buf = state->buffers->items[state->buf_curr];
+        buf_t *buf = state->buffers->items[state->buf_curr];
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
 
         switch (c) {
@@ -97,7 +97,7 @@ void handle_edit_input(editor_state_t *state, char c) {
         }
 }
 
-void handle_esc_delete_key(file_buf *buf, dyn_str *line) {
+void handle_esc_delete_key(buf_t *buf, dyn_str *line) {
         int col = buf->cursor_col - 1;
         if (col == line->len) {
                 if (buf->cursor_line == buf->lines.len) {
@@ -118,7 +118,7 @@ void handle_edit_escape_sequence_input(editor_state_t *state, escape_sequence se
 
         struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
-        file_buf *buf = state->buffers->items[state->buf_curr];
+        buf_t *buf = state->buffers->items[state->buf_curr];
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
 
         switch (sequence) {

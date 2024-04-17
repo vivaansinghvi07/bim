@@ -67,23 +67,25 @@ typedef struct {
 
 typedef struct {
 
+        editor_mode mode;
+        int tab_width;
+
         struct timespec timer; 
         struct timespec inactive_timer; 
         struct timespec rgb_cycle_timer;
         struct timespec gradient_rotating_timer;
         
+        display_state_t display_state;
+
         size_t buf_curr;
         buf_list *buffers;
 
         dyn_str input_history;
         dyn_str copy_register;
-        dyn_str search_target;
+        dyn_str command_target;
 
-        editor_mode mode;
         char *cwd;
-        int tab_width;
-
-        display_state_t display_state;
+        dyn_contents files_view_buf;
 
 } editor_state_t;
 
