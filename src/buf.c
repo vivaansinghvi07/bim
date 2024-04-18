@@ -1,6 +1,6 @@
-#include "../include/buf.h"
-#include "../include/list.h"
-#include "../include/utils.h"
+#include "buf.h"
+#include "list.h"
+#include "utils.h"
 
 #include <stdint.h>
 #include <stdio.h>

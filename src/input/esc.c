@@ -2,7 +2,7 @@
  * Small file for dealing with escape sequences
  */
 
-#include "../../include/input/esc.h"
+#include "esc.h"
 
 #include <stdlib.h>
 

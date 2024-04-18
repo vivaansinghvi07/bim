@@ -1,6 +1,6 @@
-#include "../../include/display/screensaver.h"
-#include "../../include/display/display.h"
-#include "../../include/utils.h"
+#include "screensaver.h"
+#include "display.h"
+#include "../utils.h"
 
 #include <unistd.h>
 #include <poll.h>

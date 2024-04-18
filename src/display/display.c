@@ -1,6 +1,6 @@
-#include "../../include/display/display.h"
-#include "../../include/buf.h"
-#include "../../include/utils.h"
+#include "display.h"
+#include "../buf.h"
+#include "../utils.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -172,7 +172,7 @@ void decrement_angle(editor_state_t *state) {
 }
 
 double determine_angled_value(const angle_mode angle, double scalar, const bool is_reversed,
-                             const double vertical_ratio, const double horizontal_ratio) {
+                              const double vertical_ratio, const double horizontal_ratio) {
         if (is_reversed) {
                 scalar *= -1; 
         }

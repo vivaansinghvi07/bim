@@ -1,9 +1,9 @@
-#include "../../include/input/normal.h"
-#include "../../include/input/esc.h"
-#include "../../include/list.h"
-#include "../../include/utils.h"
-#include "../../include/state.h"
-#include "../../include/display/display.h"
+#include "normal.h"
+#include "esc.h"
+#include "../list.h"
+#include "../utils.h"
+#include "../state.h"
+#include "../display/display.h"
 
 #include <stdbool.h>
 #include <stdio.h>

@@ -1,6 +1,6 @@
-#include "../../include/input/command.h"
-#include "../../include/input/normal.h"
-#include "../../include/display/display.h"
+#include "command.h"
+#include "normal.h"
+#include "../display/display.h"
 
 #include <ctype.h>
 
