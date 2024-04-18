@@ -40,6 +40,7 @@
 #define C_JUMP_NEXT       'j'
 #define C_JUMP_PREVIOUS   'J'
 
+#define C_OPEN_FILE       'o'
 #define C_ENTER_FILES     'f'
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
@@ -229,10 +230,8 @@ void handle_c_paste_newline(editor_state_t *state, buf_t *buf, const int H) {
 }
 
 void handle_c_search(editor_state_t *state) {
-        if (state->command_target.len) {
-                state->command_target.len = 0;  // effectively clears the list
-        }
-        state->mode = SEARCH;
+        state->command_target.len = 0;
+        state->mode = CMD_SEARCH;
 }
 
 typedef struct {
@@ -291,8 +290,13 @@ void handle_c_jump_previous(const editor_state_t *state, buf_t *buf, const int H
         handle_jump(state, buf, H, W, true);
 }
 
+void handle_c_open_file(editor_state_t *state) {
+        state->command_target.len = 0;
+        state->mode = CMD_OPEN;
+}
+
 void handle_c_enter_files(const editor_state_t *state, buf_t *buf, const int H, const int W) {
-               
+        
 }
 
 void handle_normal_input(editor_state_t *state, char c) {
@@ -331,6 +335,8 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_SEARCH: handle_c_search(state); break;
                 case C_JUMP_NEXT: handle_c_jump_next(state, buf, H, W); break;
                 case C_JUMP_PREVIOUS: handle_c_jump_previous(state, buf, H, W); break;
+
+                case C_OPEN_FILE: handle_c_open_file(state); break;
 
                 default: return;  // nothing changes, don't waste time displaying
         }

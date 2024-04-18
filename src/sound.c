@@ -7,7 +7,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#endif /* ifdef _WIN32 */
+#endif
 
 /*
  * Plays a sound file in the WAV format.

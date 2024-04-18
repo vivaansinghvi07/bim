@@ -8,7 +8,7 @@
 #include "src/input/normal.h"
 #include "src/input/edit.h"
 #include "src/input/files.h"
-#include "src/input/command/search.h"
+#include "src/input/command.h"
 
 #include <poll.h>
 #include <limits.h>
@@ -47,7 +47,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
 }
 
 void init(editor_state_t *state) {
-        display_buffer(state);
+        display_by_mode(state);
         set_timer(&state->inactive_timer);
         set_timer(&state->gradient_rotating_timer);
         set_timer(&state->rgb_cycle_timer);
@@ -85,6 +85,8 @@ void handle_escape_sequences(editor_state_t *state, struct pollfd *in) {
                 case NORMAL: handle_normal_escape_sequence_input(state, sequence); break;
                 case EDIT: handle_edit_escape_sequence_input(state, sequence); break;
                 case FILES: handle_files_escape_sequence_input(state, sequence); break;
+                case CMD_SEARCH:
+                case CMD_OPEN: break;
         }
         display_by_mode(state);
 }
@@ -130,7 +132,8 @@ int main(const int argc, const char **argv) {
                         } break;
                         case FILES: handle_files_input(&state, c); break;
                         case EDIT: handle_edit_input(&state, c); break;
-                        case SEARCH: handle_search_input(&state, c); break;
+                        case CMD_OPEN:
+                        case CMD_SEARCH: handle_command_input(&state, c); break;
                 }
                 display_by_mode(&state);
         }

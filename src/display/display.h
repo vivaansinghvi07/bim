@@ -20,7 +20,6 @@ void display_by_mode(const editor_state_t *state);
 struct winsize get_window_size(void);
 char *get_displayed_buffer_string(const editor_state_t *state);
 char *get_bottom_bar(const int W, const editor_state_t *state);
-void display_buffer(const editor_state_t *state);
 void fill_ansi_color_table(void);
 void increment_gradient(editor_state_t *state);
 void decrement_gradient(editor_state_t *state);

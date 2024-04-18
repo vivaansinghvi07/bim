@@ -20,16 +20,6 @@
 #define ANSI_STRIKETHROUGH 9
 #define ANSI_BLINKING 5
 
-void display_by_mode(const editor_state_t *state) {
-        switch (state->mode) {
-                case SEARCH:
-                case NORMAL:
-                case EDIT: {
-                        display_buffer(state);
-                } break;
-        }
-}
-
 struct winsize get_window_size(void) {
         struct winsize w;
         if (ioctl(0, TIOCGWINSZ, &w) == -1) {
@@ -50,9 +40,6 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         char *bar = malloc(W * sizeof(char));  // TOFREE
         memset(bar, ' ', W * sizeof(char));
 
-        const char *mode_text = "edit";
-        int mode_len = 4;
-
         // prevent a bar that is overflowing
         if (W < 10) {
                 memset(bar, '=', W * sizeof(char));
@@ -60,11 +47,14 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         }
 
         // set the == mode_text == in the bar
+        const char *mode_text;
+        int mode_len;
         switch (state->mode) {
-                case SEARCH: mode_text = "search", mode_len = 6; break;
+                case CMD_OPEN: mode_text = "open", mode_len = 4; break;
+                case CMD_SEARCH: mode_text = "search", mode_len = 6; break;
                 case NORMAL: mode_text = "normal", mode_len = 6; break;
-                case FILES: mode_text = "file";
-                case EDIT: break;
+                case FILES: mode_text = "file", mode_len = 4; break;
+                case EDIT: mode_text = "edit", mode_len = 4; break;
         }
 
         memcpy(bar + 2               , "== ", 3);
@@ -75,7 +65,8 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         // add information about the filename and lines and stuff
         // in file mode, add information about the current directory
         switch (state->mode) {
-                case SEARCH: {
+                case CMD_OPEN:
+                case CMD_SEARCH: {
                         int length = min(state->command_target.len, W - 4 - used_up_front_space);
                         memcpy(bar + used_up_front_space + 2, state->command_target.items, max(0, length));  // cap so its not negative
                 } break;
@@ -148,7 +139,7 @@ uint8_t get_ansi_style(const uint8_t key) {
                 case 5: return ANSI_STRIKETHROUGH;
                 case 6: return ANSI_BLINKING;
         }
-        return 22;
+        return ANSI_NORMAL;
 }
 
 typedef struct {
@@ -285,7 +276,7 @@ char *get_highlighting_for_token(const highlighting_info_t *info, const token_t 
                         rgb_style.rgb.b = arc4random_uniform(156) + 100;
                 } break;
                 case HIGH_ALPHA: {
-                        rgb_style = ANSI_COLOR_TABLE[info->line->items[t.start]];
+                        rgb_style = ANSI_COLOR_TABLE[(uint8_t) info->line->items[t.start]];
                         rgb_style.style = get_ansi_style(rgb_style.style);
                 } break;
                 case HIGH_GRADIENT: {
@@ -402,7 +393,7 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
  *   display a buffer (meaning we are in the normal or edit mode),
  *   and return the cursor to the old position.
  */
-void display_buffer(const editor_state_t *state) {
+void display_file_buffer(const editor_state_t *state) {
 
         const buf_t *buffer = state->buffers->items[state->buf_curr];
         const struct winsize w = get_window_size();
@@ -414,10 +405,22 @@ void display_buffer(const editor_state_t *state) {
         printf("%s\033[0m%s", buffer_output, bar);
         move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1,
                        buffer->cursor_col - buffer->screen_left_col + 1);
-        if (state->mode != SEARCH) {
+        if (state->mode != CMD_SEARCH) {
                 show_cursor();
         }
         free((void *) bar);
         free((void *) buffer_output);
         fflush(stdout);
 }
+
+void display_by_mode(const editor_state_t *state) {
+        switch (state->mode) {
+                case CMD_SEARCH:
+                case CMD_OPEN:
+                case NORMAL:
+                case EDIT: {
+                        display_file_buffer(state);
+                } break;
+        }
+}
+

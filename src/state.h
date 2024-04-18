@@ -12,7 +12,7 @@ typedef struct {
 } rgb_t;
 
 typedef enum {
-        NORMAL, FILES, EDIT, SEARCH
+        NORMAL, FILES, EDIT, CMD_SEARCH, CMD_OPEN
 } editor_mode;
 
 typedef enum {
