@@ -238,10 +238,10 @@ void step_rgb_state(editor_state_t *state) {
 
 void fill_rgb_mode_rgb(ansi_code_t *rgb_style, const highlighting_info_t *info,
                        const token_t t, const display_state_t *state) {
-        uint8_t prog_index = determine_angled_value(state->angle, RGB_PROGRESSION_LEN, 
+        int prog_index = determine_angled_value(state->angle, RGB_PROGRESSION_LEN, 
                                                     state->angle == ANG_180 || state->angle == ANG_90 || state->angle == ANG_135 || state->angle == ANG_225,
                                                     (double) info->line_index / (info->H - 1), (double) t.start / info->W);
-        rgb_style->rgb = RGB_PROGRESSION[(prog_index + state->rgb_state) % RGB_PROGRESSION_LEN];
+        rgb_style->rgb = RGB_PROGRESSION[(prog_index + state->rgb_state + RGB_PROGRESSION_LEN) % RGB_PROGRESSION_LEN];
 }
 
 char *get_highlighting_for_token(const highlighting_info_t *info, const token_t t, const display_state_t *state) {

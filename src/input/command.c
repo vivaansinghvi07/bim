@@ -24,7 +24,7 @@ void handle_c_command_enter(editor_state_t *state, buf_t *buf, const int H, cons
                 case CMD_OPEN: handle_open_new_buffer(state); break;
                 case NORMAL: case FILES: case EDIT: break;  // should never happen, but it makes the warnings go away
         }
-        handle_c_exit_command(state);
+        state->mode = NORMAL;
 }
 
 void handle_c_command_backspace(editor_state_t *state) {
