@@ -21,8 +21,8 @@ struct winsize get_window_size(void);
 char *get_displayed_buffer_string(const editor_state_t *state);
 char *get_bottom_bar(const int W, const editor_state_t *state);
 void fill_ansi_color_table(void);
-void increment_gradient(editor_state_t *state);
-void decrement_gradient(editor_state_t *state);
+void increment_angle(editor_state_t *state);
+void decrement_angle(editor_state_t *state);
 void step_rgb_state(editor_state_t *state);
 
 #endif // !EDITOR_DISPLAY

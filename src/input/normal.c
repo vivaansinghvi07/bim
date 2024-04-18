@@ -316,8 +316,8 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_BIG_MOVE_RIGHT: handle_c_big_move_right(buf, W); break;
                 case C_BIG_MOVE_LEFT: handle_c_big_move_left(buf); break;
 
-                case C_GRAD_ANG_INCRE: increment_gradient(state); break;
-                case C_GRAD_ANG_DECRE: decrement_gradient(state); break;
+                case C_GRAD_ANG_INCRE: increment_angle(state); break;
+                case C_GRAD_ANG_DECRE: decrement_angle(state); break;
 
                 case C_BUF_INCRE: handle_c_buf_incre(state); break;
                 case C_BUF_DECRE: handle_c_buf_decre(state); break;

@@ -35,9 +35,9 @@ typedef struct {
 } gradient_color_t;
 
 typedef enum {
-        GRAD_ANG_0, GRAD_ANG_45, GRAD_ANG_90, GRAD_ANG_135,
-        GRAD_ANG_180, GRAD_ANG_225, GRAD_ANG_270, GRAD_ANG_315
-} gradient_angle_mode;
+        ANG_0, ANG_45, ANG_90, ANG_135,
+        ANG_180, ANG_225, ANG_270, ANG_315
+} angle_mode;
 
 typedef struct {
         highlighting_mode syntax_mode;
@@ -47,20 +47,19 @@ typedef struct {
         int screensaver_frame_length_ms;
         int screensaver_ms_inactive;
 
-        // union here to get marginal memory gains lol
-        union {
+        // controls the tilt of the gradient when using HIGH_GRADIENT or HIGH_RGB
+        // possibly overengineering but its cool
+        angle_mode angle;
 
-                // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
-                struct {
-                        gradient_color_t gradient_color;  
-                        gradient_angle_mode gradient_angle;
-                        int gradient_cycle_duration_ms;
-                };
-                // when syntax_mode is HIGH_RGB, these are the things that are used
-                struct {
-                        int rgb_cycle_duration_ms;
-                        int rgb_state;  // represents how far along we are in rgb process
-                };
+        // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
+        struct {
+                gradient_color_t gradient_color;  
+                int gradient_cycle_duration_ms;
+        };
+        // when syntax_mode is HIGH_RGB, these are the things that are used
+        struct {
+                int rgb_cycle_duration_ms;
+                int rgb_state;  // represents how far along we are in rgb process
         };
 
 } display_state_t;

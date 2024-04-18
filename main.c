@@ -58,7 +58,7 @@ void iterate_animated_displays(editor_state_t *state) {
             && state->display_state.gradient_cycle_duration_ms > 0 
             && get_ms_elapsed(&state->gradient_rotating_timer)
                > state->display_state.gradient_cycle_duration_ms) {
-                increment_gradient(state);
+                increment_angle(state);
                 set_timer(&state->gradient_rotating_timer);
         } else if (state->display_state.syntax_mode == HIGH_RGB
                    && state->display_state.rgb_cycle_duration_ms > 0 

@@ -18,6 +18,7 @@
 #define HIGHLIGHT_MODE_SETTING "highlight_mode"
 #define SCREENSAVER_MODE_SETTING "screensaver_mode"
 #define GRADIENT_ANGLE_SETTING "gradient_angle"
+#define RGB_ANGLE_SETTING "rgb_angle"
 #define SCREENSAVER_MS_INACTIVE "screensaver_ms_inactive"
 #define SCREENSAVER_FRAME_LENGTH_SETTING "screensaver_frame_length_ms"
 #define GRADIENT_CYCLE_DURATION_MS "gradient_cycle_duration_ms"
@@ -35,9 +36,9 @@ const char *SS_STR_OPTS[] = {"LEFT_SLIDE", "RIGHT_SLIDE", "TOP_SLIDE", "BOTTOM_S
 const screensaver_mode SS_ENUM_OPTS[] = {SS_LEFT, SS_RIGHT, SS_TOP, SS_BOTTOM,
                                          SS_RPS, SS_LIFE, SS_SAND};
 
-const char *GRAD_ANG_STR_OPTS[] = {"0", "45", "90", "135", "180", "225", "270", "315"};
-const gradient_angle_mode GRAD_ANG_ENUM_OPTS[] = {GRAD_ANG_0, GRAD_ANG_45, GRAD_ANG_90, GRAD_ANG_135,
-                                                  GRAD_ANG_180, GRAD_ANG_225, GRAD_ANG_270, GRAD_ANG_315};
+const char *ANG_STR_OPTS[] = {"0", "45", "90", "135", "180", "225", "270", "315"};
+const angle_mode ANG_ENUM_OPTS[] = {ANG_0, ANG_45, ANG_90, ANG_135,
+                                         ANG_180, ANG_225, ANG_270, ANG_315};
 
 #define DEFAULT_GRAD_LEFT {255, 255, 0}
 #define DEFAULT_GRAD_RIGHT {0, 255, 255}
@@ -177,7 +178,7 @@ void load_default_config(editor_state_t *state) {
 
         state->display_state.gradient_color.left = (rgb_t) DEFAULT_GRAD_LEFT;
         state->display_state.gradient_color.right = (rgb_t) DEFAULT_GRAD_RIGHT;
-        state->display_state.gradient_angle = GRAD_ANG_0;
+        state->display_state.angle = ANG_0;
         state->display_state.gradient_cycle_duration_ms = 0;
 
         state->display_state.screensaver_mode = SS_RPS;
@@ -215,32 +216,44 @@ void load_config(editor_state_t *state) {
                 // key_len is now the index of the '='
                 // literal spaghetti code lmao
                 parse_info_t info = {line, key_len};
-                if (!strncmp(line->items, GRADIENT_LEFT_SETTING, key_len)) {
-                        parse_gradient_left(&info, state);
-                } else if (!strncmp(line->items, GRADIENT_RIGHT_SETTING, key_len)) {
-                        parse_gradient_right(&info, state);
-                } else if (!strncmp(line->items, HIGHLIGHT_MODE_SETTING, key_len)) {
+                if (!strncmp(line->items, HIGHLIGHT_MODE_SETTING, key_len)) {
                         parse_text_opts(HIGHLIGHT_MODE_SETTING, state->display_state.syntax_mode,
                                         HIGH_STR_OPTS, HIGH_ENUM_OPTS, info);
-                } else if (!strncmp(line->items, TEXT_STYLE_SETTING, key_len)) {
+                }
+
+                // case-wise - this is done to ignore settings for which there is no use
+                if (state->display_state.syntax_mode == HIGH_GRADIENT) {
+                        if (!strncmp(line->items, GRADIENT_LEFT_SETTING, key_len)) {
+                                parse_gradient_left(&info, state);
+                        } else if (!strncmp(line->items, GRADIENT_RIGHT_SETTING, key_len)) {
+                                parse_gradient_right(&info, state);
+                        } else if (!strncmp(line->items, GRADIENT_CYCLE_DURATION_MS, key_len)) {
+                                parse_gradient_cycle_duration_ms(&info, state);
+                        } else if (!strncmp(line->items, GRADIENT_ANGLE_SETTING, key_len)) {
+                                parse_text_opts(GRADIENT_ANGLE_SETTING, state->display_state.angle,
+                                                ANG_STR_OPTS, ANG_ENUM_OPTS, info);
+                        }
+                } else if (state->display_state.syntax_mode == HIGH_RGB) {
+                        if (!strncmp(line->items, RGB_CYCLE_DURATION_MS, key_len)) {
+                                parse_rgb_cycle_duration_ms(&info, state);
+                        } else if (!strncmp(line->items, RGB_ANGLE_SETTING, key_len)) {
+                                parse_text_opts(RGB_ANGLE_SETTING, state->display_state.angle,
+                                                ANG_STR_OPTS, ANG_ENUM_OPTS, info);
+                        }
+                }
+
+                if (!strncmp(line->items, TEXT_STYLE_SETTING, key_len)) {
                         parse_text_opts(TEXT_STYLE_SETTING, state->display_state.text_style_mode,
                                         STYLE_STR_OPTS, STYLE_ENUM_OPTS, info);
                 } else if (!strncmp(line->items, SCREENSAVER_MODE_SETTING, key_len)) {
                         parse_text_opts(SCREENSAVER_MODE_SETTING, state->display_state.screensaver_mode,
                                         SS_STR_OPTS, SS_ENUM_OPTS, info);
-                } else if (!strncmp(line->items, GRADIENT_ANGLE_SETTING, key_len)) {
-                        parse_text_opts(GRADIENT_ANGLE_SETTING, state->display_state.gradient_angle,
-                                        GRAD_ANG_STR_OPTS, GRAD_ANG_ENUM_OPTS, info);
                 } else if (!strncmp(line->items, SCREENSAVER_FRAME_LENGTH_SETTING, key_len)) {
                         parse_screensaver_frame_length(&info, state);
                 } else if (!strncmp(line->items, SCREENSAVER_MS_INACTIVE, key_len)) {
                         parse_screensaver_ms_inactive(&info, state);
-                } else if (!strncmp(line->items, GRADIENT_CYCLE_DURATION_MS, key_len)) {
-                        parse_gradient_cycle_duration_ms(&info, state);
                 } else if (!strncmp(line->items, TAB_WIDTH_SETTING, key_len)) {
                         parse_tab_width(&info, state);
-                } else if (!strncmp(line->items, RGB_CYCLE_DURATION_MS, key_len)) {
-                        parse_rgb_cycle_duration_ms(&info, state);
                 }
 
         next_line:;

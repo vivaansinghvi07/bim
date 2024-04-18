@@ -161,60 +161,44 @@ typedef struct {
         const int W, H, line_index, col_start; 
 } highlighting_info_t;
 
-void increment_gradient(editor_state_t *state) {
-        ++state->display_state.gradient_angle;
-        state->display_state.gradient_angle %= 8;
+void increment_angle(editor_state_t *state) {
+        ++state->display_state.angle;
+        state->display_state.angle %= 8;
 }
 
-void decrement_gradient(editor_state_t *state) {
-        state->display_state.gradient_angle += 7;
-        state->display_state.gradient_angle %= 8;
+void decrement_angle(editor_state_t *state) {
+        state->display_state.angle += 7;
+        state->display_state.angle %= 8;
+}
+
+double determine_angled_value(const angle_mode angle, double scalar, const bool is_reversed,
+                             const double vertical_ratio, const double horizontal_ratio) {
+        if (is_reversed) {
+                scalar *= -1; 
+        }
+
+        switch (angle) {
+                case ANG_180:
+                case ANG_0: return scalar * horizontal_ratio;
+                case ANG_90:
+                case ANG_270: return scalar * vertical_ratio; 
+                case ANG_135: 
+                case ANG_315: return scalar * (vertical_ratio + horizontal_ratio) / 2;
+                case ANG_225:
+                case ANG_45: return scalar * (1 - vertical_ratio + horizontal_ratio) / 2;
+        }
 }
 
 void fill_gradient_rgb(ansi_code_t *rgb_style, const highlighting_info_t *info,
                        const token_t t, const display_state_t *state) {
         rgb_t left = state->gradient_color.left, right = state->gradient_color.right;
-
-        switch (state->gradient_angle) {
-                case GRAD_ANG_180: {
-                        rgb_t temp = right; right = left; left = temp;
-                }
-                case GRAD_ANG_0: {
-                        rgb_style->rgb.r = (double) (right.r - left.r) * t.start / info->line->len + left.r;  
-                        rgb_style->rgb.b = (double) (right.b - left.b) * t.start / info->line->len + left.b;  
-                        rgb_style->rgb.g = (double) (right.g - left.g) * t.start / info->line->len + left.g;
-                } return;
-                case GRAD_ANG_90: {
-                        rgb_t temp = right; right = left; left = temp;
-                }
-                case GRAD_ANG_270: {
-                        rgb_style->rgb.r = (double) (right.r - left.r) * info->line_index / (info->H - 1) + left.r;
-                        rgb_style->rgb.g = (double) (right.g - left.g) * info->line_index / (info->H - 1) + left.g;
-                        rgb_style->rgb.b = (double) (right.b - left.b) * info->line_index / (info->H - 1) + left.b;
-                } return;
-                case GRAD_ANG_135: {
-                        rgb_t temp = right; right = left; left = temp;
-                }
-                case GRAD_ANG_315: {
-                        rgb_style->rgb.r = (double) (right.r - left.r) * info->line_index / (info->H - 1) / 2 +
-                                           (double) (right.r - left.r) * t.start / info->line->len / 2 + left.r;
-                        rgb_style->rgb.g = (double) (right.g - left.g) * info->line_index / (info->H - 1) / 2 +
-                                           (double) (right.g - left.g) * t.start / info->line->len / 2 + left.g;
-                        rgb_style->rgb.b = (double) (right.b - left.b) * info->line_index / (info->H - 1) / 2 +
-                                           (double) (right.b - left.b) * t.start / info->line->len / 2 + left.b;
-                } return;
-                case GRAD_ANG_225: {
-                        rgb_t temp = right; right = left; left = temp;
-                }
-                case GRAD_ANG_45: {
-                        rgb_style->rgb.r = (double) (right.r - left.r) * (info->H - info->line_index - 1) / (info->H - 1) / 2 + 
-                                           (double) (right.r - left.r) * t.start / info->line->len / 2 + left.r;
-                        rgb_style->rgb.g = (double) (right.g - left.g) * (info->H - info->line_index - 1) / (info->H - 1) / 2 + 
-                                           (double) (right.g - left.g) * t.start / info->line->len / 2 + left.g;
-                        rgb_style->rgb.b = (double) (right.b - left.b) * (info->H - info->line_index - 1) / (info->H - 1) / 2 + 
-                                           (double) (right.b - left.b) * t.start / info->line->len / 2 + left.b;
-                }
-        }
+        bool is_reversed = state->angle == ANG_180 || state->angle == ANG_90 || state->angle == ANG_135 || state->angle == ANG_225;
+        rgb_t adder = is_reversed ? right : left;
+        double vertical_ratio = (double) info->line_index / (info->H - 1);
+        double horizontal_ratio = (double) t.start / info->line->len;
+        rgb_style->rgb.r = determine_angled_value(state->angle, (double) right.r - left.r, is_reversed, vertical_ratio, horizontal_ratio) + adder.r;
+        rgb_style->rgb.g = determine_angled_value(state->angle, (double) right.g - left.g, is_reversed, vertical_ratio, horizontal_ratio) + adder.g;
+        rgb_style->rgb.b = determine_angled_value(state->angle, (double) right.b - left.b, is_reversed, vertical_ratio, horizontal_ratio) + adder.b;
 }
 
 /*
@@ -254,9 +238,9 @@ void step_rgb_state(editor_state_t *state) {
 
 void fill_rgb_mode_rgb(ansi_code_t *rgb_style, const highlighting_info_t *info,
                        const token_t t, const display_state_t *state) {
-        const int half_rgb_prog = RGB_PROGRESSION_LEN / 2;
-        uint8_t prog_index = (double) t.start / info->W * half_rgb_prog
-                             + (double) info->line_index / (info->H - 1) * half_rgb_prog;
+        uint8_t prog_index = determine_angled_value(state->angle, RGB_PROGRESSION_LEN, 
+                                                    state->angle == ANG_180 || state->angle == ANG_90 || state->angle == ANG_135 || state->angle == ANG_225,
+                                                    (double) info->line_index / (info->H - 1), (double) t.start / info->W);
         rgb_style->rgb = RGB_PROGRESSION[(prog_index + state->rgb_state) % RGB_PROGRESSION_LEN];
 }
 
