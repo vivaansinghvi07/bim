@@ -1,6 +1,6 @@
-#include "state.h"
-#include "buf.h"
-#include "utils.h"
+#include "../include/state.h"
+#include "../include/buf.h"
+#include "../include/utils.h"
 
 #include <stdbool.h>
 #include <stdlib.h>

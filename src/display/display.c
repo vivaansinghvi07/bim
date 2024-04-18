@@ -1,6 +1,6 @@
-#include "display.h"
-#include "../buf.h"
-#include "../utils.h"
+#include "../../include/display/display.h"
+#include "../../include/buf.h"
+#include "../../include/utils.h"
 
 #include <assert.h>
 #include <stdbool.h>

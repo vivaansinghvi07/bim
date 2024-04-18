@@ -1,6 +1,6 @@
-#include "buf.h"
-#include "list.h"
-#include "utils.h"
+#include "../include/buf.h"
+#include "../include/list.h"
+#include "../include/utils.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -38,8 +38,16 @@ void buf_save(const buf_t *buf) {
         fclose(file);
 }
 
+void assert_valid_file(const char *filename) {
+        FILE *file = fopen(filename, "w");
+        if (file == NULL) {
+                // TODO: add error display feature
+        }
+}
+
 buf_t *buf_open(const char *filename, const int tab_width) {
 
+        assert_valid_file(filename);
         FILE *file = fopen(filename, "r");
         buf_t *return_buffer = malloc(sizeof(buf_t));
         *return_buffer = (buf_t) {

@@ -1,5 +1,5 @@
-#include "utils.h"
-#include "list.h"
+#include "../include/utils.h"
+#include "../include/list.h"
 
 #include <ctype.h>
 #include <time.h>

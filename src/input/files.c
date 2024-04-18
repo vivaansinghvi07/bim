@@ -1,5 +1,5 @@
-#include "files.h"
-#include "../state.h"
+#include "../../include/input/files.h"
+#include "../../include/state.h"
 
 void handle_files_input(editor_state_t *state, char c) {
 
