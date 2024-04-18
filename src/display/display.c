@@ -290,7 +290,7 @@ const char *apply_syntax_highlighting(const highlighting_info_t *info, const dis
         for (size_t c = info->col_start - 1, i = 0; c < info->line->len && i < info->W; ++c, ++i) {
                 bool current_token_ending = c < info->line->len - 1 
                                             && !is_name_char(info->line->items[c + 1]);
-                if (state->syntax_mode == HIGH_GRADIENT 
+                if (state->syntax_mode == HIGH_GRADIENT || state->syntax_mode == HIGH_RGB
                     || !is_name_char(info->line->items[c]) 
                     || current_token_ending) {
                         tokens[t++].end = c + 1;
