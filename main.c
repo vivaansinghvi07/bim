@@ -66,6 +66,7 @@ int main(const int argc, const char **argv) {
         setup_state(&state, argc, argv);
         display_by_mode(&state);
         char c;
+        bool already_found_error = false;
         while (true) {
 
                 set_timer(&state.timer);
@@ -101,8 +102,13 @@ int main(const int argc, const char **argv) {
                         case CMD_OPEN:
                         case CMD_SEARCH: handle_command_input(&state, c); break;
                 }
+                if (state.error_message.len) {
+                        if (already_found_error) {
+                                clear_error_message(&state);
+                        }
+                        already_found_error = !already_found_error;
+                }
                 display_by_mode(&state);
-                clear_error_message(&state);
         }
 
         buf_free_list(state.buffers);

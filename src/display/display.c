@@ -42,8 +42,8 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
 
         // error message?!?!?!?!?!?!?
         if (state->error_message.len) {
-                int length = min(state->error_message.len, W - 4);
-                memcpy(bar + 2, state->error_message.items, max(0, length));
+                int length = min(state->error_message.len, W - 2);
+                memcpy(bar + 1, state->error_message.items, max(0, length));
                 return bar;
         }
 
@@ -395,7 +395,7 @@ void display_file_buffer(const editor_state_t *state) {
 
         move_to_top_left();
         hide_cursor();
-        printf("%s\033[0m%s%s", buffer_output, state->error_message.len ? "\033[31m" : "", bar);
+        printf("%s\033[0m%s%s", buffer_output, state->error_message.len ? "\033[1m" : "", bar);
         move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1,
                        buffer->cursor_col - buffer->screen_left_col + 1);
         if (state->mode != CMD_SEARCH) {
