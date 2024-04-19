@@ -21,10 +21,13 @@ void handle_open_new_buffer(editor_state_t *state) {
                 return;
         }
 
-        list_append(*target, '\0');
-        buf_t *buf = buf_open(target->items, state->tab_width);
+        char *filename = malloc((target->len + 1) * sizeof(char));  // will be freed at the end 
+        memcpy(filename, target->items, target->len);
+        filename[target->len] = '\0';
+
+        buf_t *buf = buf_open(filename, state->tab_width);
         if (buf == NULL) {
-                show_error(state, "INVALID FILE ATTEMPTED TO BE OPENED: %s", target->items);
+                show_error(state, "INVALID FILE: %s", filename);
                 return;
         }
         list_append(*state->buffers, buf);  // NOLINT

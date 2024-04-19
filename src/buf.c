@@ -29,6 +29,7 @@ void buf_free(buf_t *buf) {
 void buf_save(const buf_t *buf) {
         FILE *file = fopen(buf->filename, "w");
         const char newline = '\n';
+        editor_log("Saving file...\n");
         for (size_t i = 0; i < buf->lines.len; ++i) {
                 dyn_str *line = buf->lines.items + i;
                 fwrite(line->items, sizeof(char), line->len, file);

@@ -19,7 +19,7 @@ list_typedef(dyn_str, char);
 // typedef struct timespec _;
 
 void open_log_file();
-void editor_log(int test, const char *format, ...);
+void editor_log(const char *format, ...);
 
 int input_set_tty_raw(void);
 int input_restore_tty(void);

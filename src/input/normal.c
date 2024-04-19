@@ -273,7 +273,10 @@ void handle_jump(const editor_state_t *state, buf_t *buf, const int H, const int
                 text_pos_t *pos = positions.items + i;
                 if (!strncmp(target->items, buf->lines.items[pos->line].items + pos->col, target->len)) {
                         buf->cursor_line = pos->line + 1;
-                        buf->screen_top_line = pos->line > H - 2 ? pos->line - (H - 1) / 2 : 1;
+                        if (buf->cursor_line - buf->screen_top_line >= H - 1 
+                            || buf->cursor_line - buf->screen_top_line < 0) {
+                                buf->screen_top_line = pos->line > H - 2 ? pos->line - (H - 1) / 2 : 1;  
+                        }
                         buf->cursor_col = pos->col + 1;
                         buf->screen_left_col = pos->col > W - 1 ? pos->col - W / 2 : 1;
                         return;
@@ -295,6 +298,9 @@ void handle_c_open_file(editor_state_t *state) {
 }
 
 void handle_c_enter_files(const editor_state_t *state, buf_t *buf, const int H, const int W) {
+        // TODO
+        DIR *dir;
+        struct dirent *dir_ent;
         
 }
 
