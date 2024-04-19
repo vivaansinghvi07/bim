@@ -1,7 +1,9 @@
 #include "state.h"
 #include "buf.h"
+#include "display/display.h"
 #include "utils.h"
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +11,66 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <limits.h>
+
+/* State-related functions */
+
+void show_error(editor_state_t *state, const char *format, ...) {
+        clear_error_message(state);
+        va_list arg_ptr, other_args;
+        va_start(arg_ptr, format);
+        va_copy(other_args, arg_ptr);
+        size_t len = vsnprintf(NULL, 0, format, arg_ptr);
+        list_create_space(state->error_message, len + 1);
+        vsnprintf(state->error_message.items, len + 1, format, other_args);
+        --state->error_message.len;  // removes the null terminator
+        va_end(arg_ptr);
+}
+
+void clear_error_message(editor_state_t *state) {
+        state->error_message.len = 0;
+}
+
+// forward decl, i want the state function on the top here
+void load_config(editor_state_t *state);
+
+void setup_state(editor_state_t *state, const int argc, const char **argv) {
+
+        fill_ansi_color_table();
+        load_config(state);
+
+        // open all buffers passed in cli
+        if (argc == 1) {
+                exit_error("Must pass in a filename to run this editor.\n\r");
+        }
+        buf_list *buffers = malloc(sizeof(buf_list));
+        *buffers = list_init(buf_list, argc);   // NOLINT
+        for (uint8_t i = 1; i < argc; ++i) {
+                buf_t *buf = buf_open(argv[i], state->tab_width); 
+                if (buf == NULL) {
+                        exit_error("Invalid file name passed into editor: %s\n", argv[i]);
+                }
+                list_append(*buffers, buf);  // NOLINT
+        }
+
+        // according to the man pages, if NULL, space is allocated for it and a pointer to it is returned
+        const char *cwd = getcwd(NULL, PATH_MAX + 1);  
+
+        state->cwd = (char *) cwd;
+        state->input_history = list_init(dyn_str, 128);
+        state->command_target = list_init(dyn_str, 128);
+        state->copy_register = list_init(dyn_str, 256);
+        state->error_message = list_init(dyn_str, 128);
+        state->buf_curr = buffers->len - 1;
+        state->buffers = (buf_list *) buffers;
+        state->mode = NORMAL;
+
+        set_timer(&state->inactive_timer);
+        set_timer(&state->gradient_rotating_timer);
+        set_timer(&state->rgb_cycle_timer);
+}
+
+/* Config file-related functions */
 
 #define CONFIG_FILE_NAME ".stupid_editor_rc"
 
@@ -47,7 +109,7 @@ const angle_mode ANG_ENUM_OPTS[] = {ANG_0, ANG_45, ANG_90, ANG_135,
         do {                                                                                        \
                 const char *ending_str = (info).line->items + (info).equal_index + 1;               \
                 size_t len = (info).line->len - (info).equal_index - 1;                             \
-                for (size_t i = (info).line->len - 1; (info).line->items[i] == ' '; --i, --len) {}  \
+                for (size_t i = (info).line->len - 1; (info).line->items[i] == ' '; --i, --len);    \
                                                                                                     \
                 int i;                                                                              \
                 for (i = 0; i < sizeof(str_opts_arr) / sizeof(*str_opts_arr); ++i) {                \
@@ -198,6 +260,10 @@ void load_config(editor_state_t *state) {
         }
         buf_t *buf = buf_open(config_path, state->tab_width);  // tab_width here doesn't really matter
         free(config_path);
+
+        if (buf == NULL) {
+                exit_error("Invalid config file path. This is an error with the program itself.\n");
+        }
 
         for (size_t l = 0; l < buf->lines.len; ++l) {
 

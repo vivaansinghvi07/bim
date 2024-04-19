@@ -1,4 +1,5 @@
 #include "buf.h"
+#include "state.h"
 #include "list.h"
 #include "utils.h"
 
@@ -38,16 +39,22 @@ void buf_save(const buf_t *buf) {
         fclose(file);
 }
 
-void assert_valid_file(const char *filename) {
-        FILE *file = fopen(filename, "w");
+bool is_valid_file(const char *filename) {
+        FILE *file = fopen(filename, "a");
         if (file == NULL) {
-                // TODO: add error display feature
+                return false;
+        } else {
+                fclose(file);
+                return true;
         }
 }
 
 buf_t *buf_open(const char *filename, const int tab_width) {
 
-        assert_valid_file(filename);
+        if (!is_valid_file(filename)) {
+                return NULL;
+        }
+
         FILE *file = fopen(filename, "r");
         buf_t *return_buffer = malloc(sizeof(buf_t));
         *return_buffer = (buf_t) {
@@ -58,7 +65,7 @@ buf_t *buf_open(const char *filename, const int tab_width) {
                 .screen_top_line = 1,
                 .lines = list_init(dyn_contents, MIN_NEW_LINE_LEN)
         };
-	list_append(return_buffer->lines, list_init(dyn_str, MIN_NEW_LINE_LEN));
+        list_append(return_buffer->lines, list_init(dyn_str, MIN_NEW_LINE_LEN));
 
         if (file == NULL) {
                 return return_buffer;

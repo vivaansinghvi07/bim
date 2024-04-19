@@ -79,6 +79,7 @@ typedef struct {
         size_t buf_curr;
         buf_list *buffers;
 
+        dyn_str error_message;
         dyn_str input_history;
         dyn_str copy_register;
         dyn_str command_target;
@@ -88,6 +89,8 @@ typedef struct {
 
 } editor_state_t;
 
-void load_config(editor_state_t *state);
+void show_error(editor_state_t *state, const char *format, ...);
+void clear_error_message(editor_state_t *state);
+void setup_state(editor_state_t *state, const int argc, const char **argv);
 
 #endif // !EDITOR_STATE

@@ -14,8 +14,20 @@ void handle_c_exit_command(editor_state_t *state) {
 }
 
 void handle_open_new_buffer(editor_state_t *state) {
-        list_append(state->command_target, '\0');
-        list_append(*state->buffers, buf_open(state->command_target.items, state->tab_width));  // NOLINT
+
+        dyn_str *target = &state->command_target;
+        for (; target->len && target->items[target->len - 1] == ' '; --target->len);  // strip whitespace lmao
+        if (!target->len) {
+                return;
+        }
+
+        list_append(*target, '\0');
+        buf_t *buf = buf_open(target->items, state->tab_width);
+        if (buf == NULL) {
+                show_error(state, "INVALID FILE ATTEMPTED TO BE OPENED: %s", target->items);
+                return;
+        }
+        list_append(*state->buffers, buf);  // NOLINT
         ++state->buf_curr;
 }
 

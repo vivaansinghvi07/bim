@@ -11,47 +11,12 @@
 #include "src/input/command.h"
 
 #include <poll.h>
-#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdbool.h>
 
 #define POLL_TIMEOUT_MS 20
-
-void setup_state(editor_state_t *state, const int argc, const char **argv) {
-
-        fill_ansi_color_table();
-        load_config(state);
-
-        // open all buffers passed in cli
-        if (argc == 1) {
-                exit_error("Must pass in a filename to run this editor.\n\r");
-        }
-        buf_list *buffers = malloc(sizeof(buf_list));
-        *buffers = list_init(buf_list, argc);   // NOLINT
-        for (uint8_t i = 1; i < argc; ++i) {
-                list_append(*buffers, buf_open(argv[i], state->tab_width));  // NOLINT
-        }
-
-        // according to the man pages, if NULL, space is allocated for it and a pointer to it is returned
-        const char *cwd = getcwd(NULL, PATH_MAX + 1);  
-
-        state->cwd = (char *) cwd;
-        state->input_history = list_init(dyn_str, 128);
-        state->command_target = list_init(dyn_str, 128);
-        state->copy_register = list_init(dyn_str, 256);
-        state->buf_curr = buffers->len - 1;
-        state->buffers = (buf_list *) buffers;
-        state->mode = NORMAL;
-}
-
-void init(editor_state_t *state) {
-        display_by_mode(state);
-        set_timer(&state->inactive_timer);
-        set_timer(&state->gradient_rotating_timer);
-        set_timer(&state->rgb_cycle_timer);
-}
 
 void iterate_animated_displays(editor_state_t *state) {
         if (state->display_state.syntax_mode == HIGH_GRADIENT
@@ -89,6 +54,7 @@ void handle_escape_sequences(editor_state_t *state, struct pollfd *in) {
                 case CMD_OPEN: break;
         }
         display_by_mode(state);
+        clear_error_message(state);
 }
 
 int main(const int argc, const char **argv) {
@@ -98,7 +64,7 @@ int main(const int argc, const char **argv) {
         struct pollfd in = {.fd = 0, .events = POLLIN};
 
         setup_state(&state, argc, argv);
-        init(&state);
+        display_by_mode(&state);
         char c;
         while (true) {
 
@@ -136,6 +102,7 @@ int main(const int argc, const char **argv) {
                         case CMD_SEARCH: handle_command_input(&state, c); break;
                 }
                 display_by_mode(&state);
+                clear_error_message(&state);
         }
 
         buf_free_list(state.buffers);

@@ -40,8 +40,16 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         char *bar = malloc(W * sizeof(char));  // TOFREE
         memset(bar, ' ', W * sizeof(char));
 
+        // error message?!?!?!?!?!?!?
+        if (state->error_message.len) {
+                int length = min(state->error_message.len, W - 4);
+                memcpy(bar + 2, state->error_message.items, max(0, length));
+                return bar;
+        }
+
         // prevent a bar that is overflowing
-        if (W < 10) {
+        const size_t max_mode_len = 16;
+        if (W < max_mode_len) {
                 memset(bar, '=', W * sizeof(char));
                 return bar;
         }
@@ -57,6 +65,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                 case EDIT: mode_text = "edit", mode_len = 4; break;
         }
 
+        // prints the mode onto the bar
         memcpy(bar + 2               , "== ", 3);
         memcpy(bar + 2 + 3           , mode_text, mode_len);
         memcpy(bar + 2 + 3 + mode_len, " ==", 3);
@@ -386,7 +395,7 @@ void display_file_buffer(const editor_state_t *state) {
 
         move_to_top_left();
         hide_cursor();
-        printf("%s\033[0m%s", buffer_output, bar);
+        printf("%s\033[0m%s%s", buffer_output, state->error_message.len ? "\033[31m" : "", bar);
         move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1,
                        buffer->cursor_col - buffer->screen_left_col + 1);
         if (state->mode != CMD_SEARCH) {

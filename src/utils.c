@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "state.h"
 #include "list.h"
 
 #include <ctype.h>
@@ -19,7 +20,7 @@ void open_log_file() {
         setbuf(logger, NULL);
 }
 
-void editor_log(const char *format, ...) {
+void editor_log(int test, const char *format, ...) {
         if (!logger) {
                 open_log_file();
         }
