@@ -52,8 +52,10 @@ void insert_single_character(buf_t *buf, dyn_str *line, char c, const int W) {
         handle_c_move_right(buf, W);
 }
 
-void delete_single_character(buf_t *buf, dyn_str *line) {
+void delete_single_character(buf_t *buf, dyn_str *line, const int tab_width) {
         int col = buf->cursor_col - 2;
+
+        // deletion is at the beginning of a line
         if (col < 0) {
                 if (buf->cursor_line == 1) {
                         return;
@@ -67,8 +69,15 @@ void delete_single_character(buf_t *buf, dyn_str *line) {
                 handle_c_move_up(buf);
                 buf->cursor_col = prev_line_prev_len + 1;
         } else {
-                list_pop(*line, col);
-                handle_c_move_left(buf);
+                int deletes = 1;
+                if (line->items[col] == ' ') {
+                        int max_to_delete = col % tab_width + 1;
+                        for (; deletes < max_to_delete && line->items[col - deletes] == ' '; ++deletes);
+                }
+                while (deletes-->0) {
+                        list_pop(*line, buf->cursor_col - 2);
+                        handle_c_move_left(buf);
+                }
         }
 }
 
@@ -86,7 +95,7 @@ void handle_edit_input(editor_state_t *state, char c) {
                 case CHAR_ESCAPE: state->mode = NORMAL; break;
                 case CHAR_TAB: insert_tab(buf, line, state->tab_width); break;
                 case CHAR_NEWLINE: insert_newline(buf, line, H); break;
-                case CHAR_BACKSPACE: delete_single_character(buf, line); break;
+                case CHAR_BACKSPACE: delete_single_character(buf, line, state->tab_width); break;
                 default: {
                         if (!isprint(c)) {
                                 return;
