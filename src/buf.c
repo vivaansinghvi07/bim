@@ -29,7 +29,6 @@ void buf_free(buf_t *buf) {
 void buf_save(const buf_t *buf) {
         FILE *file = fopen(buf->filename, "w");
         const char newline = '\n';
-        editor_log("Saving file...\n");
         for (size_t i = 0; i < buf->lines.len; ++i) {
                 dyn_str *line = buf->lines.items + i;
                 fwrite(line->items, sizeof(char), line->len, file);
@@ -50,6 +49,17 @@ bool is_valid_file(const char *filename) {
         }
 }
 
+void buf_init(buf_t *buffer, const char *filename) {
+        *buffer = (buf_t) {
+                .filename = filename,
+                .cursor_col = 1,
+                .cursor_line = 1,
+                .screen_left_col = 1,
+                .screen_top_line = 1,
+                .lines = list_init(dyn_contents, MIN_NEW_LINE_LEN)
+        };
+}
+
 buf_t *buf_open(const char *filename, const int tab_width) {
 
         if (!is_valid_file(filename)) {
@@ -58,14 +68,7 @@ buf_t *buf_open(const char *filename, const int tab_width) {
 
         FILE *file = fopen(filename, "r");
         buf_t *return_buffer = malloc(sizeof(buf_t));
-        *return_buffer = (buf_t) {
-                .filename = filename, 
-                .cursor_col = 1,
-                .cursor_line = 1,
-                .screen_left_col = 1,
-                .screen_top_line = 1,
-                .lines = list_init(dyn_contents, MIN_NEW_LINE_LEN)
-        };
+        buf_init(return_buffer, filename);
         list_append(return_buffer->lines, list_init(dyn_str, MIN_NEW_LINE_LEN));
 
         if (file == NULL) {

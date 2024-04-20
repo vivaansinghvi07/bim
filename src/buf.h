@@ -31,6 +31,7 @@ list_typedef(buf_list, buf_t *);
 void buf_free_list(buf_list *buffers);
 void buf_free(buf_t *buf);
 void buf_save(const buf_t *buf);
+void buf_init(buf_t *buffer, const char *filename);
 buf_t *buf_open(const char *filename, const int tab_width);
 
 #endif // !EDITOR_BUF

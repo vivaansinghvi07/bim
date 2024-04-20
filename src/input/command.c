@@ -31,7 +31,7 @@ void handle_open_new_buffer(editor_state_t *state) {
                 return;
         }
         list_append(*state->buffers, buf);  // NOLINT
-        ++state->buf_curr;
+        state->buf_curr = state->buffers->len - 1;
 }
 
 void handle_c_command_enter(editor_state_t *state, buf_t *buf, const int H, const int W) {

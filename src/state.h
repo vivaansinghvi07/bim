@@ -84,9 +84,7 @@ typedef struct {
         dyn_str copy_register;
         dyn_str command_target;
 
-        char *cwd;
-        dyn_contents files_view_buf;
-
+        buf_t files_view_buf;
 } editor_state_t;
 
 void show_error(editor_state_t *state, const char *format, ...);

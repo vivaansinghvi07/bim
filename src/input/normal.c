@@ -301,7 +301,7 @@ void handle_c_enter_files(const editor_state_t *state, buf_t *buf, const int H, 
         // TODO
         DIR *dir;
         struct dirent *dir_ent;
-        
+        buf_t *file_view_buffer = malloc(sizeof(buf_t));
 }
 
 void handle_normal_input(editor_state_t *state, char c) {

@@ -81,8 +81,16 @@ int main(const int argc, const char **argv) {
                 }
                 set_timer(&state.inactive_timer);
                 read(0, &c, 1);
-                if (state.mode == NORMAL && c == 'q') {  // putting this here early
-                        break;
+                if (state.mode == NORMAL && (c == 'q' || c == 'Q')) {  // putting this here early
+                        if (c == 'Q' || state.buffers->len == 1) {
+                                break;
+                        }
+                        buf_free(state.buffers->items[state.buf_curr]);
+                        editor_log("Buffer freed.\n");
+                        list_pop(*state.buffers, state.buf_curr);  // NOLINT
+                        if (state.buf_curr == state.buffers->len) {
+                                --state.buf_curr;
+                        }
                 }
 
                 if (c == '\033') {

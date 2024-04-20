@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <ctype.h>
-#include <limits.h>
 
 /* State-related functions */
 
@@ -53,10 +52,8 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
                 list_append(*buffers, buf);  // NOLINT
         }
 
-        // according to the man pages, if NULL, space is allocated for it and a pointer to it is returned
-        const char *cwd = getcwd(NULL, PATH_MAX + 1);  
-
-        state->cwd = (char *) cwd;
+        buf_init(&state->files_view_buf, getcwd(NULL, 0));
+        // TODO: fill file mode buffer with this
         state->input_history = list_init(dyn_str, 128);
         state->command_target = list_init(dyn_str, 128);
         state->copy_register = list_init(dyn_str, 256);
