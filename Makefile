@@ -1,2 +1,4 @@
+CFLAGS = -Wall -Wno-logical-op-parentheses -O3
+
 main:
-	gcc main.c -O3 src/*.c src/*/*.c -o editor -Wall -Wno-logical-op-parentheses
+	gcc $(CFLAGS) main.c src/*.c src/*/*.c -o editor

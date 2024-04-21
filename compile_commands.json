@@ -1,0 +1,197 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "main.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/main.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/buf.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/buf.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/list.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/list.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/sound.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/sound.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/state.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/state.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/utils.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/utils.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/display/display.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/display/display.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/display/screensaver.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/display/screensaver.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/input/command.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/input/command.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/input/edit.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/input/edit.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/input/esc.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/input/esc.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/input/files.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/input/files.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wno-logical-op-parentheses",
+      "-o",
+      "editor",
+      "src/input/normal.c"
+    ],
+    "directory": "/Users/vs/Documents/Code/GitHub/editor",
+    "file": "/Users/vs/Documents/Code/GitHub/editor/src/input/normal.c",
+    "output": "/Users/vs/Documents/Code/GitHub/editor/editor"
+  }
+]
