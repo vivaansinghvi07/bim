@@ -3,9 +3,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "main.c"
@@ -18,9 +18,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/buf.c"
@@ -33,9 +33,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/list.c"
@@ -48,9 +48,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/sound.c"
@@ -63,9 +63,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/state.c"
@@ -78,9 +78,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/utils.c"
@@ -93,9 +93,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/display/display.c"
@@ -108,9 +108,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/display/screensaver.c"
@@ -123,9 +123,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/input/command.c"
@@ -138,9 +138,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/input/edit.c"
@@ -153,9 +153,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/input/esc.c"
@@ -168,9 +168,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/input/files.c"
@@ -183,9 +183,9 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
-      "-O3",
       "-Wall",
       "-Wno-logical-op-parentheses",
+      "-O3",
       "-o",
       "editor",
       "src/input/normal.c"
