@@ -53,7 +53,8 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
         }
 
         buf_init(&state->files_view_buf, getcwd(NULL, 0));
-        // TODO: fill file mode buffer with this
+        buf_fill_files_view(&state->files_view_buf);                
+
         state->input_history = list_init(dyn_str, 128);
         state->command_target = list_init(dyn_str, 128);
         state->copy_register = list_init(dyn_str, 256);

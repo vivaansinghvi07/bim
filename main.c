@@ -34,7 +34,7 @@ void iterate_animated_displays(editor_state_t *state) {
         } else {
                 return;
         }
-        display_by_mode(state);
+        display_buffer(state);
 }
 
 void handle_escape_sequences(editor_state_t *state, struct pollfd *in) {
@@ -53,7 +53,7 @@ void handle_escape_sequences(editor_state_t *state, struct pollfd *in) {
                 case CMD_SEARCH:
                 case CMD_OPEN: break;
         }
-        display_by_mode(state);
+        display_buffer(state);
         clear_error_message(state);
 }
 
@@ -64,7 +64,7 @@ int main(const int argc, const char **argv) {
         struct pollfd in = {.fd = 0, .events = POLLIN};
 
         setup_state(&state, argc, argv);
-        display_by_mode(&state);
+        display_buffer(&state);
         char c;
         bool already_found_error = false;
         while (true) {
@@ -86,7 +86,6 @@ int main(const int argc, const char **argv) {
                                 break;
                         }
                         buf_free(state.buffers->items[state.buf_curr]);
-                        editor_log("Buffer freed.\n");
                         list_pop(*state.buffers, state.buf_curr);  // NOLINT
                         if (state.buf_curr == state.buffers->len) {
                                 --state.buf_curr;
@@ -110,13 +109,20 @@ int main(const int argc, const char **argv) {
                         case CMD_OPEN:
                         case CMD_SEARCH: handle_command_input(&state, c); break;
                 }
+
+                // if there is input already there, skip display
+                if (poll(&in, 1, 0)) {
+                        continue;
+                }
+
+
                 if (state.error_message.len) {
                         if (already_found_error) {
                                 clear_error_message(&state);
                         }
                         already_found_error = !already_found_error;
                 }
-                display_by_mode(&state);
+                display_buffer(&state);
         }
 
         buf_free_list(state.buffers);

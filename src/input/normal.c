@@ -297,10 +297,8 @@ void handle_c_open_file(editor_state_t *state) {
         state->mode = CMD_OPEN;
 }
 
-void handle_c_enter_files(const editor_state_t *state, buf_t *buf, const int H, const int W) {
-        DIR *dir;
-        struct dirent *dir_ent;
-        
+void handle_c_enter_files(editor_state_t *state) {
+        state->mode = FILES;
 }
 
 void handle_normal_input(editor_state_t *state, char c) {
@@ -341,6 +339,7 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_JUMP_PREVIOUS: handle_c_jump_previous(state, buf, H, W); break;
 
                 case C_OPEN_FILE: handle_c_open_file(state); break;
+                case C_ENTER_FILES: handle_c_enter_files(state); break;
 
                 default: return;  // nothing changes, don't waste time displaying
         }

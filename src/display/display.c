@@ -61,7 +61,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                 case CMD_OPEN: mode_text = "open", mode_len = 4; break;
                 case CMD_SEARCH: mode_text = "search", mode_len = 6; break;
                 case NORMAL: mode_text = "normal", mode_len = 6; break;
-                case FILES: mode_text = "file", mode_len = 4; break;
+                case FILES: mode_text = "files", mode_len = 5; break;
                 case EDIT: mode_text = "edit", mode_len = 4; break;
         }
 
@@ -226,17 +226,16 @@ const rgb_t RGB_PROGRESSION[] = {
         (rgb_t){0, 255, 54},    (rgb_t){0, 255, 74},    (rgb_t){0, 255, 95},    (rgb_t){0, 255, 115},
         (rgb_t){0, 255, 135},   (rgb_t){0, 255, 155},   (rgb_t){0, 255, 175},   (rgb_t){0, 255, 195},
         (rgb_t){0, 255, 216},   (rgb_t){0, 255, 236},   (rgb_t){0, 254, 255},   (rgb_t){0, 234, 255},
-        (rgb_t){0, 231, 255},   (rgb_t){0, 228, 255},   (rgb_t){36, 223, 255},  (rgb_t){67, 219, 255},
-        (rgb_t){85, 214, 255},  (rgb_t){97, 210, 255},  (rgb_t){107, 205, 255}, (rgb_t){115, 201, 255},
-        (rgb_t){122, 197, 255}, (rgb_t){128, 193, 255}, (rgb_t){134, 189, 255}, (rgb_t){140, 184, 255},
-        (rgb_t){146, 180, 255}, (rgb_t){151, 175, 255}, (rgb_t){157, 170, 255}, (rgb_t){163, 165, 255},
-        (rgb_t){169, 159, 255}, (rgb_t){175, 153, 255}, (rgb_t){182, 146, 255}, (rgb_t){190, 138, 255},
-        (rgb_t){198, 129, 255}, (rgb_t){206, 122, 255}, (rgb_t){212, 116, 255}, (rgb_t){218, 110, 247},
-        (rgb_t){224, 104, 237}, (rgb_t){229, 97, 227},  (rgb_t){234, 91, 216},  (rgb_t){238, 85, 204},
-        (rgb_t){242, 78, 192},  (rgb_t){246, 72, 180},  (rgb_t){249, 65, 166},  (rgb_t){252, 58, 152},
-        (rgb_t){254, 51, 138},  (rgb_t){255, 43, 123},  (rgb_t){255, 35, 107},  (rgb_t){255, 26, 90},
-        (rgb_t){255, 17, 71},   (rgb_t){255, 7, 47},
-};
+        (rgb_t){0, 231, 255},   (rgb_t){0, 228, 255},   (rgb_t){22, 225, 255},  (rgb_t){45, 222, 255},
+        (rgb_t){67, 219, 255},  (rgb_t){85, 214, 255},  (rgb_t){97, 210, 255},  (rgb_t){107, 205, 255},
+        (rgb_t){115, 201, 255}, (rgb_t){122, 197, 255}, (rgb_t){128, 193, 255}, (rgb_t){134, 189, 255},
+        (rgb_t){140, 184, 255}, (rgb_t){146, 180, 255}, (rgb_t){151, 175, 255}, (rgb_t){157, 170, 255},
+        (rgb_t){163, 165, 255}, (rgb_t){169, 159, 255}, (rgb_t){175, 153, 255}, (rgb_t){182, 146, 255},
+        (rgb_t){190, 138, 255}, (rgb_t){198, 129, 255}, (rgb_t){206, 122, 255}, (rgb_t){212, 116, 255},
+        (rgb_t){218, 110, 247}, (rgb_t){224, 104, 237}, (rgb_t){229, 97, 227},  (rgb_t){234, 91, 216},
+        (rgb_t){238, 85, 204},  (rgb_t){242, 78, 192},  (rgb_t){246, 72, 180},  (rgb_t){249, 65, 166},
+        (rgb_t){252, 58, 152},  (rgb_t){254, 51, 138},  (rgb_t){255, 43, 123},  (rgb_t){255, 35, 107},
+        (rgb_t){255, 26, 90},   (rgb_t){255, 17, 71},   (rgb_t){255, 7, 47}, };
 
 const uint8_t RGB_PROGRESSION_LEN = sizeof(RGB_PROGRESSION) / sizeof(rgb_t);
 
@@ -330,6 +329,13 @@ const char *apply_syntax_highlighting(const highlighting_info_t *info, const dis
         return output;
 }
 
+const buf_t *get_buffer_by_state(const editor_state_t *state) {
+        switch (state->mode) {
+                case FILES: return &state->files_view_buf;
+                default: return state->buffers->items[state->buf_curr];
+        }
+}
+
 /*
  * Returns an entire string that will be printed to the screen while editing.
  * The string will be null-terminated.
@@ -339,7 +345,7 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         // determine information about the screen
         const struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
-        const buf_t *buf = state->buffers->items[state->buf_curr];
+        const buf_t *buf = get_buffer_by_state(state);
         char blank_space_block[ANSI_ESCAPE_LEN + 2];
         snprintf(blank_space_block, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 0, 0, 0, 22);
         blank_space_block[ANSI_ESCAPE_LEN] = ' ';
@@ -386,9 +392,9 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
  *   display a buffer (meaning we are in the normal or edit mode),
  *   and return the cursor to the old position.
  */
-void display_file_buffer(const editor_state_t *state) {
+void display_buffer(const editor_state_t *state) {
 
-        const buf_t *buffer = state->buffers->items[state->buf_curr];
+        const buf_t *buf = get_buffer_by_state(state);
         const struct winsize w = get_window_size();
         const char *buffer_output = get_displayed_buffer_string(state);
         const char *bar = get_bottom_bar(w.ws_col, state);
@@ -396,24 +402,13 @@ void display_file_buffer(const editor_state_t *state) {
         move_to_top_left();
         hide_cursor();
         printf("%s\033[0m%s%s", buffer_output, state->error_message.len ? "\033[1m" : "", bar);
-        move_cursor_to(buffer->cursor_line - buffer->screen_top_line + 1,
-                       buffer->cursor_col - buffer->screen_left_col + 1);
+        move_cursor_to(buf->cursor_line - buf->screen_top_line + 1,
+                       buf->cursor_col - buf->screen_left_col + 1);
         if (state->mode != CMD_SEARCH) {
                 show_cursor();
         }
         free((void *) bar);
         free((void *) buffer_output);
         fflush(stdout);
-}
-
-void display_by_mode(const editor_state_t *state) {
-        switch (state->mode) {
-                case CMD_SEARCH:
-                case CMD_OPEN:
-                case NORMAL:
-                case EDIT: {
-                        display_file_buffer(state);
-                } break;
-        }
 }
 

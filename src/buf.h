@@ -32,6 +32,7 @@ void buf_free_list(buf_list *buffers);
 void buf_free(buf_t *buf);
 void buf_save(const buf_t *buf);
 void buf_init(buf_t *buffer, const char *filename);
+void buf_fill_files_view(buf_t *buf);
 buf_t *buf_open(const char *filename, const int tab_width);
 
 #endif // !EDITOR_BUF

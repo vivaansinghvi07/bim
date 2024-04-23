@@ -168,7 +168,7 @@ void run_screensaver(editor_state_t *state) {
                         getchar(); // this is here to get rid of what's in the poll
 
                         show_cursor();
-                        display_by_mode(state);
+                        display_buffer(state);
 
                         free((void *) buf_str);
                         free(cells);

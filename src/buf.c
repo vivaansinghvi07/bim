@@ -3,6 +3,7 @@
 #include "list.h"
 #include "utils.h"
 
+#include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,11 +41,17 @@ void buf_save(const buf_t *buf) {
 }
 
 bool is_valid_file(const char *filename) {
+        FILE *read_handle = fopen(filename, "r");
         FILE *file = fopen(filename, "a");
         if (file == NULL) {
                 return false;
         } else {
                 fclose(file);
+                if (read_handle == NULL) {
+                        remove(filename);
+                } else {
+                        fclose(read_handle);
+                }
                 return true;
         }
 }
@@ -58,6 +65,29 @@ void buf_init(buf_t *buffer, const char *filename) {
                 .screen_top_line = 1,
                 .lines = list_init(dyn_contents, MIN_NEW_LINE_LEN)
         };
+}
+
+/*
+ * Fills the file view buffer with directory information about the diretory 
+ *  stored in the <filename> attribute.
+ */
+void buf_fill_files_view(buf_t *buf) {
+        for (int i = 0; i < buf->lines.len; ++i) {
+                free_list_items(1, buf->lines.items + i);
+        }
+        buf->lines.len = 0;
+        DIR *dir;
+        struct dirent *dirent;
+        dir = opendir(".");
+        if (dir) {
+                while ((dirent = readdir(dir)) != NULL) {
+                        if (dirent->d_type == DT_REG || dirent->d_type == DT_DIR) {
+                                dyn_str s = *dyn_str_from_string(dirent->d_name);
+                                list_append(buf->lines, s);
+                        }
+                }
+                closedir(dir);
+        }
 }
 
 buf_t *buf_open(const char *filename, const int tab_width) {
@@ -79,7 +109,7 @@ buf_t *buf_open(const char *filename, const int tab_width) {
         size_t file_length = ftell(file);
         fseek(file, 0, SEEK_SET);
 
-        char buf[file_length + 1];
+        char *buf = malloc((file_length + 1) * sizeof(char));
         fread(buf, sizeof(char), file_length, file);
         buf[file_length] = '\0';
         fclose(file);
@@ -95,5 +125,6 @@ buf_t *buf_open(const char *filename, const int tab_width) {
                         list_append(return_buffer->lines.items[return_buffer->lines.len - 1], *curr);
                 }
         }
+        free(buf);
         return return_buffer;
 }
