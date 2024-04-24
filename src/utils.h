@@ -27,6 +27,8 @@ int input_restore_tty(void);
 void clear_screen(void);
 void hide_cursor(void);
 void show_cursor(void);
+void set_cursor_block(void);
+void set_cursor_bar(void);
 void move_to_top_left(void);
 void move_cursor_to(const int x, const int y);
 

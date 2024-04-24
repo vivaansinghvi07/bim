@@ -81,6 +81,11 @@ void delete_single_character(buf_t *buf, dyn_str *line, const int tab_width) {
         }
 }
 
+void handle_exit_edit(editor_state_t *state) {
+        state->mode = NORMAL;
+        set_cursor_block();
+}
+
 void handle_edit_input(editor_state_t *state, char c) {
         struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
@@ -92,7 +97,7 @@ void handle_edit_input(editor_state_t *state, char c) {
                 case CHAR_CTRL_A: handle_c_move_left(buf); break; 
                 case CHAR_CTRL_S: handle_c_move_down(buf, H); break;
                 case CHAR_CTRL_D: handle_c_move_right(buf, W); break; 
-                case CHAR_ESCAPE: state->mode = NORMAL; break;
+                case CHAR_ESCAPE: handle_exit_edit(state); break;
                 case CHAR_TAB: insert_tab(buf, line, state->tab_width); break;
                 case CHAR_NEWLINE: insert_newline(buf, line, H); break;
                 case CHAR_BACKSPACE: delete_single_character(buf, line, state->tab_width); break;

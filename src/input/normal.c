@@ -143,6 +143,11 @@ void handle_c_big_move_right(buf_t *buf, const int W) {
         prev_col = 0;
 }
 
+void handle_c_enter_edit(editor_state_t *state) {
+        state->mode = EDIT;
+        set_cursor_bar();
+}
+
 void handle_c_buf_incre(editor_state_t *state) {
         state->buf_curr++; 
         state->buf_curr %= state->buffers->len;
@@ -328,7 +333,7 @@ void handle_normal_input(editor_state_t *state, char c) {
 
                 case C_BUF_INCRE: handle_c_buf_incre(state); break;
                 case C_BUF_DECRE: handle_c_buf_decre(state); break;
-                case C_ENTER_EDIT: state->mode = EDIT; break;
+                case C_ENTER_EDIT: handle_c_enter_edit(state); break;
                 case C_SAVE: buf_save(buf); break;
                 case C_SAVE_ALL: handle_c_save_all(state); break;
 

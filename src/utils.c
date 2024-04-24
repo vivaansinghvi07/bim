@@ -85,11 +85,19 @@ void clear_screen(void) {
 }
 
 void hide_cursor(void) {
-        printf("\x1b[?25l");
+        printf("\033[?25l");
 }
 
 void show_cursor(void) {
-        printf("\x1b[?25h");
+        printf("\033[?25h");
+}
+
+void set_cursor_block(void) {
+        printf("\033[2 q");
+}
+
+void set_cursor_bar(void) {
+        printf("\033[6 q");
 }
 
 dyn_str *dyn_str_from_string(const char *str) {

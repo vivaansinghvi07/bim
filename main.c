@@ -37,25 +37,6 @@ void iterate_animated_displays(editor_state_t *state) {
         display_buffer(state);
 }
 
-void handle_escape_sequences(editor_state_t *state, struct pollfd *in) {
-        dyn_str sequence_str = list_init(dyn_str, 20);
-        char c;
-        do {
-                read(0, &c, 1);
-                list_append(sequence_str, c);
-        } while (poll(in, 1, 0));
-        escape_sequence sequence = parse_escape_sequence(sequence_str.items, sequence_str.len);
-        free_list_items(1, &sequence_str);
-        switch (state->mode) {
-                case NORMAL: handle_normal_escape_sequence_input(state, sequence); break;
-                case EDIT: handle_edit_escape_sequence_input(state, sequence); break;
-                case FILES: handle_files_escape_sequence_input(state, sequence); break;
-                default: break;
-        }
-        display_buffer(state);
-        clear_error_message(state);
-}
-
 int main(const int argc, const char **argv) {
 
         input_set_tty_raw();
@@ -65,21 +46,29 @@ int main(const int argc, const char **argv) {
         setup_state(&state, argc, argv);
         display_buffer(&state);
         char c;
-        bool already_found_error = false;
+        bool already_found_error = false, skip_display = false;
         while (true) {
 
                 set_timer(&state.timer);
-                iterate_animated_displays(&state);
+                
+                if (!skip_display) {
+                        iterate_animated_displays(&state);
+                }
 
                 if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
                         if (get_ms_elapsed(&state.inactive_timer) > state.display_state.screensaver_ms_inactive) {
                                 run_screensaver(&state);
                                 set_timer(&state.inactive_timer);
+                        } else if (skip_display) {
+                                display_buffer(&state);
+                                skip_display = false;
                         }
                         continue;
                 }
                 set_timer(&state.inactive_timer);
                 read(0, &c, 1);
+                skip_display = (bool) poll(&in, 1, 0);
+
                 if (state.mode == NORMAL && (c == 'q' || c == 'Q')) {  // putting this here early
                         if (c == 'Q' || state.buffers->len == 1) {
                                 break;
@@ -93,7 +82,7 @@ int main(const int argc, const char **argv) {
 
                 if (c == '\033') {
                         if (poll(&in, 1, 0)) {  
-                                handle_escape_sequences(&state, &in);
+                                recognize_escape_sequences(&state, &in);
                                 continue;
                         }
                 }
@@ -107,19 +96,19 @@ int main(const int argc, const char **argv) {
                         case EDIT: handle_edit_input(&state, c); break;
                         default: handle_command_input(&state, c); break;
                 }
-
-                // if there is input already there, skip display
-                if (poll(&in, 1, 0)) {
+        
+                if (skip_display) {
                         continue;
                 }
 
-
+                // clear the error message only if it has already been seen by the user
                 if (state.error_message.len) {
                         if (already_found_error) {
                                 clear_error_message(&state);
                         }
                         already_found_error = !already_found_error;
                 }
+                
                 display_buffer(&state);
         }
 
