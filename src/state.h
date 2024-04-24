@@ -12,7 +12,7 @@ typedef struct {
 } rgb_t;
 
 typedef enum {
-        NORMAL, FILES, EDIT, CMD_SEARCH, CMD_OPEN
+        NORMAL, FILES, EDIT, CMD_SEARCH, CMD_OPEN, CMD_RENAME
 } editor_mode;
 
 typedef enum {
@@ -87,6 +87,7 @@ typedef struct {
         buf_t files_view_buf;
 } editor_state_t;
 
+bool is_command_mode(editor_mode mode);
 void show_error(editor_state_t *state, const char *format, ...);
 void clear_error_message(editor_state_t *state);
 void setup_state(editor_state_t *state, const int argc, const char **argv);

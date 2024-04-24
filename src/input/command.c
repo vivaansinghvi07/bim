@@ -34,11 +34,16 @@ void handle_open_new_buffer(editor_state_t *state) {
         state->buf_curr = state->buffers->len - 1;
 }
 
+void handle_c_rename_file(editor_state_t *state) {
+
+}
+
 void handle_c_command_enter(editor_state_t *state, buf_t *buf, const int H, const int W) {
         switch (state->mode) {
+                case CMD_RENAME: handle_c_rename_file(state); break;
                 case CMD_SEARCH: handle_c_jump_next(state, buf, H, W); break; 
                 case CMD_OPEN: handle_open_new_buffer(state); break;
-                case NORMAL: case FILES: case EDIT: break;  // should never happen, but it makes the warnings go away
+                default: break;  // should never be reached
         }
         state->mode = NORMAL;
 }

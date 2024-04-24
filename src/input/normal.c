@@ -176,6 +176,11 @@ void handle_c_delete_line(editor_state_t *state, buf_t *buf) {
                 if (buf->cursor_line > buf->lines.len) {
                         handle_c_move_up(buf);
                 }
+
+                // when going to a new line, make sure the cursor is in the right position
+                if (buf->cursor_col > buf->lines.items[buf->cursor_line - 1].len + 1) {
+                        buf->cursor_col = buf->lines.items[buf->cursor_line - 1].len + 1;
+                }
         }
 }
 

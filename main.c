@@ -50,8 +50,7 @@ void handle_escape_sequences(editor_state_t *state, struct pollfd *in) {
                 case NORMAL: handle_normal_escape_sequence_input(state, sequence); break;
                 case EDIT: handle_edit_escape_sequence_input(state, sequence); break;
                 case FILES: handle_files_escape_sequence_input(state, sequence); break;
-                case CMD_SEARCH:
-                case CMD_OPEN: break;
+                default: break;
         }
         display_buffer(state);
         clear_error_message(state);
@@ -106,8 +105,7 @@ int main(const int argc, const char **argv) {
                         } break;
                         case FILES: handle_files_input(&state, c); break;
                         case EDIT: handle_edit_input(&state, c); break;
-                        case CMD_OPEN:
-                        case CMD_SEARCH: handle_command_input(&state, c); break;
+                        default: handle_command_input(&state, c); break;
                 }
 
                 // if there is input already there, skip display

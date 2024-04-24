@@ -14,6 +14,10 @@
 
 /* State-related functions */
 
+bool is_command_mode(editor_mode mode) {
+        return mode == CMD_SEARCH || mode == CMD_OPEN || mode == CMD_RENAME;
+}
+
 void show_error(editor_state_t *state, const char *format, ...) {
         clear_error_message(state);
         va_list arg_ptr, other_args;

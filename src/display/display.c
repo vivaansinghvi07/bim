@@ -60,6 +60,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         switch (state->mode) {
                 case CMD_OPEN: mode_text = "open", mode_len = 4; break;
                 case CMD_SEARCH: mode_text = "search", mode_len = 6; break;
+                case CMD_RENAME: mode_text = "rename", mode_len = 6; break;
                 case NORMAL: mode_text = "normal", mode_len = 6; break;
                 case FILES: mode_text = "files", mode_len = 5; break;
                 case EDIT: mode_text = "edit", mode_len = 4; break;
@@ -74,6 +75,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         // add information about the filename and lines and stuff
         // in file mode, add information about the current directory
         switch (state->mode) {
+                case CMD_RENAME:
                 case CMD_OPEN:
                 case CMD_SEARCH: {
                         int length = min(state->command_target.len, W - 4 - used_up_front_space);
@@ -331,6 +333,7 @@ const char *apply_syntax_highlighting(const highlighting_info_t *info, const dis
 
 const buf_t *get_buffer_by_state(const editor_state_t *state) {
         switch (state->mode) {
+                case CMD_RENAME:
                 case FILES: return &state->files_view_buf;
                 default: return state->buffers->items[state->buf_curr];
         }
@@ -404,11 +407,10 @@ void display_buffer(const editor_state_t *state) {
         printf("%s\033[0m%s%s", buffer_output, state->error_message.len ? "\033[1m" : "", bar);
         move_cursor_to(buf->cursor_line - buf->screen_top_line + 1,
                        buf->cursor_col - buf->screen_left_col + 1);
-        if (state->mode != CMD_SEARCH) {
+        if (!is_command_mode(state->mode)) {
                 show_cursor();
         }
         free((void *) bar);
         free((void *) buffer_output);
         fflush(stdout);
 }
-
