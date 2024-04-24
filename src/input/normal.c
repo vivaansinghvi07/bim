@@ -262,13 +262,12 @@ void handle_jump(const editor_state_t *state, buf_t *buf, const int H, const int
                 size_t line_index = (i + buf->cursor_line - 1) % buf->lines.len;
                 dyn_str *line = buf->lines.items + line_index;
                 size_t start = (i == 0) ? buf->cursor_col : 0;
-                size_t end = (i == buf->lines.len) ? min(buf->cursor_col, line->len) : line->len;
+                size_t end = (i == buf->lines.len) ? min(buf->cursor_col - 1, line->len) : line->len;
 
                 if (end < target->len) {
                         continue;
                 }
 
-                // there is something very wrong with this so that needs some fixing
                 for (size_t j = start; j < end - target->len + 1; ++j) {
                         bool first_char_match = line->items[j] == target->items[0];
                         bool last_char_match = line->items[j + target->len - 1] == target->items[target->len - 1];
