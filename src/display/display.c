@@ -103,7 +103,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
 
                         // check if there is space for the pipe operator and the filename
                         size_t used_up_back_space = curr_line_len + total_lines_len + 3;
-                        if (W - used_up_front_space - used_up_back_space - 3 - filename_len < 0) {  
+                        if (W - used_up_front_space - used_up_back_space - 3 < filename_len) {
                                 return bar;
                         }
         

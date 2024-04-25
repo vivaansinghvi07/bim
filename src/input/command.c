@@ -1,5 +1,6 @@
 #include "command.h"
 #include "normal.h"
+#include "files.h"
 #include "../display/display.h"
 
 #include <ctype.h>
@@ -13,7 +14,7 @@ void handle_c_exit_command(editor_state_t *state) {
         state->mode = NORMAL;
 }
 
-void handle_open_new_buffer(editor_state_t *state) {
+void handle_open_new_buffer_command(editor_state_t *state) {
 
         dyn_str *target = &state->command_target;
         for (; target->len && target->items[target->len - 1] == ' '; --target->len);  // strip whitespace lmao
@@ -21,28 +22,22 @@ void handle_open_new_buffer(editor_state_t *state) {
                 return;
         }
 
-        char *filename = malloc((target->len + 1) * sizeof(char));  // will be freed at the end 
+        char *filename = malloc((target->len + 1) * sizeof(char));  // will be freed at the end
         memcpy(filename, target->items, target->len);
         filename[target->len] = '\0';
 
-        buf_t *buf = buf_open(filename, state->tab_width);
-        if (buf == NULL) {
-                show_error(state, "INVALID FILE: %s", filename);
-                return;
-        }
-        list_append(*state->buffers, buf);  // NOLINT
-        state->buf_curr = state->buffers->len - 1;
+        editor_open_new_buffer(state, filename);
 }
 
 void handle_c_rename_file(editor_state_t *state) {
-
+        state->mode = CMD_RENAME;
 }
 
 void handle_c_command_enter(editor_state_t *state, buf_t *buf, const int H, const int W) {
         switch (state->mode) {
                 case CMD_RENAME: handle_c_rename_file(state); break;
                 case CMD_SEARCH: handle_c_jump_next(state, buf, H, W); break; 
-                case CMD_OPEN: handle_open_new_buffer(state); break;
+                case CMD_OPEN: handle_open_new_buffer_command(state); break;
                 default: break;  // should never be reached
         }
         state->mode = NORMAL;

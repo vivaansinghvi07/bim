@@ -86,7 +86,7 @@ int main(const int argc, const char **argv) {
                                 continue;
                         }
                 }
-                       
+                
                 switch (state.mode) {
                         case NORMAL: {
                                 handle_normal_input(&state, c);
