@@ -1,5 +1,7 @@
 #include "list.h"
 
+#include <stdbool.h>
+
 // this file only exists because there were a lot of small files 
 // and i just put everything together
 
@@ -44,5 +46,6 @@ double get_ms_elapsed(const struct timespec *start);
 int store_cursor_pos(int *y, int *x);
 
 uint8_t get_hex_value(char c);
+bool is_dir(const char *path);
 
 #endif // !EDITOR_UTILS

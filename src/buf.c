@@ -78,7 +78,7 @@ void buf_fill_files_view(buf_t *buf) {
         buf->lines.len = 0;
         DIR *dir;
         struct dirent *dirent;
-        dir = opendir(".");
+        dir = opendir(buf->filename);
         if (dir) {
                 while ((dirent = readdir(dir)) != NULL) {
                         if (dirent->d_type == DT_REG || dirent->d_type == DT_DIR) {

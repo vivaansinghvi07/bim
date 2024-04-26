@@ -1,5 +1,6 @@
 #include "files.h"
 #include "normal.h"
+#include "../utils.h"
 #include "../state.h"
 #include "../display/display.h"
 
@@ -43,7 +44,8 @@ void editor_open_new_buffer(editor_state_t *state, const char *filename) {
 }
 
 void handle_c_enter_file(editor_state_t *state) {
-
+        
+        // determine full path being pointed to
         dyn_str *pathless_filename = state->files_view_buf.lines.items + state->files_view_buf.cursor_line - 1;
         size_t dirname_len = strlen(state->files_view_buf.filename);
         char *path_to_open = malloc((dirname_len + 1 + pathless_filename->len + 1) * sizeof(char));
@@ -52,8 +54,13 @@ void handle_c_enter_file(editor_state_t *state) {
         memcpy(path_to_open + dirname_len + 1, pathless_filename->items, pathless_filename->len); 
         path_to_open[dirname_len + 1 + pathless_filename->len] = '\0';
 
-        editor_open_new_buffer(state, path_to_open);
-        state->mode = NORMAL;
+        if (is_dir(path_to_open)) {
+                state->files_view_buf.filename = path_to_open;
+                buf_fill_files_view(&state->files_view_buf);
+        } else {
+                editor_open_new_buffer(state, path_to_open);
+                state->mode = NORMAL;
+        }
 }
 
 void handle_files_input(editor_state_t *state, char c) {

@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <termios.h>
 #include <stdarg.h>
+#include <sys/stat.h>
 
 static FILE *logger;
 
@@ -189,3 +190,8 @@ uint8_t get_hex_value(const char c) {
         }
 }
  
+bool is_dir(const char *path) {
+        struct stat path_stat;
+        stat(path, &path_stat);
+        return (bool) S_ISDIR(path_stat.st_mode);
+}
