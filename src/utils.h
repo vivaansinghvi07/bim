@@ -1,12 +1,12 @@
-#include "list.h"
-
-#include <stdbool.h>
-
 // this file only exists because there were a lot of small files 
 // and i just put everything together
 
 #ifndef EDITOR_UTILS
 #define EDITOR_UTILS
+
+#include "list.h"
+
+#include <stdbool.h>
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))

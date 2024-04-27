@@ -30,7 +30,7 @@ void insert_tab(buf_t *buf, dyn_str *line, const int tab_width) {
         buf->cursor_col += spaces_to_add;
 }
 
-void insert_newline(buf_t *buf, dyn_str *line, const int H) {
+void insert_newline(buf_t *buf, dyn_str *line, const int H, const int W) {
         int col = buf->cursor_col - 1;
         size_t split_text_len = line->len - col;
         size_t new_len = max(MIN_NEW_LINE_LEN, split_text_len * 2);   // times 2 for some leeway
@@ -42,7 +42,7 @@ void insert_newline(buf_t *buf, dyn_str *line, const int H) {
         memset(line->items + col, 0, split_text_len * sizeof(*line->items));
         next_line->len = split_text_len;
         line->len = col;
-        handle_c_move_down(buf, H); 
+        handle_c_move_down(buf, H, W); 
         handle_c_big_move_left(buf);
 }
 
@@ -52,7 +52,7 @@ void insert_single_character(buf_t *buf, dyn_str *line, char c, const int W) {
         handle_c_move_right(buf, W);
 }
 
-void delete_single_character(buf_t *buf, dyn_str *line, const int tab_width) {
+void delete_single_character(buf_t *buf, dyn_str *line, const int tab_width, const int W) {
         int col = buf->cursor_col - 2;
 
         // deletion is at the beginning of a line
@@ -66,7 +66,7 @@ void delete_single_character(buf_t *buf, dyn_str *line, const int tab_width) {
                 memcpy(prev_line->items + prev_line_prev_len, line->items, line->len * sizeof(*prev_line->items));
                 free_list_items(1, line);
                 list_pop(buf->lines, buf->cursor_line - 1);
-                handle_c_move_up(buf);
+                handle_c_move_up(buf, W);
                 buf->cursor_col = prev_line_prev_len + 1;
         } else {
                 int deletes = 1;
@@ -93,14 +93,14 @@ void handle_edit_input(editor_state_t *state, char c) {
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
 
         switch (c) {
-                case CHAR_CTRL_W: handle_c_move_up(buf); break;
+                case CHAR_CTRL_W: handle_c_move_up(buf, W); break;
                 case CHAR_CTRL_A: handle_c_move_left(buf); break; 
-                case CHAR_CTRL_S: handle_c_move_down(buf, H); break;
+                case CHAR_CTRL_S: handle_c_move_down(buf, H, W); break;
                 case CHAR_CTRL_D: handle_c_move_right(buf, W); break; 
                 case CHAR_ESCAPE: handle_exit_edit(state); break;
                 case CHAR_TAB: insert_tab(buf, line, state->tab_width); break;
-                case CHAR_NEWLINE: insert_newline(buf, line, H); break;
-                case CHAR_BACKSPACE: delete_single_character(buf, line, state->tab_width); break;
+                case CHAR_NEWLINE: insert_newline(buf, line, H, W); break;
+                case CHAR_BACKSPACE: delete_single_character(buf, line, state->tab_width, W); break;
                 default: {
                         if (!isprint(c)) {
                                 return;
@@ -135,8 +135,8 @@ void handle_edit_escape_sequence_input(editor_state_t *state, escape_sequence se
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
 
         switch (sequence) {
-                case ESC_UP_ARROW: handle_c_move_up(buf); break;
-                case ESC_DOWN_ARROW: handle_c_move_down(buf, H); break;
+                case ESC_UP_ARROW: handle_c_move_up(buf, W); break;
+                case ESC_DOWN_ARROW: handle_c_move_down(buf, H, W); break;
                 case ESC_LEFT_ARROW: handle_c_move_left(buf); break;
                 case ESC_RIGHT_ARROW: handle_c_move_right(buf, W); break;
                 case ESC_DELETE_KEY: handle_esc_delete_key(buf, line); break;

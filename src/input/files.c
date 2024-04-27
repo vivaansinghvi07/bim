@@ -43,21 +43,26 @@ void editor_open_new_buffer(editor_state_t *state, const char *filename) {
         state->buf_curr = state->buffers->len - 1;
 }
 
-void handle_c_enter_file(editor_state_t *state) {
+void handle_c_enter_file(editor_state_t *state, const int H) {
         
+        buf_t *buf = &state->files_view_buf;
+
         // determine full path being pointed to
-        dyn_str *pathless_filename = state->files_view_buf.lines.items + state->files_view_buf.cursor_line - 1;
-        size_t dirname_len = strlen(state->files_view_buf.filename);
+        dyn_str *pathless_filename = buf->lines.items + buf->cursor_line - 1;
+        size_t dirname_len = strlen(buf->filename);
         char *path_to_open = malloc((dirname_len + pathless_filename->len + 1) * sizeof(char));
-        memcpy(path_to_open, state->files_view_buf.filename, dirname_len);
+        memcpy(path_to_open, buf->filename, dirname_len);
         memcpy(path_to_open + dirname_len, pathless_filename->items, pathless_filename->len); 
         path_to_open[dirname_len + pathless_filename->len] = '\0';
 
         if (is_dir(path_to_open)) {
-                free((void *) state->files_view_buf.filename);
-                state->files_view_buf.filename = path_to_open;
+                free((void *) buf->filename);
+                buf->filename = path_to_open;
                 buf_fill_files_view(&state->files_view_buf);
-                state->files_view_buf.cursor_line = min(state->files_view_buf.cursor_line, state->files_view_buf.lines.len);
+                buf->cursor_line = min(buf->cursor_line, buf->lines.len);
+                if (buf->cursor_line - buf->screen_top_line >= H - 1) {
+                         buf->screen_top_line = buf->cursor_line > H / 2 ? buf->cursor_line - H / 2 : 1;
+                }
         } else {
                 editor_open_new_buffer(state, path_to_open);
                 state->mode = NORMAL;
@@ -67,17 +72,17 @@ void handle_c_enter_file(editor_state_t *state) {
 void handle_files_input(editor_state_t *state, char c) {
 
         struct winsize w = get_window_size();
-        const int H = w.ws_row;
+        const int H = w.ws_row, W = w.ws_col;
         buf_t *files_view_buf = &state->files_view_buf;
 
         switch (c) {
-                case C_MOVE_UP: handle_c_move_up(files_view_buf); break;
-                case C_MOVE_DOWN: handle_c_move_down(files_view_buf, H); break;
+                case C_MOVE_UP: handle_c_move_up(files_view_buf, W); break;
+                case C_MOVE_DOWN: handle_c_move_down(files_view_buf, H, W); break;
                 
-                case C_BIG_MOVE_UP: handle_c_big_move_up(files_view_buf, H); break;
-                case C_BIG_MOVE_DOWN: handle_c_big_move_down(files_view_buf, H); break;
+                case C_BIG_MOVE_UP: handle_c_big_move_up(files_view_buf, H, W); break;
+                case C_BIG_MOVE_DOWN: handle_c_big_move_down(files_view_buf, H, W); break;
                 
-                case C_ENTER_FILE: handle_c_enter_file(state); break;
+                case C_ENTER_FILE: handle_c_enter_file(state, H); break;
                 case C_EXIT_FILES: state->mode = NORMAL; break;
         }
 }

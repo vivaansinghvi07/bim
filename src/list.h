@@ -2,20 +2,22 @@
  * Inspiration for this file and its implementation is Tsoding's [nob.h](https://github.com/tsoding/musializer/blob/master/src/nob.h)
  */
 
+#ifndef EDITOR_LIST
+#define EDITOR_LIST
+
 #include <assert.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 
-#ifndef EDITOR_LIST
-#define EDITOR_LIST
-
 // declares a new list type called <type> containing an array of items of <type>
-#define list_typedef(name, type)    \
-        typedef struct {            \
-                size_t cap;         \
-                size_t len;         \
-                type *items;        \
+// <len> and <cap> have been changed from `size_t` to allow for overflow-free operations
+//   because some part of the program that essentially did `0 /* of size_t */ - 1` was breaking
+#define list_typedef(name, type)     \
+        typedef struct {             \
+                int64_t cap;         \
+                int64_t len;         \
+                type *items;         \
         } name
 
 // add one element, <item> to <list>

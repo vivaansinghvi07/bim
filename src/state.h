@@ -1,11 +1,11 @@
+#ifndef EDITOR_STATE
+#define EDITOR_STATE
+
 #include "utils.h"
 #include "buf.h"
 
 #include <stdbool.h>
 #include <time.h>
-
-#ifndef EDITOR_STATE
-#define EDITOR_STATE
 
 typedef struct {
         uint8_t r, g, b;

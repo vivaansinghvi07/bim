@@ -1,10 +1,10 @@
+#ifndef EDITOR_INPUT_ESCAPE
+#define EDITOR_INPUT_ESCAPE
+
 #include "../state.h"
 
 #include <poll.h>
 #include <stddef.h>
-
-#ifndef EDITOR_INPUT_ESCAPE
-#define EDITOR_INPUT_ESCAPE
 
 typedef enum {
         ESC_LEFT_ARROW, ESC_RIGHT_ARROW, ESC_UP_ARROW, ESC_DOWN_ARROW,

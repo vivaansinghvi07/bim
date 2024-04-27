@@ -1,8 +1,8 @@
-#include "list.h"
-#include "utils.h"
-
 #ifndef EDITOR_BUF
 #define EDITOR_BUF
+
+#include "list.h"
+#include "utils.h"
 
 #define MIN_NEW_LINE_LEN 128
 

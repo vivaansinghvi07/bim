@@ -20,7 +20,7 @@
 #define RPS_LOSING_THRESH 3
 
 // in the falling sand mode, this is how many spaces the program is allowed to look in horizontal
-#define SAND_HORIZONTAL_SEEK 5
+#define SAND_HORIZONTAL_SEEK 3
 
 // i hate function pointer syntax
 void (*get_ss_func(editor_state_t *state))(cell_t *, const int, const int) {

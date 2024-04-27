@@ -1,7 +1,3 @@
-#include "../state.h"
-#include "display.h"
-#include <stdint.h>
-
 /*
 * A collection of cellular-automaton based screen-savers, inspired by:
 * https://github.com/Eandrju/cellular-automaton.nvim
@@ -9,6 +5,11 @@
 
 #ifndef EDTIOR_SCREENSAVER
 #define EDTIOR_SCREENSAVER
+
+#include "../state.h"
+#include "display.h"
+
+#include <stdint.h>
 
 #define COLOR_GROUP_COUNT 7
 typedef enum {

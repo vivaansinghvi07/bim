@@ -69,7 +69,7 @@ int main(const int argc, const char **argv) {
                 read(0, &c, 1);
                 skip_display = (bool) poll(&in, 1, 0);
 
-                if (state.mode == NORMAL && (c == 'q' || c == 'Q')) {  // putting this here early
+                if (state.mode == NORMAL && (c == 'q' || c == 'Q')) {
                         if (c == 'Q' || state.buffers->len == 1) {
                                 break;
                         }

@@ -1,8 +1,8 @@
-#include "../state.h"
-#include "esc.h"
-
 #ifndef EDITOR_FILES_EDIT
 #define EDITOR_FILES_EDIT
+
+#include "../state.h"
+#include "esc.h"
 
 void editor_open_new_buffer(editor_state_t *state, const char *filename);
 void handle_files_input(editor_state_t *state, char c);

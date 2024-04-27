@@ -1,9 +1,10 @@
-#include <sys/ioctl.h>
+#ifndef EDITOR_DISPLAY
+#define EDITOR_DISPLAY
+
 #include "../buf.h"
 #include "../state.h"
 
-#ifndef EDITOR_DISPLAY
-#define EDITOR_DISPLAY
+#include <sys/ioctl.h>
 
 // the standardized codes for this project will be as below:
 // \033[0;38;2;XXX;XXX;XXX;XXm  <-- this is 24 characters long

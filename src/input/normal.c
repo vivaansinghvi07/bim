@@ -43,26 +43,34 @@
 #define C_ENTER_FILES     'f'
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
-int prev_col = 0;
-void restore_prev_col(buf_t *buf) {
+static int prev_col = 0, prev_left_col = 0;
+void restore_prev_col(buf_t *buf, const int W) {
         if (prev_col == 0) {
                 prev_col = buf->cursor_col;
+                prev_left_col = buf->screen_left_col;
         }
+
         int curr_line_len = buf->lines.items[buf->cursor_line - 1].len;
         if (prev_col > curr_line_len + 1) {
                 buf->cursor_col = curr_line_len + 1;
         } else {
                 buf->cursor_col = prev_col;
         }
+
+        if (buf->cursor_col < buf->screen_left_col) {
+                buf->screen_left_col = 1;
+        } else if (buf->cursor_col > buf->screen_left_col + W - 1) {
+                buf->screen_left_col = prev_left_col;
+        }
 }
 
-void handle_c_move_up(buf_t *buf) {
+void handle_c_move_up(buf_t *buf, const int W) {
         if (buf->cursor_line > 1) {
                 if (buf->screen_top_line == buf->cursor_line) { 
                         --buf->screen_top_line;
                 } 
                 --buf->cursor_line;
-                restore_prev_col(buf);
+                restore_prev_col(buf, W);
         }
 }
 
@@ -70,7 +78,7 @@ void handle_c_move_up(buf_t *buf) {
  * This keeps the cursor on the same line on the screen, 
  * but moves the buffer one screen-width up.
  */
-void handle_c_big_move_up(buf_t *buf, const int H) {
+void handle_c_big_move_up(buf_t *buf, const int H, const int W) {
         
         // if there are no more "pages" to move up by
         if (buf->screen_top_line <= 1) {
@@ -80,16 +88,16 @@ void handle_c_big_move_up(buf_t *buf, const int H) {
                 buf->screen_top_line -= lines_to_move;
                 buf->cursor_line -= lines_to_move;
         }
-        restore_prev_col(buf);
+        restore_prev_col(buf, W);
 }
 
-void handle_c_move_down(buf_t *buf, const int H) {
+void handle_c_move_down(buf_t *buf, const int H, const int W) {
         if (buf->cursor_line < buf->lines.len) {
                 if (buf->screen_top_line + H - 2 == buf->cursor_line) {
                         ++buf->screen_top_line;
                 }
                 ++buf->cursor_line;
-                restore_prev_col(buf);
+                restore_prev_col(buf, W);
         }
 }
 
@@ -97,7 +105,7 @@ void handle_c_move_down(buf_t *buf, const int H) {
  * This keeps the cursor on the same line on the screen, 
  * but moves the buffer one screen-width down.
  */
-void handle_c_big_move_down(buf_t *buf, const int H) {
+void handle_c_big_move_down(buf_t *buf, const int H, const int W) {
 
         // already at the bottom-most "page" 
         if (buf->screen_top_line + H - 2 >= buf->lines.len) {
@@ -107,7 +115,7 @@ void handle_c_big_move_down(buf_t *buf, const int H) {
                 buf->screen_top_line += lines_to_move;
                 buf->cursor_line += lines_to_move;
         }
-        restore_prev_col(buf);
+        restore_prev_col(buf, W);
 }
 
 void handle_c_move_left(buf_t *buf) {
@@ -170,7 +178,7 @@ void handle_c_save_all(editor_state_t *state) {
         }
 }
 
-void handle_c_delete_line(editor_state_t *state, buf_t *buf) {
+void handle_c_delete_line(editor_state_t *state, buf_t *buf, const int W) {
         if (buf->lines.len > 1) {
                 dyn_str *line = buf->lines.items + buf->cursor_line - 1;
                 add_to_copy_register(state, line->items, line->len);
@@ -179,7 +187,7 @@ void handle_c_delete_line(editor_state_t *state, buf_t *buf) {
                 // this moves first and then deletes in case deleting messes with the moving
                 list_pop(buf->lines, buf->cursor_line - 1);
                 if (buf->cursor_line > buf->lines.len) {
-                        handle_c_move_up(buf);
+                        handle_c_move_up(buf, W);
                 }
 
                 // when going to a new line, make sure the cursor is in the right position
@@ -228,14 +236,14 @@ void handle_c_paste_inline(editor_state_t *state, buf_t *buf, const int W) {
         }
 }
 
-void handle_c_paste_newline(editor_state_t *state, buf_t *buf, const int H) {
+void handle_c_paste_newline(editor_state_t *state, buf_t *buf, const int H, const int W) {
         if (!state->copy_register.len) {
                 return;
         }
         list_insert(buf->lines, buf->cursor_line, list_init(dyn_str, state->copy_register.len));
         list_create_space(buf->lines.items[buf->cursor_line], state->copy_register.len);
         memcpy(buf->lines.items[buf->cursor_line].items, state->copy_register.items, state->copy_register.len);
-        handle_c_move_down(buf, H);
+        handle_c_move_down(buf, H, W);
 }
 
 void handle_c_search(editor_state_t *state) {
@@ -317,13 +325,13 @@ void handle_normal_input(editor_state_t *state, char c) {
         buf_t *buf = state->buffers->items[state->buf_curr];
 
         switch (c) {
-                case C_MOVE_UP: handle_c_move_up(buf); break;
-                case C_MOVE_DOWN: handle_c_move_down(buf, H); break;
+                case C_MOVE_UP: handle_c_move_up(buf, W); break;
+                case C_MOVE_DOWN: handle_c_move_down(buf, H, W); break;
                 case C_MOVE_RIGHT: handle_c_move_right(buf, W); break;
                 case C_MOVE_LEFT: handle_c_move_left(buf); break;
 
-                case C_BIG_MOVE_UP: handle_c_big_move_up(buf, H); break;
-                case C_BIG_MOVE_DOWN: handle_c_big_move_down(buf, H); break;
+                case C_BIG_MOVE_UP: handle_c_big_move_up(buf, H, W); break;
+                case C_BIG_MOVE_DOWN: handle_c_big_move_down(buf, H, W); break;
                 case C_BIG_MOVE_RIGHT: handle_c_big_move_right(buf, W); break;
                 case C_BIG_MOVE_LEFT: handle_c_big_move_left(buf); break;
 
@@ -336,12 +344,12 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_SAVE: buf_save(buf); break;
                 case C_SAVE_ALL: handle_c_save_all(state); break;
 
-                case C_DELETE_LINE: handle_c_delete_line(state, buf); break;
+                case C_DELETE_LINE: handle_c_delete_line(state, buf, W); break;
                 case C_DELETE_ONE: handle_c_delete_one(state, buf); break;
                 case C_COPY_LINE: handle_c_copy_line(state, buf); break;
                 case C_COPY_ONE: handle_c_copy_one(state, buf); break;
                 case C_PASTE_INLINE: handle_c_paste_inline(state, buf, W); break;
-                case C_PASTE_NEWLINE: handle_c_paste_newline(state, buf, H); break;
+                case C_PASTE_NEWLINE: handle_c_paste_newline(state, buf, H, W); break;
 
                 case C_SEARCH: handle_c_search(state); break;
                 case C_JUMP_NEXT: handle_c_jump_next(state, buf, H, W); break;
@@ -361,8 +369,8 @@ void handle_normal_escape_sequence_input(editor_state_t *state, escape_sequence 
         buf_t *buf = state->buffers->items[state->buf_curr];
 
         switch (sequence) {
-                case ESC_UP_ARROW: handle_c_move_up(buf); break;
-                case ESC_DOWN_ARROW: handle_c_move_down(buf, H); break;
+                case ESC_UP_ARROW: handle_c_move_up(buf, W); break;
+                case ESC_DOWN_ARROW: handle_c_move_down(buf, H, W); break;
                 case ESC_LEFT_ARROW: handle_c_move_left(buf); break;
                 case ESC_RIGHT_ARROW: handle_c_move_right(buf, W); break;
                 case ESC_DELETE_KEY:
