@@ -83,6 +83,9 @@ void buf_fill_files_view(buf_t *buf) {
                 while ((dirent = readdir(dir)) != NULL) {
                         if (dirent->d_type == DT_REG || dirent->d_type == DT_DIR) {
                                 dyn_str s = *dyn_str_from_string(dirent->d_name);
+                                if (dirent->d_type == DT_DIR) {
+                                        list_append(s, '/');
+                                }
                                 list_append(buf->lines, s);
                         }
                 }

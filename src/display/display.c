@@ -86,10 +86,16 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                         const buf_t *buf = state->buffers->items[state->buf_curr];
                         const char *filename = buf->filename;
                         const char *curr_line_str = num_to_str(buf->cursor_line);
-                        const char *total_lines_str = num_to_str(buf->lines.len);
-                        const size_t filename_len = strlen(filename);
                         const size_t curr_line_len = strlen(curr_line_str);
+                        const char *total_lines_str = num_to_str(buf->lines.len);
                         const size_t total_lines_len = strlen(total_lines_str);
+
+                        // chop off everything but the name of the file  --  TODO fix 
+                        size_t filename_len = strlen(filename);
+                        int64_t i;
+                        for (i = filename_len - 1; filename[i] != '/' && i >= 0; --i);
+                        filename += ++i;
+                        filename_len -= i;
 
                         // space_in_beginning + curr + "/" + total + "  "
                         if (used_up_front_space + curr_line_len + 1 + total_lines_len + 2 > W) {
@@ -111,8 +117,19 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                         memcpy(bar + W - used_up_back_space - 3, " | ", 3);
                         memcpy(bar + W - used_up_back_space - 3 - filename_len, filename, filename_len);
                 } break;
-                case FILES:
-                        break;  // TODO
+                case FILES: {
+                        const char *filename = state->files_view_buf.filename;
+                        const size_t filename_len = strlen(filename);
+                        
+                        // absolutely unreadable pointer arithmetic
+                        if (W - used_up_front_space - 2 < filename_len) {
+                                memcpy(bar + used_up_front_space, "...", 3);
+                                memcpy(bar + used_up_front_space + 3, filename + filename_len - (W - used_up_front_space - 2),
+                                       W - used_up_front_space - 5);
+                        } else {
+                                memcpy(bar + W - 2 - filename_len, filename, filename_len);
+                        }
+                } break;
         }
         return bar;
 }
