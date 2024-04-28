@@ -2,7 +2,7 @@
  * Helper utility to determine what number represents a character.
  */
 
-#include "include/utils.h"
+#include "src/utils.h"
 
 #include <stdio.h>
 
