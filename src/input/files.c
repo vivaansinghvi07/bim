@@ -11,6 +11,10 @@
 #define C_BIG_MOVE_UP   'W'
 #define C_BIG_MOVE_DOWN 'S'
 
+#define C_JUMP_NEXT     'j'
+#define C_JUMP_PREVIOUS 'J'
+#define C_ENTER_SEARCH  ':'
+
 #define C_REMOVE_FILE   127
 #define C_RENAME_FILE   'r'
 #define C_MOVE_FILE     'm'
@@ -48,12 +52,26 @@ void handle_c_enter_file(editor_state_t *state, const int H) {
         buf_t *buf = &state->files_view_buf;
 
         // determine full path being pointed to
-        dyn_str *pathless_filename = buf->lines.items + buf->cursor_line - 1;
+        char *path_to_open;
         size_t dirname_len = strlen(buf->filename);
-        char *path_to_open = malloc((dirname_len + pathless_filename->len + 1) * sizeof(char));
-        memcpy(path_to_open, buf->filename, dirname_len);
-        memcpy(path_to_open + dirname_len, pathless_filename->items, pathless_filename->len); 
-        path_to_open[dirname_len + pathless_filename->len] = '\0';
+        dyn_str *pathless_filename = buf->lines.items + buf->cursor_line - 1;
+        if (is_same_dir(pathless_filename)) {
+                return;
+        } else if (is_parent_dir(pathless_filename)) {
+                if (dirname_len == 1) {
+                        return;
+                }
+                int i = dirname_len - 2;  // end of dirname guaranteed to be /
+                for (; buf->filename[i] != '/'; --i);
+                path_to_open = malloc((i + 2) * sizeof(char));
+                memcpy(path_to_open, buf->filename, i + 1);
+                path_to_open[i + 1] = '\0';
+        } else {
+                path_to_open = malloc((dirname_len + pathless_filename->len + 1) * sizeof(char));
+                memcpy(path_to_open, buf->filename, dirname_len);
+                memcpy(path_to_open + dirname_len, pathless_filename->items, pathless_filename->len); 
+                path_to_open[dirname_len + pathless_filename->len] = '\0';
+        }
 
         if (is_dir(path_to_open)) {
                 free((void *) buf->filename);
@@ -78,6 +96,9 @@ void handle_files_input(editor_state_t *state, char c) {
         switch (c) {
                 case C_MOVE_UP: handle_c_move_up(files_view_buf, W); break;
                 case C_MOVE_DOWN: handle_c_move_down(files_view_buf, H, W); break;
+                case C_ENTER_SEARCH: handle_c_search(state); break;
+                case C_JUMP_NEXT: handle_c_jump_next(state, files_view_buf, H, W); break;
+                case C_JUMP_PREVIOUS: handle_c_jump_previous(state, files_view_buf, H, W); break;
                 
                 case C_BIG_MOVE_UP: handle_c_big_move_up(files_view_buf, H, W); break;
                 case C_BIG_MOVE_DOWN: handle_c_big_move_down(files_view_buf, H, W); break;
@@ -88,5 +109,13 @@ void handle_files_input(editor_state_t *state, char c) {
 }
 
 void handle_files_escape_sequence_input(editor_state_t *state, escape_sequence sequence) {
-        
+        struct winsize w = get_window_size();
+        const int H = w.ws_row, W = w.ws_col;
+        buf_t *files_view_buf = &state->files_view_buf;
+
+        switch (sequence) {
+                case ESC_UP_ARROW: handle_c_move_up(files_view_buf, W); break;
+                case ESC_DOWN_ARROW: handle_c_move_down(files_view_buf, H, W); break;
+                default: break;
+        }        
 }

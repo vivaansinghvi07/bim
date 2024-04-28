@@ -81,14 +81,6 @@ int alphabetical_comparer(const dyn_str *first, const dyn_str *second) {
         return 0;  // should never happen in the below use case
 }
 
-bool is_parent_dir(const dyn_str *path) {
-        return path->len == 3 && path->items[0] == '.' && path->items[1] == '.' && path->items[2] == '/';
-}
-
-bool is_same_dir(const dyn_str *path) {
-        return path->len == 2 && path->items[0] == '.' && path->items[1] == '/';
-}
-
 int file_comparer(const void *_first, const void *_second) {
         const dyn_str *first = _first, *second = _second;
         if (is_same_dir(first) || is_same_dir(second)) {

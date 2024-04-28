@@ -14,6 +14,14 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 
+bool is_parent_dir(const dyn_str *path) {
+        return path->len == 3 && path->items[0] == '.' && path->items[1] == '.' && path->items[2] == '/';
+}
+
+bool is_same_dir(const dyn_str *path) {
+        return path->len == 2 && path->items[0] == '.' && path->items[1] == '/';
+}
+
 static FILE *logger;
 
 void open_log_file() {

@@ -20,6 +20,9 @@ list_typedef(dyn_str, char);
 // this makes the warnings from clangd about
 // typedef struct timespec _;
 
+bool is_same_dir(const dyn_str *path);
+bool is_parent_dir(const dyn_str *path);
+
 void open_log_file();
 void editor_log(const char *format, ...);
 

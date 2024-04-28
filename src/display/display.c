@@ -92,8 +92,8 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
 
                         // chop off everything but the name of the file  --  TODO fix 
                         size_t filename_len = strlen(filename);
-                        int64_t i;
-                        for (i = filename_len - 1; filename[i] != '/' && i >= 0; --i);
+                        int64_t i = filename_len - 1;
+                        for (; filename[i] != '/' && i >= 0; --i);
                         filename += ++i;
                         filename_len -= i;
 
@@ -376,8 +376,6 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         size_t len = 0;
         for (int i = 0; i < H - 1; ++i) { 
 
-                size_t old = len;
-
                 // no lines left 
                 if (buf->screen_top_line - 1 + i >= buf->lines.len) {
                         for (size_t j = 0; j < W; ++j) {
@@ -403,9 +401,6 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
                         len += ANSI_ESCAPE_LEN + 1;
                 }
                 free((void *) formatted_line);
-
-                editor_log("Formatted len: %d\n", formatted_len);
-                editor_log("Line length: %d\n", len - old);
         }
 
         output[len] = '\0';
