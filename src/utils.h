@@ -20,8 +20,10 @@ list_typedef(dyn_str, char);
 // this makes the warnings from clangd about
 // typedef struct timespec _;
 
-bool is_same_dir(const dyn_str *path);
+bool is_curr_dir(const dyn_str *path);
 bool is_parent_dir(const dyn_str *path);
+bool is_same_file(const char *file, const char *other);
+const char *fill_file_name(const char *dirname, const dyn_str *filename);
 
 void open_log_file();
 void editor_log(const char *format, ...);
@@ -45,8 +47,6 @@ const char *num_to_str(const int n);
 
 void set_timer(struct timespec *timer);
 double get_ms_elapsed(const struct timespec *start);
-
-int store_cursor_pos(int *y, int *x);
 
 uint8_t get_hex_value(char c);
 bool is_dir(const char *path);

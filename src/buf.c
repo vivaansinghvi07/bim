@@ -83,8 +83,8 @@ int alphabetical_comparer(const dyn_str *first, const dyn_str *second) {
 
 int file_comparer(const void *_first, const void *_second) {
         const dyn_str *first = _first, *second = _second;
-        if (is_same_dir(first) || is_same_dir(second)) {
-                return is_same_dir(second) - is_same_dir(first);
+        if (is_curr_dir(first) || is_curr_dir(second)) {
+                return is_curr_dir(second) - is_curr_dir(first);
         } else if (is_parent_dir(first) || is_parent_dir(second)) {
                 return is_parent_dir(second) - is_parent_dir(first);
         }

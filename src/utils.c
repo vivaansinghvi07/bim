@@ -14,12 +14,29 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 
+const char *fill_file_name(const char *dirname, const dyn_str *filename) {
+        size_t dirname_len = strlen(dirname);
+        char *new_name_str = malloc((dirname_len + filename->len + 1) * sizeof(char));
+        memcpy(new_name_str, dirname, dirname_len);
+        memcpy(new_name_str + dirname_len, filename->items, filename->len); 
+        new_name_str[dirname_len + filename->len] = '\0';
+        return new_name_str;
+}
+
 bool is_parent_dir(const dyn_str *path) {
         return path->len == 3 && path->items[0] == '.' && path->items[1] == '.' && path->items[2] == '/';
 }
 
-bool is_same_dir(const dyn_str *path) {
+bool is_curr_dir(const dyn_str *path) {
         return path->len == 2 && path->items[0] == '.' && path->items[1] == '/';
+}
+
+// check if the file is effectively the same - uses stat(2) from the man pages
+bool is_same_file(const char *file, const char *other) {
+        struct stat file_stat, other_stat;
+        stat(file, &file_stat);
+        stat(other, &other_stat);
+        return file_stat.st_ino == other_stat.st_ino;
 }
 
 static FILE *logger;
@@ -139,54 +156,6 @@ double get_ms_elapsed(const struct timespec *start) {
         return (end.tv_sec - start->tv_sec) * 1e3 + (end.tv_nsec - start->tv_nsec) / 1e6;
 }
 
-/*
- * stores the position of the cursor in the given integer pointers,
- * with 1, 1 representing the top left
- * https://stackoverflow.com/a/50888457
- */
-int store_cursor_pos(int *y, int *x) {
-
-        struct termios term, restore;
-        char buf[30] = {0};
-
-        // controlling terminal status to avoid displaying
-        tcgetattr(0, &term);
-        tcgetattr(0, &restore);
-        term.c_lflag &= ~(ICANON|ECHO);
-        tcsetattr(0, TCSANOW, &term);
-        write(1, "\033[6n", 4);
-
-        // get response in the form ^[[xx;xxR
-        int curr;
-        char ch;
-        for(curr = 0, ch = 0; ch != 'R'; ++curr) {
-                if (!read(0, &ch, 1)) {
-                        tcsetattr(0, TCSANOW, &restore);
-                        return 1;
-                }
-                buf[curr] = ch;
-        }
-
-        // invalid response, there is not enough information given
-        if (curr <= 6) {
-                tcsetattr(0, TCSANOW, &restore);
-                return 1;
-        }
-
-        *y = 0; *x = 0;
-        int pow;
-        for(curr -= 2, pow = 1; buf[curr] != ';'; curr--, pow *= 10) {  // parsing the second number
-                *x = *x + (buf[curr] - '0') * pow;
-        }
-        for(curr--, pow = 1; buf[curr] != '['; curr--, pow *= 10) {  // parsing the first number
-                *y = *y + (buf[curr] - '0') * pow;
-        }
-
-        tcsetattr(0, TCSANOW, &restore);
-        return 0;
-}
-
-
 // assumes c matches [A-Fa-f0-9]
 uint8_t get_hex_value(const char c) {
         if (isdigit(c)) {
@@ -201,5 +170,6 @@ uint8_t get_hex_value(const char c) {
 bool is_dir(const char *path) {
         struct stat path_stat;
         stat(path, &path_stat);
+        editor_log("%d\n", path_stat.st_mode);
         return (bool) S_ISDIR(path_stat.st_mode);
 }
