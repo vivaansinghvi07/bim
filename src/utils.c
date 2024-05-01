@@ -14,6 +14,23 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 
+/*
+ * Appends a '/' to the end of <path>, frees <path> and returns the replacement.
+ */
+char *append_slash(char *path) {
+        const size_t path_len = strlen(path);
+        char *output = malloc((path_len + 2) * sizeof(char));
+        memcpy(output, path, path_len);
+        output[path_len] = '/';
+        output[path_len + 1] = '\0';
+        free(path);
+        return output;
+}
+
+void strip_whitespace(dyn_str *target) {
+        for (; target->len && target->items[target->len - 1] == ' '; --target->len);
+}
+
 const char *fill_file_name(const char *dirname, const dyn_str *filename) {
         size_t dirname_len = strlen(dirname);
         char *new_name_str = malloc((dirname_len + filename->len + 1) * sizeof(char));
@@ -21,6 +38,15 @@ const char *fill_file_name(const char *dirname, const dyn_str *filename) {
         memcpy(new_name_str + dirname_len, filename->items, filename->len); 
         new_name_str[dirname_len + filename->len] = '\0';
         return new_name_str;
+}
+
+bool file_exists(const char *path) {
+        FILE *f = fopen(path, "r");
+        if (f == NULL) {
+                return false;
+        }
+        fclose(f);
+        return true;
 }
 
 bool is_parent_dir(const dyn_str *path) {

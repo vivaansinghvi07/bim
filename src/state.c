@@ -43,9 +43,6 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
         load_config(state);
 
         // open all buffers passed in cli
-        if (argc == 1) {
-                exit_error("Must pass in a filename to run this editor.\n\r");
-        }
         buf_list *buffers = malloc(sizeof(buf_list));
         *buffers = list_init(buf_list, argc);   // NOLINT
         for (uint8_t i = 1; i < argc; ++i) {
@@ -72,7 +69,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
         state->error_message = list_init(dyn_str, 128);
         state->buf_curr = buffers->len - 1;
         state->buffers = (buf_list *) buffers;
-        state->mode = NORMAL;
+        state->mode = argc == 1 ? FILES : NORMAL;
 
         set_timer(&state->inactive_timer);
         set_timer(&state->gradient_rotating_timer);
@@ -118,7 +115,7 @@ const angle_mode ANG_ENUM_OPTS[] = {ANG_0, ANG_45, ANG_90, ANG_135,
         do {                                                                                        \
                 const char *ending_str = (info).line->items + (info).equal_index + 1;               \
                 size_t len = (info).line->len - (info).equal_index - 1;                             \
-                for (size_t i = (info).line->len - 1; (info).line->items[i] == ' '; --i, --len);    \
+                strip_whitespace((info).line);                                                      \
                                                                                                     \
                 int i;                                                                              \
                 for (i = 0; i < sizeof(str_opts_arr) / sizeof(*str_opts_arr); ++i) {                \

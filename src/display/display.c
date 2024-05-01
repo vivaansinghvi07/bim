@@ -90,7 +90,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                         const char *total_lines_str = num_to_str(buf->lines.len);
                         const size_t total_lines_len = strlen(total_lines_str);
 
-                        // chop off everything but the name of the file  --  TODO fix 
+                        // chop off everything but the name of the file
                         size_t filename_len = strlen(filename);
                         int64_t i = filename_len - 1;
                         for (; filename[i] != '/' && i >= 0; --i);

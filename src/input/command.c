@@ -13,11 +13,10 @@
 
 void handle_c_exit_command(editor_state_t *state) {
         state->command_target.len = 0;  // making it 0 here too for safety
-        state->mode = NORMAL;
-}
-
-void strip_whitespace(dyn_str *target) {
-        for (; target->len && target->items[target->len - 1] == ' '; --target->len);  // strip whitespace lmao
+        switch (state->mode) {
+                case CMD_RENAME: state->mode = FILES; break;
+                default: state->mode = NORMAL;
+        }
 }
 
 void handle_open_new_buffer_command(editor_state_t *state, const int H) {
@@ -34,33 +33,15 @@ void handle_open_new_buffer_command(editor_state_t *state, const int H) {
         filename[target->len] = '\0';
 
         if (is_dir(filename)) {
-                const char *real_filename = realpath(filename, NULL);
-                const size_t real_filename_len = strlen(real_filename);
-                free(filename);
-                filename = malloc((real_filename_len + 2) * sizeof(char));
-                memcpy(filename, real_filename, real_filename_len);
-                filename[real_filename_len] = '/';
-                filename[real_filename_len + 1] = '\0';
-                free((void *) real_filename);
-
+                char *real_filename = realpath(filename, NULL);
+                filename = append_slash(real_filename);
                 open_new_files_view(state, filename, H);
-                state->mode = FILES;
-                return;
+        } else {
+                editor_open_new_buffer(state, filename, H);
         }
-
-        editor_open_new_buffer(state, filename, H);
 }
 
-bool file_exists(const char *path) {
-        FILE *f = fopen(path, "r");
-        if (f == NULL) {
-                return false;
-        }
-        fclose(f);
-        return true;
-}
-
-void handle_c_rename_file(editor_state_t *state) {
+void handle_c_rename_file(editor_state_t *state, const int H) {
         dyn_str *target = &state->command_target;
         strip_whitespace(target);
         if (!target->len) {
@@ -90,16 +71,17 @@ void handle_c_rename_file(editor_state_t *state) {
                 }
         }
         rename(old_name_str, new_name_str);
+        open_new_files_view(state, strdup(state->files_view_buf.filename), H);
         free((void *) old_name_str);
-        if (found_same_file) {
+        if (!found_same_file) {
                 free((void *) new_name_str);
         }
 }
 
 void handle_c_command_enter(editor_state_t *state, buf_t *buf, const int H, const int W) {
         switch (state->mode) {
-                case CMD_RENAME: handle_c_rename_file(state); break;
-                case CMD_SEARCH: handle_c_jump_next(state, buf, H, W); break; 
+                case CMD_RENAME: handle_c_rename_file(state, H); state->mode = FILES; break;
+                case CMD_SEARCH: handle_c_jump_next(state, buf, H, W); state->mode = NORMAL; break; 
                 case CMD_OPEN: handle_open_new_buffer_command(state, H); break;
                 default: break;  // should never be reached
         }

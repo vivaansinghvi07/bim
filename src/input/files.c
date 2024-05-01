@@ -30,6 +30,7 @@ void open_new_files_view(editor_state_t *state, const char *filename, const int 
         if (buf->cursor_line - buf->screen_top_line >= H - 1) {
                  buf->screen_top_line = buf->cursor_line > H / 2 ? buf->cursor_line - H / 2 : 1;
         }
+        state->mode = FILES;
 }
 
 void editor_open_new_buffer(editor_state_t *state, const char *filename, const int H) {
@@ -49,6 +50,7 @@ void editor_open_new_buffer(editor_state_t *state, const char *filename, const i
         }
         list_append(*state->buffers, buf);  // NOLINT
         state->buf_curr = state->buffers->len - 1;
+        state->mode = NORMAL;
 }
 
 void handle_c_enter_file(editor_state_t *state, const int H) {
@@ -82,6 +84,17 @@ void handle_c_enter_file(editor_state_t *state, const int H) {
         }
 }
 
+void handle_c_rename(editor_state_t *state) {
+        state->command_target.len = 0;
+        state->mode = CMD_RENAME;
+}
+
+void handle_c_exit_files(editor_state_t *state) {
+        if (state->buffers->len) {
+                state->mode = NORMAL;
+        }
+}
+
 void handle_files_input(editor_state_t *state, char c) {
 
         struct winsize w = get_window_size();
@@ -98,8 +111,9 @@ void handle_files_input(editor_state_t *state, char c) {
                 case C_BIG_MOVE_UP: handle_c_big_move_up(files_view_buf, H, W); break;
                 case C_BIG_MOVE_DOWN: handle_c_big_move_down(files_view_buf, H, W); break;
                 
+                case C_RENAME_FILE: handle_c_rename(state); break;
                 case C_ENTER_FILE: handle_c_enter_file(state, H); break;
-                case C_EXIT_FILES: state->mode = NORMAL; break;
+                case C_EXIT_FILES: handle_c_exit_files(state); break;
         }
 }
 
