@@ -12,7 +12,8 @@ typedef struct {
 } rgb_t;
 
 typedef enum {
-        NORMAL = 0, FILES, EDIT, CMD_SEARCH, CMD_OPEN, CMD_RENAME,
+        NORMAL = 0, FILES, EDIT,
+        CMD_SEARCH, CMD_FILE_SEARCH, CMD_OPEN, CMD_RENAME
 } editor_mode_type_t;
 #define EDITOR_MODE_TYPE_COUNT 6   // keep in sync!!
 

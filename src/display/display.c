@@ -58,62 +58,56 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
 
         // add information about the filename and lines and stuff
         // in file mode, add information about the current directory
-        switch (state->mode) {
-                case CMD_RENAME:
-                case CMD_OPEN:
-                case CMD_SEARCH: {
-                        int length = min(state->command_target.len, W - 4 - used_up_front_space);
-                        memcpy(bar + used_up_front_space + 2, state->command_target.items, max(0, length));  // cap so its not negative
-                } break;
-                case NORMAL: 
-                case EDIT: {
-                        const buf_t *buf = state->buffers->items[state->buf_curr];
-                        const char *filename = buf->filename;
-                        const char *curr_line_str = num_to_str(buf->cursor_line);
-                        const size_t curr_line_len = strlen(curr_line_str);
-                        const char *total_lines_str = num_to_str(buf->lines.len);
-                        const size_t total_lines_len = strlen(total_lines_str);
+        if (is_command_mode(state->mode)) {
+                int length = min(state->command_target.len, W - 4 - used_up_front_space);
+                memcpy(bar + used_up_front_space + 2, state->command_target.items, max(0, length));  // cap so its not negative
+        } else if (state->mode == NORMAL || state->mode == EDIT) {
+                const buf_t *buf = state->buffers->items[state->buf_curr];
+                const char *filename = buf->filename;
+                const char *curr_line_str = num_to_str(buf->cursor_line);
+                const size_t curr_line_len = strlen(curr_line_str);
+                const char *total_lines_str = num_to_str(buf->lines.len);
+                const size_t total_lines_len = strlen(total_lines_str);
 
-                        // chop off everything but the name of the file
-                        size_t filename_len = strlen(filename);
-                        int64_t i = filename_len - 1;
-                        for (; filename[i] != '/' && i >= 0; --i);
-                        filename += ++i;
-                        filename_len -= i;
+                // chop off everything but the name of the file
+                size_t filename_len = strlen(filename);
+                int64_t i = filename_len - 1;
+                for (; filename[i] != '/' && i >= 0; --i);
+                filename += ++i;
+                filename_len -= i;
 
-                        // space_in_beginning + curr + "/" + total + "  "
-                        if (used_up_front_space + curr_line_len + 1 + total_lines_len + 2 > W) {
-                                return bar;  // return as is - forget about adding anything else
-                        }
-        
-                        // fill the string with the fraction of the file read
-                        memcpy(bar + W - 2 - total_lines_len, total_lines_str, total_lines_len);
-                        bar[W - 2 - total_lines_len - 1] = '/';
-                        memcpy(bar + W - 2 - total_lines_len - 1 - curr_line_len, curr_line_str, curr_line_len);
+                // space_in_beginning + curr + "/" + total + "  "
+                if (used_up_front_space + curr_line_len + 1 + total_lines_len + 2 > W) {
+                        return bar;  // return as is - forget about adding anything else
+                }
 
-                        // check if there is space for the pipe operator and the filename
-                        size_t used_up_back_space = curr_line_len + total_lines_len + 3;
-                        if (W - used_up_front_space - used_up_back_space - 3 < filename_len) {
-                                return bar;
-                        }
-        
-                        // copy the filename and the straight line
-                        memcpy(bar + W - used_up_back_space - 3, " | ", 3);
-                        memcpy(bar + W - used_up_back_space - 3 - filename_len, filename, filename_len);
-                } break;
-                case FILES: {
-                        const char *filename = state->files_view_buf.filename;
-                        const size_t filename_len = strlen(filename);
-                        
-                        // absolutely unreadable pointer arithmetic
-                        if (W - used_up_front_space - 2 < filename_len) {
-                                memcpy(bar + used_up_front_space, "...", 3);
-                                memcpy(bar + used_up_front_space + 3, filename + filename_len - (W - used_up_front_space - 2),
-                                       W - used_up_front_space - 5);
-                        } else {
-                                memcpy(bar + W - 2 - filename_len, filename, filename_len);
-                        }
-                } break;
+                // fill the string with the fraction of the file read
+                memcpy(bar + W - 2 - total_lines_len, total_lines_str, total_lines_len);
+                bar[W - 2 - total_lines_len - 1] = '/';
+                memcpy(bar + W - 2 - total_lines_len - 1 - curr_line_len, curr_line_str, curr_line_len);
+
+                // check if there is space for the pipe operator and the filename
+                size_t used_up_back_space = curr_line_len + total_lines_len + 3;
+                if (W - used_up_front_space - used_up_back_space - 3 < filename_len) {
+                        return bar;
+                }
+
+                // copy the filename and the straight line
+                memcpy(bar + W - used_up_back_space - 3, " | ", 3);
+                memcpy(bar + W - used_up_back_space - 3 - filename_len, filename, filename_len);
+        } else if (state->mode == FILES) {
+
+                const char *filename = state->files_view_buf.filename;
+                const size_t filename_len = strlen(filename);
+                
+                // absolutely unreadable pointer arithmetic
+                if (W - used_up_front_space - 2 < filename_len) {
+                        memcpy(bar + used_up_front_space, "...", 3);
+                        memcpy(bar + used_up_front_space + 3, filename + filename_len - (W - used_up_front_space - 2),
+                               W - used_up_front_space - 5);
+                } else {
+                        memcpy(bar + W - 2 - filename_len, filename, filename_len);
+                }
         }
         return bar;
 }
@@ -399,18 +393,19 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
 void display_buffer(const editor_state_t *state) {
 
         const buf_t *buf = get_buffer_by_state(state);
-        const struct winsize w = get_window_size();
         const char *buffer_output = get_displayed_buffer_string(state);
-        const char *bar = get_bottom_bar(w.ws_col, state);
+        const char *bar = get_bottom_bar(W(), state);
 
         move_to_top_left();
         hide_cursor();
         printf("%s\033[0m%s%s", buffer_output, state->error_message.len ? "\033[1m" : "", bar);
-        move_cursor_to(buf->cursor_line - buf->screen_top_line + 1,
-                       buf->cursor_col - buf->screen_left_col + 1);
-        if (!is_command_mode(state->mode)) {
-                show_cursor();
+        if (is_command_mode(state->mode)) {
+                move_cursor_to(H(), mode_from(state->mode)->title_len + 13 + state->command_target.len);
+        } else {
+                move_cursor_to(buf->cursor_line - buf->screen_top_line + 1,
+                               buf->cursor_col - buf->screen_left_col + 1);
         }
+        show_cursor();
         free((void *) bar);
         free((void *) buffer_output);
         fflush(stdout);

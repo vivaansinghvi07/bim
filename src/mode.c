@@ -26,6 +26,11 @@ static const editor_mode_t MODES[] = {
                 .command_destination = NORMAL, .command_enter_handler = handle_search_command
         },
         {
+                .type = CMD_FILE_SEARCH, .title_text = "file search", . title_len = 11, .input_handler = handle_command_input,
+                .escape_sequence_handler = NULL, .displays_files = true, .track_input = false,
+                .command_destination = FILES, .command_enter_handler = handle_file_search_command
+        },
+        {
                 .type = CMD_OPEN, .title_text = "open", .title_len = 4, .input_handler = handle_command_input,
                 .escape_sequence_handler = NULL, .displays_files = false, .track_input = false,
                 .command_destination = NORMAL, .command_enter_handler = handle_open_command
@@ -34,7 +39,7 @@ static const editor_mode_t MODES[] = {
                 .type = CMD_RENAME, .title_text = "rename", .title_len = 6, .input_handler = handle_command_input,
                 .escape_sequence_handler = NULL, .displays_files = true, .track_input = false, 
                 .command_destination = FILES, .command_enter_handler = handle_rename_command
-        }
+        },
 };
 
 void check_mode_array(void) {

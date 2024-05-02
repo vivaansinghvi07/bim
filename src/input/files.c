@@ -86,6 +86,9 @@ void handle_c_enter_file(editor_state_t *state) {
 
 void handle_c_rename(editor_state_t *state) {
         state->command_target.len = 0;
+        const dyn_str *target_filename = state->files_view_buf.lines.items + state->files_view_buf.cursor_line - 1;
+        list_create_space(state->command_target, target_filename->len);
+        memcpy(state->command_target.items, target_filename->items, target_filename->len);
         state->mode = CMD_RENAME;
 }
 
@@ -95,6 +98,11 @@ void handle_c_exit_files(editor_state_t *state) {
         }
 }
 
+void handle_file_search(editor_state_t *state) {
+        state->command_target.len = 0;
+        state->mode = CMD_FILE_SEARCH;
+}
+
 void handle_files_input(editor_state_t *state, char c) {
 
         buf_t *files_view_buf = &state->files_view_buf;
@@ -102,7 +110,7 @@ void handle_files_input(editor_state_t *state, char c) {
         switch (c) {
                 case C_MOVE_UP: handle_c_move_up(files_view_buf); break;
                 case C_MOVE_DOWN: handle_c_move_down(files_view_buf); break;
-                case C_ENTER_SEARCH: handle_search(state); break;
+                case C_ENTER_SEARCH: handle_file_search(state); break;
                 case C_JUMP_NEXT: handle_c_jump_next(state, files_view_buf); break;
                 case C_JUMP_PREVIOUS: handle_c_jump_previous(state, files_view_buf); break;
                 

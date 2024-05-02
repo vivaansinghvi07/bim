@@ -13,6 +13,7 @@
 #define C_BACKSPACE      127
 
 void handle_c_exit_command(editor_state_t *state) {
+        set_cursor_block();
         state->command_target.len = 0;  // making it 0 here too for safety
         state->mode = mode_from(state->mode)->command_destination;
 }
@@ -81,9 +82,15 @@ void handle_search_command(editor_state_t *state) {
         handle_c_jump_next(state, buf);
 }
 
+void handle_file_search_command(editor_state_t *state) {
+        buf_t *buf = &state->files_view_buf;
+        handle_c_jump_next(state, buf);
+}
+
 void handle_c_command_enter(editor_state_t *state) {
         mode_from(state->mode)->command_enter_handler(state);
         state->mode = mode_from(state->mode)->command_destination;
+        set_cursor_block();
 }
 
 void handle_c_command_backspace(editor_state_t *state) {
@@ -99,6 +106,7 @@ void handle_c_add_to_command(editor_state_t *state, char c) {
 }
 
 void handle_command_input(editor_state_t *state, char c) {
+        set_cursor_bar();
         switch (c) {
                 case C_EXIT_COMMAND: handle_c_exit_command(state); break;
                 case C_COMMAND_ENTER: handle_c_command_enter(state); break;
