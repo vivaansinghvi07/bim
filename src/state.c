@@ -1,7 +1,9 @@
 #include "state.h"
 #include "buf.h"
-#include "display/display.h"
 #include "utils.h"
+#include "mode.h"
+#include "input/command.h"
+#include "display/display.h"
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -14,8 +16,8 @@
 
 /* State-related functions */
 
-bool is_command_mode(editor_mode mode) {
-        return mode == CMD_SEARCH || mode == CMD_OPEN || mode == CMD_RENAME;
+bool is_command_mode(editor_mode_type_t mode) {
+        return mode_from(mode)->input_handler == handle_command_input;
 }
 
 void show_error(editor_state_t *state, const char *format, ...) {
@@ -39,6 +41,7 @@ void load_config(editor_state_t *state);
 
 void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
+        check_mode_array();
         fill_ansi_color_table();
         load_config(state);
 

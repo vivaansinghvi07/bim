@@ -21,19 +21,19 @@
 #define C_ENTER_FILE    13
 #define C_EXIT_FILES    27 
 
-void open_new_files_view(editor_state_t *state, const char *filename, const int H) {
+void open_new_files_view(editor_state_t *state, const char *filename) {
         buf_t *buf = &state->files_view_buf;
         free((void *) buf->filename);
         buf->filename = filename;
         buf_fill_files_view(&state->files_view_buf);
         buf->cursor_line = min(buf->cursor_line, buf->lines.len);
-        if (buf->cursor_line - buf->screen_top_line >= H - 1) {
-                 buf->screen_top_line = buf->cursor_line > H / 2 ? buf->cursor_line - H / 2 : 1;
+        if (buf->cursor_line - buf->screen_top_line >= H() - 1) {
+                 buf->screen_top_line = buf->cursor_line > H() / 2 ? buf->cursor_line - H() / 2 : 1;
         }
         state->mode = FILES;
 }
 
-void editor_open_new_buffer(editor_state_t *state, const char *filename, const int H) {
+void editor_open_new_buffer(editor_state_t *state, const char *filename) {
         
         for (size_t i = 0; i < state->buffers->len; ++i) {
                 buf_t *buf = state->buffers->items[i];
@@ -53,7 +53,7 @@ void editor_open_new_buffer(editor_state_t *state, const char *filename, const i
         state->mode = NORMAL;
 }
 
-void handle_c_enter_file(editor_state_t *state, const int H) {
+void handle_c_enter_file(editor_state_t *state) {
         
         buf_t *buf = &state->files_view_buf;
 
@@ -77,9 +77,9 @@ void handle_c_enter_file(editor_state_t *state, const int H) {
         }
 
         if (is_dir(path_to_open)) {
-                open_new_files_view(state, path_to_open, H);
+                open_new_files_view(state, path_to_open);
         } else {
-                editor_open_new_buffer(state, path_to_open, H);
+                editor_open_new_buffer(state, path_to_open);
                 state->mode = NORMAL;
         }
 }
@@ -97,34 +97,31 @@ void handle_c_exit_files(editor_state_t *state) {
 
 void handle_files_input(editor_state_t *state, char c) {
 
-        struct winsize w = get_window_size();
-        const int H = w.ws_row, W = w.ws_col;
         buf_t *files_view_buf = &state->files_view_buf;
 
         switch (c) {
-                case C_MOVE_UP: handle_c_move_up(files_view_buf, W); break;
-                case C_MOVE_DOWN: handle_c_move_down(files_view_buf, H, W); break;
-                case C_ENTER_SEARCH: handle_c_search(state); break;
-                case C_JUMP_NEXT: handle_c_jump_next(state, files_view_buf, H, W); break;
-                case C_JUMP_PREVIOUS: handle_c_jump_previous(state, files_view_buf, H, W); break;
+                case C_MOVE_UP: handle_c_move_up(files_view_buf); break;
+                case C_MOVE_DOWN: handle_c_move_down(files_view_buf); break;
+                case C_ENTER_SEARCH: handle_search(state); break;
+                case C_JUMP_NEXT: handle_c_jump_next(state, files_view_buf); break;
+                case C_JUMP_PREVIOUS: handle_c_jump_previous(state, files_view_buf); break;
                 
-                case C_BIG_MOVE_UP: handle_c_big_move_up(files_view_buf, H, W); break;
-                case C_BIG_MOVE_DOWN: handle_c_big_move_down(files_view_buf, H, W); break;
+                case C_BIG_MOVE_UP: handle_c_big_move_up(files_view_buf); break;
+                case C_BIG_MOVE_DOWN: handle_c_big_move_down(files_view_buf); break;
                 
                 case C_RENAME_FILE: handle_c_rename(state); break;
-                case C_ENTER_FILE: handle_c_enter_file(state, H); break;
+                case C_ENTER_FILE: handle_c_enter_file(state); break;
                 case C_EXIT_FILES: handle_c_exit_files(state); break;
         }
 }
 
 void handle_files_escape_sequence_input(editor_state_t *state, escape_sequence sequence) {
-        struct winsize w = get_window_size();
-        const int H = w.ws_row, W = w.ws_col;
+
         buf_t *files_view_buf = &state->files_view_buf;
 
         switch (sequence) {
-                case ESC_UP_ARROW: handle_c_move_up(files_view_buf, W); break;
-                case ESC_DOWN_ARROW: handle_c_move_down(files_view_buf, H, W); break;
+                case ESC_UP_ARROW: handle_c_move_up(files_view_buf); break;
+                case ESC_DOWN_ARROW: handle_c_move_down(files_view_buf); break;
                 default: break;
         }        
 }

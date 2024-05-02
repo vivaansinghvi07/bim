@@ -6,6 +6,7 @@
 #include "normal.h"
 #include "edit.h"
 #include "files.h"
+#include "../mode.h"
 #include "../display/display.h"
 
 #include <unistd.h>
@@ -13,11 +14,9 @@
 
 void handle_escape_sequence(editor_state_t *state, dyn_str *sequence_str) {
         escape_sequence sequence = parse_escape_sequence(sequence_str->items, sequence_str->len);
-        switch (state->mode) {
-                case NORMAL: handle_normal_escape_sequence_input(state, sequence); break;
-                case EDIT: handle_edit_escape_sequence_input(state, sequence); break;
-                case FILES: handle_files_escape_sequence_input(state, sequence); break;
-                default: break;
+        void (*handler)(editor_state_t *, escape_sequence) = mode_from(state->mode)->escape_sequence_handler;
+        if (handler) {
+                handler(state, sequence);
         }
 }
 

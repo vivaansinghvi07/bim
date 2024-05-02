@@ -13,6 +13,20 @@
 #include <termios.h>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
+
+struct winsize get_window_size(void) {
+        struct winsize w;
+        if (ioctl(0, TIOCGWINSZ, &w) == -1) {
+                exit_error("Could not determine terminal size.");
+        }
+        return w;
+}
+
+void update_screen_dimensions(void) {
+        struct winsize w = get_window_size();
+        __H = w.ws_row, __W = w.ws_col;
+}
 
 /*
  * Appends a '/' to the end of <path>, frees <path> and returns the replacement.

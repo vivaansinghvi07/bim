@@ -17,8 +17,16 @@ typedef struct timespec _;
 
 list_typedef(dyn_str, char);
 
-// this makes the warnings from clangd about
-// typedef struct timespec _;
+int __H, __W;
+inline const int H(void) {
+        return __H;
+}
+inline const int W(void) {
+        return __W;
+}
+
+struct winsize get_window_size(void);
+void update_screen_dimensions(void);
 
 char *append_slash(char *path);
 void strip_whitespace(dyn_str *target);

@@ -12,8 +12,9 @@ typedef struct {
 } rgb_t;
 
 typedef enum {
-        NORMAL, FILES, EDIT, CMD_SEARCH, CMD_OPEN, CMD_RENAME
-} editor_mode;
+        NORMAL = 0, FILES, EDIT, CMD_SEARCH, CMD_OPEN, CMD_RENAME,
+} editor_mode_type_t;
+#define EDITOR_MODE_TYPE_COUNT 6   // keep in sync!!
 
 typedef enum {
         HIGH_ALPHA, HIGH_RANDOM, HIGH_GRADIENT, HIGH_NONE, HIGH_RGB
@@ -66,7 +67,7 @@ typedef struct {
 
 typedef struct {
 
-        editor_mode mode;
+        editor_mode_type_t mode;
         int tab_width;
 
         struct timespec timer; 
@@ -87,7 +88,7 @@ typedef struct {
         buf_t files_view_buf;
 } editor_state_t;
 
-bool is_command_mode(editor_mode mode);
+bool is_command_mode(editor_mode_type_t mode);
 void show_error(editor_state_t *state, const char *format, ...);
 void clear_error_message(editor_state_t *state);
 void setup_state(editor_state_t *state, const int argc, const char **argv);

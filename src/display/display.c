@@ -1,12 +1,12 @@
 #include "display.h"
 #include "../buf.h"
 #include "../utils.h"
+#include "../mode.h"
 
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <termios.h>
@@ -19,14 +19,6 @@
 #define ANSI_UNDERLINE 4
 #define ANSI_STRIKETHROUGH 9
 #define ANSI_BLINKING 5
-
-struct winsize get_window_size(void) {
-        struct winsize w;
-        if (ioctl(0, TIOCGWINSZ, &w) == -1) {
-                exit_error("Could not determine terminal size.");
-        }
-        return w;
-}
 
 /*
 * Creates a bottom bar like so: 
@@ -55,16 +47,8 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         }
 
         // set the == mode_text == in the bar
-        const char *mode_text;
-        int mode_len;
-        switch (state->mode) {
-                case CMD_OPEN: mode_text = "open", mode_len = 4; break;
-                case CMD_SEARCH: mode_text = "search", mode_len = 6; break;
-                case CMD_RENAME: mode_text = "rename", mode_len = 6; break;
-                case NORMAL: mode_text = "normal", mode_len = 6; break;
-                case FILES: mode_text = "files", mode_len = 5; break;
-                case EDIT: mode_text = "edit", mode_len = 4; break;
-        }
+        const char *mode_text = mode_from(state->mode)->title_text;
+        int mode_len = mode_from(state->mode)->title_len;
 
         // prints the mode onto the bar
         memcpy(bar + 2               , "== ", 3);
@@ -349,10 +333,10 @@ const char *apply_syntax_highlighting(const highlighting_info_t *info, const dis
 }
 
 const buf_t *get_buffer_by_state(const editor_state_t *state) {
-        switch (state->mode) {
-                case CMD_RENAME:
-                case FILES: return &state->files_view_buf;
-                default: return state->buffers->items[state->buf_curr];
+        if (mode_from(state->mode)->displays_files) {
+                return &state->files_view_buf;
+        } else {
+                return state->buffers->items[state->buf_curr];
         }
 }
 

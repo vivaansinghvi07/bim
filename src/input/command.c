@@ -1,6 +1,7 @@
 #include "command.h"
 #include "normal.h"
 #include "files.h"
+#include "../mode.h"
 #include "../display/display.h"
 
 #include <stdlib.h>
@@ -13,13 +14,10 @@
 
 void handle_c_exit_command(editor_state_t *state) {
         state->command_target.len = 0;  // making it 0 here too for safety
-        switch (state->mode) {
-                case CMD_RENAME: state->mode = FILES; break;
-                default: state->mode = NORMAL;
-        }
+        state->mode = mode_from(state->mode)->command_destination;
 }
 
-void handle_open_new_buffer_command(editor_state_t *state, const int H) {
+void handle_open_command(editor_state_t *state) {
 
         dyn_str *target = &state->command_target;
         strip_whitespace(target);
@@ -35,13 +33,13 @@ void handle_open_new_buffer_command(editor_state_t *state, const int H) {
         if (is_dir(filename)) {
                 char *real_filename = realpath(filename, NULL);
                 filename = append_slash(real_filename);
-                open_new_files_view(state, filename, H);
+                open_new_files_view(state, filename);
         } else {
-                editor_open_new_buffer(state, filename, H);
+                editor_open_new_buffer(state, filename);
         }
 }
 
-void handle_c_rename_file(editor_state_t *state, const int H) {
+void handle_rename_command(editor_state_t *state) {
         dyn_str *target = &state->command_target;
         strip_whitespace(target);
         if (!target->len) {
@@ -71,20 +69,21 @@ void handle_c_rename_file(editor_state_t *state, const int H) {
                 }
         }
         rename(old_name_str, new_name_str);
-        open_new_files_view(state, strdup(state->files_view_buf.filename), H);
+        open_new_files_view(state, strdup(state->files_view_buf.filename));
         free((void *) old_name_str);
         if (!found_same_file) {
                 free((void *) new_name_str);
         }
 }
 
-void handle_c_command_enter(editor_state_t *state, buf_t *buf, const int H, const int W) {
-        switch (state->mode) {
-                case CMD_RENAME: handle_c_rename_file(state, H); state->mode = FILES; break;
-                case CMD_SEARCH: handle_c_jump_next(state, buf, H, W); state->mode = NORMAL; break; 
-                case CMD_OPEN: handle_open_new_buffer_command(state, H); break;
-                default: break;  // should never be reached
-        }
+void handle_search_command(editor_state_t *state) {
+        buf_t *buf = state->buffers->items[state->buf_curr];
+        handle_c_jump_next(state, buf);
+}
+
+void handle_c_command_enter(editor_state_t *state) {
+        mode_from(state->mode)->command_enter_handler(state);
+        state->mode = mode_from(state->mode)->command_destination;
 }
 
 void handle_c_command_backspace(editor_state_t *state) {
@@ -100,13 +99,9 @@ void handle_c_add_to_command(editor_state_t *state, char c) {
 }
 
 void handle_command_input(editor_state_t *state, char c) {
-        struct winsize w = get_window_size();
-        const int W = w.ws_col, H = w.ws_row;
-        buf_t *buf = state->buffers->items[state->buf_curr];
-
         switch (c) {
                 case C_EXIT_COMMAND: handle_c_exit_command(state); break;
-                case C_COMMAND_ENTER: handle_c_command_enter(state, buf, H, W); break;
+                case C_COMMAND_ENTER: handle_c_command_enter(state); break;
                 case C_BACKSPACE: handle_c_command_backspace(state); break;
                 default: handle_c_add_to_command(state, c); break;
         }

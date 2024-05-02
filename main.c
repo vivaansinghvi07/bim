@@ -1,5 +1,5 @@
-#include "src/input/esc.h"
 #include "src/list.h"
+#include "src/mode.h"
 #include "src/utils.h"
 #include "src/buf.h"
 #include "src/state.h"
@@ -7,6 +7,7 @@
 #include "src/display/display.h"
 #include "src/input/normal.h"
 #include "src/input/edit.h"
+#include "src/input/esc.h"
 #include "src/input/files.h"
 #include "src/input/command.h"
 
@@ -48,7 +49,8 @@ int main(const int argc, const char **argv) {
         char c;
         bool already_found_error = false, skip_display = false;
         while (true) {
-
+        
+                update_screen_dimensions();
                 set_timer(&state.timer);
                 
                 if (!skip_display) {
@@ -69,7 +71,8 @@ int main(const int argc, const char **argv) {
                 read(0, &c, 1);
                 skip_display = (bool) poll(&in, 1, 0);
 
-                if (state.mode == NORMAL && (c == 'q' || c == 'Q')) {
+                if (state.mode == NORMAL && (c == 'q' || c == 'Q') || 
+                    state.mode == FILES && c == 'Q') {
                         if (c == 'Q' || state.buffers->len == 1) {
                                 break;
                         }
@@ -87,16 +90,11 @@ int main(const int argc, const char **argv) {
                         }
                 }
                 
-                switch (state.mode) {
-                        case NORMAL: {
-                                handle_normal_input(&state, c);
-                                list_append(state.input_history, c);
-                        } break;
-                        case FILES: handle_files_input(&state, c); break;
-                        case EDIT: handle_edit_input(&state, c); break;
-                        default: handle_command_input(&state, c); break;
-                }
-        
+                if (mode_from(state.mode)->track_input) {
+                        list_append(state.input_history, c);
+                } 
+                mode_from(state.mode)->input_handler(&state, c);
+
                 if (skip_display) {
                         continue;
                 }

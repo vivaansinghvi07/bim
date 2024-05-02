@@ -44,7 +44,7 @@
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
 static int prev_col = 0, prev_left_col = 0;
-void restore_prev_col(buf_t *buf, const int W) {
+void restore_prev_col(buf_t *buf) {
         if (prev_col == 0) {
                 prev_col = buf->cursor_col;
                 prev_left_col = buf->screen_left_col;
@@ -59,18 +59,18 @@ void restore_prev_col(buf_t *buf, const int W) {
 
         if (buf->cursor_col < buf->screen_left_col) {
                 buf->screen_left_col = 1;
-        } else if (buf->cursor_col > buf->screen_left_col + W - 1) {
+        } else if (buf->cursor_col > buf->screen_left_col + W() - 1) {
                 buf->screen_left_col = prev_left_col;
         }
 }
 
-void handle_c_move_up(buf_t *buf, const int W) {
+void handle_c_move_up(buf_t *buf) {
         if (buf->cursor_line > 1) {
                 if (buf->screen_top_line == buf->cursor_line) { 
                         --buf->screen_top_line;
                 } 
                 --buf->cursor_line;
-                restore_prev_col(buf, W);
+                restore_prev_col(buf);
         }
 }
 
@@ -78,26 +78,26 @@ void handle_c_move_up(buf_t *buf, const int W) {
  * This keeps the cursor on the same line on the screen, 
  * but moves the buffer one screen-width up.
  */
-void handle_c_big_move_up(buf_t *buf, const int H, const int W) {
+void handle_c_big_move_up(buf_t *buf) {
         
         // if there are no more "pages" to move up by
         if (buf->screen_top_line <= 1) {
                 buf->cursor_line = 1;
         } else {
-                int lines_to_move = min(H - 5, buf->screen_top_line - 1);
+                int lines_to_move = min(H() - 5, buf->screen_top_line - 1);
                 buf->screen_top_line -= lines_to_move;
                 buf->cursor_line -= lines_to_move;
         }
-        restore_prev_col(buf, W);
+        restore_prev_col(buf);
 }
 
-void handle_c_move_down(buf_t *buf, const int H, const int W) {
+void handle_c_move_down(buf_t *buf) {
         if (buf->cursor_line < buf->lines.len) {
-                if (buf->screen_top_line + H - 2 == buf->cursor_line) {
+                if (buf->screen_top_line + H() - 2 == buf->cursor_line) {
                         ++buf->screen_top_line;
                 }
                 ++buf->cursor_line;
-                restore_prev_col(buf, W);
+                restore_prev_col(buf);
         }
 }
 
@@ -105,17 +105,17 @@ void handle_c_move_down(buf_t *buf, const int H, const int W) {
  * This keeps the cursor on the same line on the screen, 
  * but moves the buffer one screen-width down.
  */
-void handle_c_big_move_down(buf_t *buf, const int H, const int W) {
+void handle_c_big_move_down(buf_t *buf) {
 
         // already at the bottom-most "page" 
-        if (buf->screen_top_line + H - 2 >= buf->lines.len) {
+        if (buf->screen_top_line + H() - 2 >= buf->lines.len) {
                 buf->cursor_line = buf->lines.len;
         } else {
-                int lines_to_move = min(H - 5, buf->lines.len - (buf->screen_top_line + H - 2));
+                int lines_to_move = min(H() - 5, buf->lines.len - (buf->screen_top_line + H() - 2));
                 buf->screen_top_line += lines_to_move;
                 buf->cursor_line += lines_to_move;
         }
-        restore_prev_col(buf, W);
+        restore_prev_col(buf);
 }
 
 void handle_c_move_left(buf_t *buf) {
@@ -133,9 +133,9 @@ void handle_c_big_move_left(buf_t *buf) {
         prev_col = 0;
 }
 
-void handle_c_move_right(buf_t *buf, const int W) {
+void handle_c_move_right(buf_t *buf) {
         if (buf->cursor_col < buf->lines.items[buf->cursor_line - 1].len + 1) {
-                if (buf->cursor_col - buf->screen_left_col == W - 1) {
+                if (buf->cursor_col - buf->screen_left_col == W() - 1) {
                         ++buf->screen_left_col;
                 }
                 ++buf->cursor_col;
@@ -143,10 +143,10 @@ void handle_c_move_right(buf_t *buf, const int W) {
         }
 }
 
-void handle_c_big_move_right(buf_t *buf, const int W) {
+void handle_c_big_move_right(buf_t *buf) {
         buf->cursor_col = buf->lines.items[buf->cursor_line - 1].len + 1;
-        if (buf->cursor_col - buf->screen_left_col > W - 1) {
-                buf->screen_left_col = buf->cursor_col - W + 1;
+        if (buf->cursor_col - buf->screen_left_col > W() - 1) {
+                buf->screen_left_col = buf->cursor_col - W() + 1;
         }
         prev_col = 0;
 }
@@ -178,7 +178,7 @@ void handle_c_save_all(editor_state_t *state) {
         }
 }
 
-void handle_c_delete_line(editor_state_t *state, buf_t *buf, const int W) {
+void handle_c_delete_line(editor_state_t *state, buf_t *buf) {
         if (buf->lines.len > 1) {
                 dyn_str *line = buf->lines.items + buf->cursor_line - 1;
                 add_to_copy_register(state, line->items, line->len);
@@ -187,7 +187,7 @@ void handle_c_delete_line(editor_state_t *state, buf_t *buf, const int W) {
                 // this moves first and then deletes in case deleting messes with the moving
                 list_pop(buf->lines, buf->cursor_line - 1);
                 if (buf->cursor_line > buf->lines.len) {
-                        handle_c_move_up(buf, W);
+                        handle_c_move_up(buf);
                 }
 
                 // when going to a new line, make sure the cursor is in the right position
@@ -220,7 +220,7 @@ void handle_c_copy_one(editor_state_t *state, buf_t *buf) {
         }
 }
 
-void handle_c_paste_inline(editor_state_t *state, buf_t *buf, const int W) {
+void handle_c_paste_inline(editor_state_t *state, buf_t *buf) {
         if (!state->copy_register.len) {
                 return;
         }
@@ -232,21 +232,21 @@ void handle_c_paste_inline(editor_state_t *state, buf_t *buf, const int W) {
         memcpy(line->items + buf->cursor_col - 1, state->copy_register.items,
                state->copy_register.len * sizeof(*line->items));
         for (size_t i = 0; i < state->copy_register.len; ++i) {
-                handle_c_move_right(buf, W);
+                handle_c_move_right(buf);
         }
 }
 
-void handle_c_paste_newline(editor_state_t *state, buf_t *buf, const int H, const int W) {
+void handle_c_paste_newline(editor_state_t *state, buf_t *buf) {
         if (!state->copy_register.len) {
                 return;
         }
         list_insert(buf->lines, buf->cursor_line, list_init(dyn_str, state->copy_register.len));
         list_create_space(buf->lines.items[buf->cursor_line], state->copy_register.len);
         memcpy(buf->lines.items[buf->cursor_line].items, state->copy_register.items, state->copy_register.len);
-        handle_c_move_down(buf, H, W);
+        handle_c_move_down(buf);
 }
 
-void handle_c_search(editor_state_t *state) {
+void handle_search(editor_state_t *state) {
         state->command_target.len = 0;
         state->mode = CMD_SEARCH;
 }
@@ -256,7 +256,7 @@ typedef struct {
 } text_pos_t;
 list_typedef(dyn_pos, text_pos_t);
 
-void handle_jump(const editor_state_t *state, buf_t *buf, const int H, const int W, const bool reverse) {
+void handle_jump(const editor_state_t *state, buf_t *buf, const bool reverse) {
 
         const dyn_str *target = &state->command_target;
         if (!target->len) {
@@ -290,23 +290,23 @@ void handle_jump(const editor_state_t *state, buf_t *buf, const int H, const int
                 text_pos_t *pos = positions.items + i;
                 if (!strncmp(target->items, buf->lines.items[pos->line].items + pos->col, target->len)) {
                         buf->cursor_line = pos->line + 1;
-                        if (buf->cursor_line - buf->screen_top_line >= H - 1 
+                        if (buf->cursor_line - buf->screen_top_line >= H() - 1 
                             || buf->cursor_line - buf->screen_top_line < 0) {
-                                buf->screen_top_line = pos->line > H - 2 ? pos->line - (H - 1) / 2 : 1;  
+                                buf->screen_top_line = pos->line > H() - 2 ? pos->line - (H() - 1) / 2 : 1;  
                         }
                         buf->cursor_col = pos->col + 1;
-                        buf->screen_left_col = pos->col > W - 1 ? pos->col - W / 2 : 1;
+                        buf->screen_left_col = pos->col > W() - 1 ? pos->col - W() / 2 : 1;
                         return;
                 }
         }
 }
 
-void handle_c_jump_next(const editor_state_t *state, buf_t *buf, const int H, const int W) {
-        handle_jump(state, buf, H, W, false);
+void handle_c_jump_next(const editor_state_t *state, buf_t *buf) {
+        handle_jump(state, buf, false);
 }
 
-void handle_c_jump_previous(const editor_state_t *state, buf_t *buf, const int H, const int W) {
-        handle_jump(state, buf, H, W, true);
+void handle_c_jump_previous(const editor_state_t *state, buf_t *buf) {
+        handle_jump(state, buf, true);
 }
 
 void handle_c_open_file(editor_state_t *state) {
@@ -320,19 +320,17 @@ void handle_c_enter_files(editor_state_t *state) {
 
 void handle_normal_input(editor_state_t *state, char c) {
 
-        struct winsize w = get_window_size();
-        const int W = w.ws_col, H = w.ws_row;
         buf_t *buf = state->buffers->items[state->buf_curr];
 
         switch (c) {
-                case C_MOVE_UP: handle_c_move_up(buf, W); break;
-                case C_MOVE_DOWN: handle_c_move_down(buf, H, W); break;
-                case C_MOVE_RIGHT: handle_c_move_right(buf, W); break;
+                case C_MOVE_UP: handle_c_move_up(buf); break;
+                case C_MOVE_DOWN: handle_c_move_down(buf); break;
+                case C_MOVE_RIGHT: handle_c_move_right(buf); break;
                 case C_MOVE_LEFT: handle_c_move_left(buf); break;
 
-                case C_BIG_MOVE_UP: handle_c_big_move_up(buf, H, W); break;
-                case C_BIG_MOVE_DOWN: handle_c_big_move_down(buf, H, W); break;
-                case C_BIG_MOVE_RIGHT: handle_c_big_move_right(buf, W); break;
+                case C_BIG_MOVE_UP: handle_c_big_move_up(buf); break;
+                case C_BIG_MOVE_DOWN: handle_c_big_move_down(buf); break;
+                case C_BIG_MOVE_RIGHT: handle_c_big_move_right(buf); break;
                 case C_BIG_MOVE_LEFT: handle_c_big_move_left(buf); break;
 
                 case C_GRAD_ANG_INCRE: increment_angle(state); break;
@@ -344,16 +342,16 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_SAVE: buf_save(buf); break;
                 case C_SAVE_ALL: handle_c_save_all(state); break;
 
-                case C_DELETE_LINE: handle_c_delete_line(state, buf, W); break;
+                case C_DELETE_LINE: handle_c_delete_line(state, buf); break;
                 case C_DELETE_ONE: handle_c_delete_one(state, buf); break;
                 case C_COPY_LINE: handle_c_copy_line(state, buf); break;
                 case C_COPY_ONE: handle_c_copy_one(state, buf); break;
-                case C_PASTE_INLINE: handle_c_paste_inline(state, buf, W); break;
-                case C_PASTE_NEWLINE: handle_c_paste_newline(state, buf, H, W); break;
+                case C_PASTE_INLINE: handle_c_paste_inline(state, buf); break;
+                case C_PASTE_NEWLINE: handle_c_paste_newline(state, buf); break;
 
-                case C_SEARCH: handle_c_search(state); break;
-                case C_JUMP_NEXT: handle_c_jump_next(state, buf, H, W); break;
-                case C_JUMP_PREVIOUS: handle_c_jump_previous(state, buf, H, W); break;
+                case C_SEARCH: handle_search(state); break;
+                case C_JUMP_NEXT: handle_c_jump_next(state, buf); break;
+                case C_JUMP_PREVIOUS: handle_c_jump_previous(state, buf); break;
 
                 case C_OPEN_FILE: handle_c_open_file(state); break;
                 case C_ENTER_FILES: handle_c_enter_files(state); break;
@@ -364,15 +362,13 @@ void handle_normal_input(editor_state_t *state, char c) {
 
 void handle_normal_escape_sequence_input(editor_state_t *state, escape_sequence sequence) {
 
-        struct winsize w = get_window_size();
-        const int W = w.ws_col, H = w.ws_row;
         buf_t *buf = state->buffers->items[state->buf_curr];
 
         switch (sequence) {
-                case ESC_UP_ARROW: handle_c_move_up(buf, W); break;
-                case ESC_DOWN_ARROW: handle_c_move_down(buf, H, W); break;
+                case ESC_UP_ARROW: handle_c_move_up(buf); break;
+                case ESC_DOWN_ARROW: handle_c_move_down(buf); break;
                 case ESC_LEFT_ARROW: handle_c_move_left(buf); break;
-                case ESC_RIGHT_ARROW: handle_c_move_right(buf, W); break;
+                case ESC_RIGHT_ARROW: handle_c_move_right(buf); break;
                 case ESC_DELETE_KEY:
                 case ESC_NONE:
                 default: return;
