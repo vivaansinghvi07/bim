@@ -4,6 +4,7 @@
 #include "../mode.h"
 #include "../display/display.h"
 
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -46,6 +47,29 @@ void handle_open_command(editor_state_t *state) {
         }
 }
 
+void handle_delete_confirm_command(editor_state_t *state) {
+
+        if (state->command_target.len != 1 || state->command_target.items[0] != 'y') {
+                return;
+        }
+
+        const dyn_str *target = state->files_view_buf.lines.items + state->files_view_buf.cursor_line - 1;
+        const char *filename = fill_file_name(state->files_view_buf.filename, target);
+
+        if (is_dir(filename)) {
+                show_error(state, "CANNOT REMOVE DIRECTORY: %s", filename);
+                free((void *) filename);
+                return;
+        }
+
+        if (remove(filename) != 0) {
+                show_error(state, "FILE COULD NOT BE REMOVED: %s", filename);
+        } else {
+                open_new_files_view(state, strdup(state->files_view_buf.filename));
+        }
+        free((void *) filename);
+}
+
 void handle_create_command(editor_state_t *state) {
         dyn_str *target = &state->command_target;
         strip_whitespace(target);
@@ -60,9 +84,13 @@ void handle_create_command(editor_state_t *state) {
                 free((void *) filename);
                 return;
         }
-
-        FILE *f = fopen(filename, "a");
-        fclose(f);
+        
+        if (target->items[target->len - 1] == '/') {
+                mkdir(filename, 0777);
+        } else {
+                FILE *f = fopen(filename, "a");
+                fclose(f);
+        }
         open_new_files_view(state, strdup(state->files_view_buf.filename));
         free((void *) filename);
 }

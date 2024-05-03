@@ -55,12 +55,8 @@ const char *fill_file_name(const char *dirname, const dyn_str *filename) {
 }
 
 bool file_exists(const char *path) {
-        FILE *f = fopen(path, "r");
-        if (f == NULL) {
-                return false;
-        }
-        fclose(f);
-        return true;
+        struct stat s;
+        return stat(path, &s) == 0;
 }
 
 bool is_parent_dir(const dyn_str *path) {
@@ -210,6 +206,5 @@ uint8_t get_hex_value(const char c) {
 bool is_dir(const char *path) {
         struct stat path_stat;
         stat(path, &path_stat);
-        editor_log("%d\n", path_stat.st_mode);
         return (bool) S_ISDIR(path_stat.st_mode);
 }

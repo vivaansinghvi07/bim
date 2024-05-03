@@ -90,9 +90,7 @@ int main(const int argc, const char **argv) {
                         }
                 }
                 
-                if (mode_from(state.mode)->track_input) {
-                        list_append(state.input_history, c);
-                } 
+                list_append(state.input_history, c);
                 mode_from(state.mode)->input_handler(&state, c);
 
                 if (skip_display) {

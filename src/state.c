@@ -68,6 +68,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
         state->buffers = (buf_list *) buffers;
         state->mode = argc == 1 ? FILES : NORMAL;
         state->search_forwards = true;
+        state->number_repeat = 0;
 
         set_timer(&state->inactive_timer);
         set_timer(&state->gradient_rotating_timer);

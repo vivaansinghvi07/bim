@@ -5,24 +5,26 @@
 #include "../state.h"
 #include "../display/display.h"
 
+#include <stdio.h>
 #include <sys/stat.h>
 
-#define C_MOVE_UP       'w'
-#define C_MOVE_DOWN     's'
-#define C_BIG_MOVE_UP   'W'
-#define C_BIG_MOVE_DOWN 'S'
+#define C_MOVE_UP          'w'
+#define C_MOVE_DOWN        's'
+#define C_BIG_MOVE_UP      'W'
+#define C_BIG_MOVE_DOWN    'S'
 
-#define C_JUMP_NEXT     'j'
-#define C_JUMP_PREVIOUS 'J'
-#define C_ENTER_SEARCH  ':'
+#define C_JUMP_NEXT        'j'
+#define C_JUMP_PREVIOUS    'J'
+#define C_ENTER_SEARCH     ';'
+#define C_ENTER_REV_SEARCH ':'
 
-#define C_CREATE_FILE   'o'
-#define C_REMOVE_FILE   127
-#define C_RENAME_FILE   'm'
+#define C_CREATE_FILE      'o'
+#define C_DELETE_FILE      127
+#define C_RENAME_FILE      'm'
 
-#define C_ENTER_FILE    13
-#define C_EXIT_FILES    27 
-#define C_BACK_DIR      '<'
+#define C_ENTER_FILE       13
+#define C_EXIT_FILES       27 
+#define C_BACK_DIR         '<'
 
 void open_new_files_view(editor_state_t *state, const char *filename) {
         buf_t *buf = &state->files_view_buf;
@@ -89,6 +91,10 @@ void handle_c_enter_file(editor_state_t *state) {
         }
 }
 
+void handle_c_delete_file(editor_state_t *state) {
+        enter_command_mode(state, CMD_DEL_CONFIRM);
+}
+
 void handle_c_rename(editor_state_t *state) {
         enter_command_mode(state, CMD_RENAME);
 }
@@ -108,6 +114,12 @@ void handle_c_back_dir(editor_state_t *state) {
 }
 
 void handle_file_search(editor_state_t *state) {
+        state->search_forwards = true;
+        enter_command_mode(state, CMD_FILE_SEARCH);
+}
+
+void handle_rev_file_search(editor_state_t *state) {
+        state->search_forwards = false;
         enter_command_mode(state, CMD_FILE_SEARCH);
 }
 
@@ -119,6 +131,7 @@ void handle_files_input(editor_state_t *state, char c) {
                 case C_MOVE_UP: handle_c_move_up(files_view_buf); break;
                 case C_MOVE_DOWN: handle_c_move_down(files_view_buf); break;
                 case C_ENTER_SEARCH: handle_file_search(state); break;
+                case C_ENTER_REV_SEARCH: handle_rev_file_search(state); break;
                 case C_JUMP_NEXT: handle_c_jump_next(state, files_view_buf); break;
                 case C_JUMP_PREVIOUS: handle_c_jump_previous(state, files_view_buf); break;
                 
@@ -126,6 +139,7 @@ void handle_files_input(editor_state_t *state, char c) {
                 case C_BIG_MOVE_DOWN: handle_c_big_move_down(files_view_buf); break;
                 
                 case C_CREATE_FILE: handle_c_create(state); break;
+                case C_DELETE_FILE: handle_c_delete_file(state); break;
                 case C_RENAME_FILE: handle_c_rename(state); break;
                 case C_BACK_DIR: handle_c_back_dir(state); break;
                 case C_ENTER_FILE: handle_c_enter_file(state); break;

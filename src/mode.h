@@ -20,7 +20,6 @@ typedef struct {
         void (*escape_sequence_handler)(editor_state_t *state, escape_sequence sequence);
 
         bool displays_files;
-        bool track_input;
 
         editor_mode_type_t command_destination;
         void (*command_enter_handler)(editor_state_t *state);

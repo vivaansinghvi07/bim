@@ -6,6 +6,8 @@
 #include "../state.h"
 #include "../display/display.h"
 
+#include <ctype.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -324,9 +326,29 @@ void handle_c_enter_files(editor_state_t *state) {
         state->mode = FILES;
 }
 
+bool handles_repeats_specially(char c) {
+        return false;
+}
+
 void handle_normal_input(editor_state_t *state, char c) {
 
         buf_t *buf = state->buffers->items[state->buf_curr];
+        
+        if (isdigit(c)) {
+                state->number_repeat = state->number_repeat * 10 + (c - '0');
+                return;
+        } else if (state->number_repeat) {
+                if (handles_repeats_specially(c)) {
+                        // TODO
+                } else {
+                        uint64_t reps = state->number_repeat;
+                        state->number_repeat = 0;
+                        for (uint64_t i = 0; i < reps; ++i) {
+                                handle_normal_input(state, c);
+                        } 
+                }
+                return;
+        }
 
         switch (c) {
                 case C_MOVE_UP: handle_c_move_up(buf); break;
@@ -363,7 +385,10 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_OPEN_FILE: handle_c_open_file(state); break;
                 case C_ENTER_FILES: handle_c_enter_files(state); break;
 
-                default: return;  // nothing changes, don't waste time displaying
+                default: {
+                        if (isdigit(c)) {
+                        }
+                }
         }
 }
 
