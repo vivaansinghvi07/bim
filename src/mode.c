@@ -1,8 +1,10 @@
-#include "input/normal.h"
-#include "input/command.h"
 #include "state.h"
 #include "utils.h"
 #include "mode.h"
+#include "input/normal.h"
+#include "input/files.h"
+#include "input/command.h"
+#include "input/edit.h"
 
 static const editor_mode_t MODES[] = {
         { 
@@ -40,6 +42,11 @@ static const editor_mode_t MODES[] = {
                 .escape_sequence_handler = NULL, .displays_files = true, .track_input = false, 
                 .command_destination = FILES, .command_enter_handler = handle_rename_command
         },
+        {
+                .type = CMD_CREATE, .title_text = "create file", .title_len = 11, .input_handler = handle_command_input,
+                .escape_sequence_handler = NULL, .displays_files = true, .track_input = false,
+                .command_destination = FILES, .command_enter_handler = handle_create_command
+        }
 };
 
 void check_mode_array(void) {

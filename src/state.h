@@ -13,9 +13,9 @@ typedef struct {
 
 typedef enum {
         NORMAL = 0, FILES, EDIT,
-        CMD_SEARCH, CMD_FILE_SEARCH, CMD_OPEN, CMD_RENAME
+        CMD_SEARCH, CMD_FILE_SEARCH, CMD_OPEN, CMD_RENAME, CMD_CREATE
 } editor_mode_type_t;
-#define EDITOR_MODE_TYPE_COUNT 6   // keep in sync!!
+#define EDITOR_MODE_TYPE_COUNT 8   // keep in sync!!
 
 typedef enum {
         HIGH_ALPHA, HIGH_RANDOM, HIGH_GRADIENT, HIGH_NONE, HIGH_RGB
@@ -85,6 +85,8 @@ typedef struct {
         dyn_str input_history;
         dyn_str copy_register;
         dyn_str command_target;
+
+        bool search_forwards;
 
         buf_t files_view_buf;
 } editor_state_t;

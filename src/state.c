@@ -56,14 +56,8 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
                 list_append(*buffers, buf);  // NOLINT
         }
         
-        const char *cwd = getcwd(NULL, 0);
-        size_t cwd_len = strlen(cwd);
-        char *with_slash = malloc((cwd_len + 2) * sizeof(char));
-        memcpy(with_slash, cwd, cwd_len);
-        free((void *) cwd);
-        with_slash[cwd_len] = '/';
-        with_slash[cwd_len + 1] = '\0';
-        buf_init(&state->files_view_buf, with_slash);
+        const char *cwd = append_slash(getcwd(NULL, 0));
+        buf_init(&state->files_view_buf, cwd);
         buf_fill_files_view(&state->files_view_buf);                
 
         state->input_history = list_init(dyn_str, 128);
@@ -73,6 +67,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
         state->buf_curr = buffers->len - 1;
         state->buffers = (buf_list *) buffers;
         state->mode = argc == 1 ? FILES : NORMAL;
+        state->search_forwards = true;
 
         set_timer(&state->inactive_timer);
         set_timer(&state->gradient_rotating_timer);

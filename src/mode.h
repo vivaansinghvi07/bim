@@ -9,10 +9,6 @@
 
 #include "state.h"
 #include "input/esc.h"
-#include "input/files.h"
-#include "input/command.h"
-#include "input/normal.h"
-#include "input/edit.h"
 
 typedef struct {
         editor_mode_type_t type;

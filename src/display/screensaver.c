@@ -163,18 +163,21 @@ void run_screensaver(editor_state_t *state) {
         cell_t *const cells = build_cells(buf_str);
 
         struct pollfd in = {.fd = 0, .events = POLLIN};
+        char c;
+        struct timespec t;
+        set_timer(&t);
         while (true) {
-                if (poll(&in, 1, state->display_state.screensaver_frame_length_ms)) {
-                        getchar(); // this is here to get rid of what's in the poll
-
+                double wait_time = max(0, state->display_state.screensaver_frame_length_ms - get_ms_elapsed(&t));
+                if (poll(&in, 1, wait_time)) {
+                        read(0, &c, 1); // this is here to get rid of what's in the poll
                         show_cursor();
                         display_buffer(state);
 
                         free((void *) buf_str);
                         free(cells);
-
                         break;
                 }
+                set_timer(&t);
                 func(cells, W, H);
                 move_to_top_left();
                 display_cells(cells, W, H);

@@ -12,6 +12,12 @@
 #define C_COMMAND_ENTER  13
 #define C_BACKSPACE      127
 
+void enter_command_mode(editor_state_t *state, const editor_mode_type_t mode) {
+        state->command_target.len = 0;
+        state->mode = mode;
+        set_cursor_bar();
+}
+
 void handle_c_exit_command(editor_state_t *state) {
         set_cursor_block();
         state->command_target.len = 0;  // making it 0 here too for safety
@@ -40,6 +46,27 @@ void handle_open_command(editor_state_t *state) {
         }
 }
 
+void handle_create_command(editor_state_t *state) {
+        dyn_str *target = &state->command_target;
+        strip_whitespace(target);
+        if (!target->len) {
+                show_error(state, "CANNOT CREATE EMPTY FILE.");
+                return;
+        }
+        
+        const char *filename = fill_file_name(state->files_view_buf.filename, target);
+        if (is_dir(filename) || file_exists(filename)) {
+                show_error(state, "FILE OR DIRECTORY ALREADY EXISTS: %s", filename);
+                free((void *) filename);
+                return;
+        }
+
+        FILE *f = fopen(filename, "a");
+        fclose(f);
+        open_new_files_view(state, strdup(state->files_view_buf.filename));
+        free((void *) filename);
+}
+
 void handle_rename_command(editor_state_t *state) {
         dyn_str *target = &state->command_target;
         strip_whitespace(target);
@@ -50,12 +77,12 @@ void handle_rename_command(editor_state_t *state) {
 
         const char *new_name_str = fill_file_name(state->files_view_buf.filename, target);
         if (is_dir(new_name_str)) {
-                free((void *) new_name_str);
                 show_error(state, "IS A DIRECTORY: %s", new_name_str);
+                free((void *) new_name_str);
                 return;
         } else if (file_exists(new_name_str)) {
-                free((void *) new_name_str);
                 show_error(state, "FILE ALREADY EXISTS: %s", new_name_str);
+                free((void *) new_name_str);
                 return;
         }
 
@@ -106,7 +133,6 @@ void handle_c_add_to_command(editor_state_t *state, char c) {
 }
 
 void handle_command_input(editor_state_t *state, char c) {
-        set_cursor_bar();
         switch (c) {
                 case C_EXIT_COMMAND: handle_c_exit_command(state); break;
                 case C_COMMAND_ENTER: handle_c_command_enter(state); break;

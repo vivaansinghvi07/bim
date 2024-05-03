@@ -1,5 +1,6 @@
 #include "normal.h"
 #include "esc.h"
+#include "command.h"
 #include "../list.h"
 #include "../utils.h"
 #include "../state.h"
@@ -35,7 +36,8 @@
 #define C_PASTE_NEWLINE   'P'
 #define C_PASTE_INLINE    'p'
 
-#define C_SEARCH          ':'
+#define C_SEARCH          ';'
+#define C_BACK_SEARCH     ':'
 #define C_JUMP_NEXT       'j'
 #define C_JUMP_PREVIOUS   'J'
 
@@ -246,9 +248,14 @@ void handle_c_paste_newline(editor_state_t *state, buf_t *buf) {
         handle_c_move_down(buf);
 }
 
-void handle_search(editor_state_t *state) {
-        state->command_target.len = 0;
-        state->mode = CMD_SEARCH;
+void handle_forward_search(editor_state_t *state) {
+        state->search_forwards = true;
+        enter_command_mode(state, CMD_SEARCH);
+}
+
+void handle_backward_search(editor_state_t *state) {
+        state->search_forwards = false;
+        enter_command_mode(state, CMD_SEARCH);
 }
 
 typedef struct {
@@ -302,16 +309,15 @@ void handle_jump(const editor_state_t *state, buf_t *buf, const bool reverse) {
 }
 
 void handle_c_jump_next(const editor_state_t *state, buf_t *buf) {
-        handle_jump(state, buf, false);
+        handle_jump(state, buf, !state->search_forwards);
 }
 
 void handle_c_jump_previous(const editor_state_t *state, buf_t *buf) {
-        handle_jump(state, buf, true);
+        handle_jump(state, buf, state->search_forwards);
 }
 
 void handle_c_open_file(editor_state_t *state) {
-        state->command_target.len = 0;
-        state->mode = CMD_OPEN;
+        enter_command_mode(state, CMD_OPEN);
 }
 
 void handle_c_enter_files(editor_state_t *state) {
@@ -349,7 +355,8 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_PASTE_INLINE: handle_c_paste_inline(state, buf); break;
                 case C_PASTE_NEWLINE: handle_c_paste_newline(state, buf); break;
 
-                case C_SEARCH: handle_search(state); break;
+                case C_SEARCH: handle_forward_search(state); break;
+                case C_BACK_SEARCH: handle_backward_search(state); break;
                 case C_JUMP_NEXT: handle_c_jump_next(state, buf); break;
                 case C_JUMP_PREVIOUS: handle_c_jump_previous(state, buf); break;
 
