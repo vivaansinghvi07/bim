@@ -38,6 +38,7 @@
 #define C_PASTE_NEWLINE   'P'
 #define C_PASTE_INLINE    'p'
 
+#define C_JUMP_LINE       'l'
 #define C_SEARCH          ';'
 #define C_BACK_SEARCH     ':'
 #define C_JUMP_NEXT       'j'
@@ -326,8 +327,22 @@ void handle_c_enter_files(editor_state_t *state) {
         state->mode = FILES;
 }
 
-bool handles_repeats_specially(char c) {
-        return false;
+void handle_c_jump_line(editor_state_t *state, buf_t *buf) {
+        int clamped_bottom = max(1, state->number_repeat);
+        buf->cursor_line = min(buf->lines.len, clamped_bottom);
+        if (buf->cursor_line < buf->screen_top_line || buf->cursor_line - buf->screen_top_line >= H() - 1) {
+                buf->screen_top_line = buf->cursor_line - 1 < H() / 2 ? 1 : buf->cursor_line - H() / 2;
+        }
+}
+
+bool handle_repeats_specially(editor_state_t *state, char c) {
+        buf_t *buf = state->buffers->items[state->buf_curr];
+        switch (c) {
+                case C_JUMP_LINE: handle_c_jump_line(state, buf); break;
+                default: return false;
+        }
+        state->number_repeat = 0;
+        return true;
 }
 
 void handle_normal_input(editor_state_t *state, char c) {
@@ -338,14 +353,12 @@ void handle_normal_input(editor_state_t *state, char c) {
                 state->number_repeat = state->number_repeat * 10 + (c - '0');
                 return;
         } else if (state->number_repeat) {
-                if (handles_repeats_specially(c)) {
-                        // TODO
-                } else {
-                        uint64_t reps = state->number_repeat;
+                if (!handle_repeats_specially(state, c)) {
+                        const uint64_t reps = state->number_repeat;
                         state->number_repeat = 0;
                         for (uint64_t i = 0; i < reps; ++i) {
                                 handle_normal_input(state, c);
-                        } 
+                        }
                 }
                 return;
         }
@@ -384,11 +397,6 @@ void handle_normal_input(editor_state_t *state, char c) {
 
                 case C_OPEN_FILE: handle_c_open_file(state); break;
                 case C_ENTER_FILES: handle_c_enter_files(state); break;
-
-                default: {
-                        if (isdigit(c)) {
-                        }
-                }
         }
 }
 
