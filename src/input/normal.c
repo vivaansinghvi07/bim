@@ -328,11 +328,12 @@ void handle_c_enter_files(editor_state_t *state) {
 }
 
 void handle_c_jump_line(editor_state_t *state, buf_t *buf) {
-        int clamped_bottom = max(1, state->number_repeat);
+        uint64_t clamped_bottom = max(1, state->number_repeat);
         buf->cursor_line = min(buf->lines.len, clamped_bottom);
         if (buf->cursor_line < buf->screen_top_line || buf->cursor_line - buf->screen_top_line >= H() - 1) {
                 buf->screen_top_line = buf->cursor_line - 1 < H() / 2 ? 1 : buf->cursor_line - H() / 2;
         }
+        restore_prev_col(buf);
 }
 
 bool handle_repeats_specially(editor_state_t *state, char c) {
@@ -350,7 +351,12 @@ void handle_normal_input(editor_state_t *state, char c) {
         buf_t *buf = state->buffers->items[state->buf_curr];
         
         if (isdigit(c)) {
+                uint64_t old = state->number_repeat;
                 state->number_repeat = state->number_repeat * 10 + (c - '0');
+                if (old > state->number_repeat) {
+                        show_error(state, "OVERFLOW DETECTED: BE MORE CAREFUL INPUTTING NUMBERS");
+                        state->number_repeat = 0;
+                }
                 return;
         } else if (state->number_repeat) {
                 if (!handle_repeats_specially(state, c)) {
