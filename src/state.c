@@ -42,6 +42,7 @@ void load_config(editor_state_t *state);
 void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
         check_mode_array();
+        update_screen_dimensions();
         fill_ansi_color_table();
         load_config(state);
 

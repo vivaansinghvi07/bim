@@ -15,6 +15,10 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 
+bool resize_detected(const int sW, const int sH) {
+        return __W != sW || __H != sH;
+}
+
 struct winsize get_window_size(void) {
         struct winsize w;
         if (ioctl(0, TIOCGWINSZ, &w) == -1) {

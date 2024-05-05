@@ -25,6 +25,7 @@ inline const int W(void) {
         return __W;
 }
 
+bool resize_detected(const int sW, const int sH);
 struct winsize get_window_size(void);
 void update_screen_dimensions(void);
 

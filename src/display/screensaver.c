@@ -127,13 +127,13 @@ cell_t *build_cells(const char *buf_str) {
         return cells;      
 } 
 
-void display_cells(cell_t *cells, const int W, const int H) {
+void display_cells(editor_state_t *state, cell_t *cells, const int sW, const int H) {
         size_t len = 0;
-        char *output = malloc(H * (W + 1) * (ANSI_ESCAPE_LEN + 1) * sizeof(char));  
+        char *output = malloc(H * (sW + 1) * (ANSI_ESCAPE_LEN + 1) * sizeof(char));  
 
         for (int y = 0; y < H - 1; ++y) {
-                for (int x = 0; x < W; ++x, ++len) {
-                        cell_t *cell = cells + y * W + x;
+                for (int x = 0; x < sW; ++x, ++len) {
+                        cell_t *cell = cells + y * sW + x;
                         if (!cell->c) {
                                 output[len] = ' ';
                                 continue;
@@ -145,9 +145,25 @@ void display_cells(cell_t *cells, const int W, const int H) {
                 output[len++] = '\r';
         }
         output[len] = '\0';
-        printf("%s", output);
+        char *bottom_bar = get_bottom_bar(W(), state);
+        printf("%s\033[0m%s", output, bottom_bar);
         fflush(stdout);
         free(output);
+        free(bottom_bar);
+}
+
+cell_t *update_cells_dimensions(cell_t *old_cells, const int old_W, const int old_H) {
+        const int sW = W(), sH = H();
+        cell_t *new_cells = calloc((sH - 1) * sW, sizeof(cell_t));
+        for (int y = 0; y < sH - 1; ++y) {
+                for (int x = 0; x < sW; ++x) {
+                        if (y < old_H - 1 && x < old_W) {
+                                new_cells[y * sW + x] = old_cells[y * old_W + x];
+                        }
+                }
+        }
+        free(old_cells);
+        return new_cells;
 }
 
 void run_screensaver(editor_state_t *state) {
@@ -155,18 +171,25 @@ void run_screensaver(editor_state_t *state) {
         void (*func)(cell_t *, const int, const int) = get_ss_func(state);
         hide_cursor();
         struct winsize window_size = get_window_size();
-        const int W = window_size.ws_col, H = window_size.ws_row;
+        int sW = window_size.ws_col, sH = window_size.ws_row;
 
         // this is not getting freed after build_cells is called because 
         // pieces of it are pointed to in order to signify the ANSI escape 
         const char *buf_str = get_displayed_buffer_string(state);
-        cell_t *const cells = build_cells(buf_str);
+        cell_t *cells = build_cells(buf_str);
 
         struct pollfd in = {.fd = 0, .events = POLLIN};
         char c;
         struct timespec t;
         set_timer(&t);
         while (true) {
+
+                update_screen_dimensions();
+                if (resize_detected(sW, sH)) {
+                        cells = update_cells_dimensions(cells, sW, sH);
+                        sW = W(), sH = H();
+                }
+
                 double wait_time = max(0, state->display_state.screensaver_frame_length_ms - get_ms_elapsed(&t));
                 if (poll(&in, 1, wait_time)) {
                         read(0, &c, 1); // this is here to get rid of what's in the poll
@@ -178,9 +201,9 @@ void run_screensaver(editor_state_t *state) {
                         break;
                 }
                 set_timer(&t);
-                func(cells, W, H);
+                func(cells, sW, sH);
                 move_to_top_left();
-                display_cells(cells, W, H);
+                display_cells(state, cells, sW, sH);
         }
 }
 

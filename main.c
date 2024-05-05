@@ -47,10 +47,16 @@ int main(const int argc, const char **argv) {
         setup_state(&state, argc, argv);
         display_buffer(&state);
         char c;
+        int old_W = W(), old_H = H();
         bool already_found_error = false, skip_display = false;
         while (true) {
         
                 update_screen_dimensions();
+                if (resize_detected(old_W, old_H)) {
+                        old_W = W(), old_H = H();
+                        display_buffer(&state);
+                }                
+
                 set_timer(&state.timer);
                 
                 if (!skip_display) {

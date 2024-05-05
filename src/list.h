@@ -43,7 +43,7 @@
 #define list_insert(list, index, value)                                                                   \
         do {                                                                                              \
                 list_create_space((list), 1);                                                             \
-                memcpy((list).items + (index) + 1, (list).items + (index),                                \
+                memmove((list).items + (index) + 1, (list).items + (index),                               \
                        ((list).len - (index) - 1) * sizeof(*(list).items));                               \
                 (list).items[(index)] = (value);                                                          \
         } while(0)
@@ -52,7 +52,7 @@
 #define list_pop(list, index)                                                                               \
         do {                                                                                                \
                 if ((list).len) {                                                                           \
-                        memcpy((list).items + (index), (list).items + (index) + 1,                          \
+                        memmove((list).items + (index), (list).items + (index) + 1,                         \
                                ((list).len - (index)) * sizeof(*(list).items));                             \
                         --(list).len;                                                                       \
                 }                                                                                           \
