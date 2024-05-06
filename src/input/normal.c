@@ -44,6 +44,9 @@
 #define C_JUMP_NEXT       'j'
 #define C_JUMP_PREVIOUS   'J'
 
+#define C_TAB_ADD         '>'
+#define C_TAB_REMOVE      '<'
+
 #define C_OPEN_FILE       'o'
 #define C_ENTER_FILES     'f'
 
@@ -364,6 +367,22 @@ void handle_c_enter_files(editor_state_t *state) {
         state->mode = FILES;
 }
 
+void handle_c_tab_add(editor_state_t *state, buf_t *buf) {
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        list_create_space(*line, state->tab_width);
+        memmove(line->items + state->tab_width, line->items, line->len - state->tab_width);
+        memset(line->items, ' ', state->tab_width);
+}
+
+void handle_c_tab_remove(editor_state_t *state, buf_t *buf) {
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        size_t spaces_to_remove = 0;
+        for (; spaces_to_remove < state->tab_width && spaces_to_remove < line->len && line->items[spaces_to_remove] == ' '
+             ; ++spaces_to_remove);
+        memmove(line->items, line->items + spaces_to_remove, line->len -= spaces_to_remove);
+        restore_prev_col(buf);
+}
+
 void handle_c_jump_line(editor_state_t *state, buf_t *buf) {
         uint64_t clamped_bottom = max(1, state->number_repeat);
         buf->cursor_line = min(buf->lines.len, clamped_bottom);
@@ -491,6 +510,9 @@ void handle_normal_input(editor_state_t *state, char c) {
 
                 case C_OPEN_FILE: handle_c_open_file(state); break;
                 case C_ENTER_FILES: handle_c_enter_files(state); break;
+
+                case C_TAB_ADD: handle_c_tab_add(state, buf); break;
+                case C_TAB_REMOVE: handle_c_tab_remove(state, buf); break;
         }
 }
 

@@ -1,4 +1,7 @@
 CFLAGS = -Wall -Wno-logical-op-parentheses -O3
 
-main:
+compile:
 	gcc $(CFLAGS) main.c src/*.c src/*/*.c -o editor
+
+install: compile
+	cp ./editor /usr/local/bin/
