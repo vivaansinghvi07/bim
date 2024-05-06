@@ -15,8 +15,8 @@
 //   because some part of the program that essentially did `0 /* of size_t */ - 1` was breaking
 #define list_typedef(name, type)     \
         typedef struct {             \
-                int64_t cap;         \
-                int64_t len;         \
+                ssize_t cap;         \
+                ssize_t len;         \
                 type *items;         \
         } name
 

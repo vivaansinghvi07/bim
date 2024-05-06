@@ -171,7 +171,7 @@ void handle_c_buf_decre(editor_state_t *state) {
         state->buf_curr %= state->buffers->len;
 }
 
-void add_to_copy_register(editor_state_t *state, const char *to_copy, const size_t n) {
+void set_copy_register(editor_state_t *state, const char *to_copy, const size_t n) {
         state->copy_register.len = 0;
         list_create_space(state->copy_register, n);
         memcpy(state->copy_register.items, to_copy, n * sizeof(*state->copy_register.items));
@@ -188,7 +188,7 @@ void handle_c_delete_line(editor_state_t *state, buf_t *buf) {
                 return;
         }
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
-        add_to_copy_register(state, line->items, line->len);
+        set_copy_register(state, line->items, line->len);
         free_list_items(1, line);
 
         // this moves first and then deletes in case deleting messes with the moving
@@ -208,7 +208,7 @@ void handle_c_delete_one(editor_state_t *state, buf_t *buf) {
         if (line->len <= 0) {
                 return;
         }
-        add_to_copy_register(state, line->items + buf->cursor_col - 1, 1);
+        set_copy_register(state, line->items + buf->cursor_col - 1, 1);
         list_pop(*line, buf->cursor_col - 1);
         if (buf->cursor_col > line->len) {
                 handle_c_move_left(buf);
@@ -217,14 +217,31 @@ void handle_c_delete_one(editor_state_t *state, buf_t *buf) {
 
 void handle_c_copy_line(editor_state_t *state, buf_t *buf) {
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
-        add_to_copy_register(state, line->items, line->len);
+        set_copy_register(state, line->items, line->len);
 }
 
 void handle_c_copy_one(editor_state_t *state, buf_t *buf) {
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
         if (buf->cursor_col <= line->len) {
-                add_to_copy_register(state, line->items + buf->cursor_col - 1, 1);
+                set_copy_register(state, line->items + buf->cursor_col - 1, 1);
         }
+}
+
+ssize_t split_newlines(buf_t *buf, const ssize_t index) {
+        dyn_str *line = buf->lines.items + index;
+        ssize_t last_newline = line->len;
+        ssize_t lines_detected = 0;
+        for (ssize_t i = line->len - 1; i > -1; --i) {
+                if (line->items[i] == '\n') {
+                        list_insert(buf->lines, index + 1, list_init(dyn_str, 128));
+                        list_create_space(buf->lines.items[index + 1], last_newline - i - 1);
+                        memcpy(buf->lines.items[index + 1].items, line->items + i + 1, last_newline - i - 1);
+                        ++lines_detected;
+                        last_newline = i;
+                }
+        }
+        line->len = last_newline;
+        return lines_detected;
 }
 
 void handle_c_paste_inline(editor_state_t *state, buf_t *buf) {
@@ -238,7 +255,24 @@ void handle_c_paste_inline(editor_state_t *state, buf_t *buf) {
                 line->items + buf->cursor_col - 1, (prev_len - buf->cursor_col + 1) * sizeof(*line->items));
         memcpy(line->items + buf->cursor_col - 1, state->copy_register.items,
                state->copy_register.len * sizeof(*line->items));
-        for (size_t i = 0; i < state->copy_register.len; ++i) {
+
+        ssize_t lines_down = split_newlines(buf, buf->cursor_line - 1);
+
+        ssize_t cols_right = 0;
+        for (ssize_t i = 0; i < state->copy_register.len; ++i) {
+                if (state->copy_register.items[i] == '\n') {
+                        cols_right = 0;
+                }
+                ++cols_right;
+        }
+
+        // TODO: fix this make it better and more optimized
+        ssize_t old_col = buf->cursor_col - 1;
+        handle_c_big_move_left(buf);
+        for (ssize_t y = 0; y < lines_down; ++y) {
+                handle_c_move_down(buf);
+        }
+        for (ssize_t x = 0; x < (lines_down ? cols_right : state->copy_register.len + old_col); ++x) {
                 handle_c_move_right(buf);
         }
 }
@@ -250,7 +284,10 @@ void handle_c_paste_newline(editor_state_t *state, buf_t *buf) {
         list_insert(buf->lines, buf->cursor_line, list_init(dyn_str, state->copy_register.len));
         list_create_space(buf->lines.items[buf->cursor_line], state->copy_register.len);
         memcpy(buf->lines.items[buf->cursor_line].items, state->copy_register.items, state->copy_register.len);
-        handle_c_move_down(buf);
+        ssize_t lines_down = split_newlines(buf, buf->cursor_line);
+        for (ssize_t y = 0; y < lines_down; ++y) {
+                handle_c_move_down(buf);
+        }
 }
 
 void handle_forward_search(editor_state_t *state) {
@@ -344,10 +381,24 @@ void handle_c_numbered_delete_one(editor_state_t *state, buf_t *buf) {
         if (len_to_delete == 0) {
                 return;
         }
-        add_to_copy_register(state, line->items + buf->cursor_col - 1, len_to_delete);
+        set_copy_register(state, line->items + buf->cursor_col - 1, len_to_delete);
         memmove(line->items + buf->cursor_col - 1, line->items + buf->cursor_col - 1 + len_to_delete,
                 line->len + - buf->cursor_col + 1 - len_to_delete);
         line->len -= len_to_delete;
+}
+
+void handle_c_numbered_delete_line(editor_state_t *state, buf_t *buf) {
+        size_t num_to_delete = min(buf->lines.len - buf->cursor_line + 1, state->number_repeat);
+        state->copy_register.len = 0;
+        for (size_t i = 0; i < num_to_delete; ++i) {
+                dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+                list_create_space(state->copy_register, line->len);
+                memcpy(state->copy_register.items + state->copy_register.len - line->len, line->items, line->len);
+                list_pop(buf->lines, buf->cursor_line - 1);
+                if (i < num_to_delete - 1) {
+                        list_append(state->copy_register, '\n');
+                }
+        }
 }
 
 bool handle_repeats_specially(editor_state_t *state, char c) {
@@ -355,6 +406,7 @@ bool handle_repeats_specially(editor_state_t *state, char c) {
         switch (c) {
                 case C_JUMP_LINE: handle_c_jump_line(state, buf); break;
                 case C_DELETE_ONE: handle_c_numbered_delete_one(state, buf); break;
+                case C_DELETE_LINE: handle_c_numbered_delete_line(state, buf); break;
                 default: return false;
         }
         state->number_repeat = 0;
