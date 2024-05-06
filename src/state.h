@@ -42,6 +42,11 @@ typedef enum {
         ANG_180, ANG_225, ANG_270, ANG_315
 } angle_mode;
 
+typedef enum {
+        ESC_LEFT_ARROW, ESC_RIGHT_ARROW, ESC_UP_ARROW, ESC_DOWN_ARROW,
+        ESC_DELETE_KEY, ESC_NONE
+} escape_sequence;
+
 typedef struct {
         highlighting_mode syntax_mode;
         text_style_mode text_style_mode;
@@ -68,6 +73,15 @@ typedef struct {
 } display_state_t;
 
 typedef struct {
+        bool is_escape_sequence;
+        union {
+                char c;
+                escape_sequence sequence;
+        };
+} input_t;  // only used in the macro register
+list_typedef(dyn_input, input_t);
+
+typedef struct {
 
         editor_mode_type_t mode;
         int tab_width;
@@ -86,6 +100,9 @@ typedef struct {
         dyn_str input_history;
         dyn_str copy_register;
         dyn_str command_target;
+
+        bool tracking_macro;
+        dyn_input macro_register;
 
         bool search_forwards;
         uint64_t number_repeat;        

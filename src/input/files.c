@@ -20,7 +20,7 @@
 
 #define C_CREATE_FILE      'o'
 #define C_DELETE_FILE      127
-#define C_RENAME_FILE      'm'
+#define C_RENAME_FILE      'r'
 
 #define C_ENTER_FILE       13
 #define C_EXIT_FILES       27 

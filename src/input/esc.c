@@ -14,6 +14,7 @@
 
 void handle_escape_sequence(editor_state_t *state, dyn_str *sequence_str) {
         escape_sequence sequence = parse_escape_sequence(sequence_str->items, sequence_str->len);
+        list_append(state->macro_register, ((input_t) {.is_escape_sequence = true, .sequence = sequence}));
         void (*handler)(editor_state_t *, escape_sequence) = mode_from(state->mode)->escape_sequence_handler;
         if (handler) {
                 handler(state, sequence);

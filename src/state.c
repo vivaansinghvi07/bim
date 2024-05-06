@@ -64,6 +64,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
         state->input_history = list_init(dyn_str, 128);
         state->command_target = list_init(dyn_str, 128);
         state->copy_register = list_init(dyn_str, 256);
+        state->macro_register = list_init(dyn_input, 256);
         state->error_message = list_init(dyn_str, 128);
         state->buf_curr = buffers->len - 1;
         state->buffers = (buf_list *) buffers;

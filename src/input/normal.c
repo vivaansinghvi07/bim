@@ -2,6 +2,7 @@
 #include "esc.h"
 #include "command.h"
 #include "../list.h"
+#include "../mode.h"
 #include "../utils.h"
 #include "../state.h"
 #include "../display/display.h"
@@ -46,6 +47,9 @@
 
 #define C_TAB_ADD         '>'
 #define C_TAB_REMOVE      '<'
+
+#define C_MACRO_LOAD      'M' 
+#define C_MACRO_CALL      'm'
 
 #define C_OPEN_FILE       'o'
 #define C_ENTER_FILES     'f'
@@ -383,6 +387,33 @@ void handle_c_tab_remove(editor_state_t *state, buf_t *buf) {
         restore_prev_col(buf);
 }
 
+void handle_c_macro_load(editor_state_t *state) {
+        if (!state->tracking_macro) {
+                state->macro_register.len = 0;
+        } else {
+                --state->macro_register.len;   // eliminate trailing load terminator
+        }
+        state->tracking_macro = !state->tracking_macro;
+}
+
+void handle_c_macro_call(editor_state_t *state) {
+        if (state->tracking_macro) {
+                show_error(state, "CANNOT CALL MACRO IN CURRENTLY RECORDING MACRO");
+                return;
+        }
+        void (*esc_handler)(editor_state_t *, escape_sequence);
+        for (ssize_t i = 0; i < state->macro_register.len; ++i) {
+                const input_t in = state->macro_register.items[i];
+                if (in.is_escape_sequence) {
+                        if ((esc_handler = mode_from(state->mode)->escape_sequence_handler)) {
+                                esc_handler(state, in.sequence)   ;
+                        }
+                } else {
+                        mode_from(state->mode)->input_handler(state, in.c);
+                }
+        }
+}
+
 void handle_c_jump_line(editor_state_t *state, buf_t *buf) {
         uint64_t clamped_bottom = max(1, state->number_repeat);
         buf->cursor_line = min(buf->lines.len, clamped_bottom);
@@ -513,6 +544,9 @@ void handle_normal_input(editor_state_t *state, char c) {
 
                 case C_TAB_ADD: handle_c_tab_add(state, buf); break;
                 case C_TAB_REMOVE: handle_c_tab_remove(state, buf); break;
+
+                case C_MACRO_CALL: handle_c_macro_call(state); break;
+                case C_MACRO_LOAD: handle_c_macro_load(state); break;
         }
 }
 
