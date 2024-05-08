@@ -18,6 +18,9 @@
 #define C_ENTER_SEARCH     ';'
 #define C_ENTER_REV_SEARCH ':'
 
+#define C_LOAD_MACRO       'M'
+#define C_CALL_MACRO       'm'
+
 #define C_CREATE_FILE      'o'
 #define C_DELETE_FILE      127
 #define C_RENAME_FILE      'r'
@@ -134,7 +137,9 @@ void handle_files_input(editor_state_t *state, char c) {
                 case C_ENTER_REV_SEARCH: handle_rev_file_search(state); break;
                 case C_JUMP_NEXT: handle_c_jump_next(state, files_view_buf); break;
                 case C_JUMP_PREVIOUS: handle_c_jump_previous(state, files_view_buf); break;
-                
+                case C_CALL_MACRO: handle_c_macro_call(state); break;
+                case C_LOAD_MACRO: handle_c_macro_load(state); break;
+        
                 case C_BIG_MOVE_UP: handle_c_big_move_up(files_view_buf); break;
                 case C_BIG_MOVE_DOWN: handle_c_big_move_down(files_view_buf); break;
                 

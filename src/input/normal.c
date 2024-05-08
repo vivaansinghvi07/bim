@@ -24,6 +24,7 @@
 #define C_BIG_MOVE_DOWN   'S'
 #define C_BIG_MOVE_RIGHT  'D'
 
+#define C_LEXICAL_SHUF    '?'
 #define C_GRAD_ANG_INCRE  '+'
 #define C_GRAD_ANG_DECRE  '-'
 #define C_BUF_INCRE       ']'
@@ -53,6 +54,9 @@
 
 #define C_OPEN_FILE       'o'
 #define C_ENTER_FILES     'f'
+
+#define C_NEXT_WORD       'n'
+#define C_PREVIOUS_WORD   'N'
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
 static int prev_col = 0, prev_left_col = 0;
@@ -310,7 +314,17 @@ typedef struct {
 } text_pos_t;
 list_typedef(dyn_pos, text_pos_t);
 
-void handle_jump(const editor_state_t *state, buf_t *buf, const bool reverse) {
+void jump_to(buf_t *buf, text_pos_t *pos) {
+        buf->cursor_line = pos->line + 1;
+        if (buf->cursor_line - buf->screen_top_line >= H() - 1 
+            || buf->cursor_line - buf->screen_top_line < 0) {
+                buf->screen_top_line = pos->line > H() - 2 ? pos->line - (H() - 1) / 2 : 1;  
+        }
+        buf->cursor_col = pos->col + 1;
+        buf->screen_left_col = pos->col > W() - 1 ? pos->col - W() / 2 : 1;
+}
+
+void handle_search_jump(const editor_state_t *state, buf_t *buf, const bool reverse) {
 
         const dyn_str *target = &state->command_target;
         if (!target->len) {
@@ -343,24 +357,18 @@ void handle_jump(const editor_state_t *state, buf_t *buf, const bool reverse) {
         for (size_t i = (reverse ? positions.len - 1 : 0); i >= 0 && i < positions.len; (reverse ? --i : ++i)) {
                 text_pos_t *pos = positions.items + i;
                 if (!strncmp(target->items, buf->lines.items[pos->line].items + pos->col, target->len)) {
-                        buf->cursor_line = pos->line + 1;
-                        if (buf->cursor_line - buf->screen_top_line >= H() - 1 
-                            || buf->cursor_line - buf->screen_top_line < 0) {
-                                buf->screen_top_line = pos->line > H() - 2 ? pos->line - (H() - 1) / 2 : 1;  
-                        }
-                        buf->cursor_col = pos->col + 1;
-                        buf->screen_left_col = pos->col > W() - 1 ? pos->col - W() / 2 : 1;
+                        jump_to(buf, pos);
                         return;
                 }
         }
 }
 
 void handle_c_jump_next(const editor_state_t *state, buf_t *buf) {
-        handle_jump(state, buf, !state->search_forwards);
+        handle_search_jump(state, buf, !state->search_forwards);
 }
 
 void handle_c_jump_previous(const editor_state_t *state, buf_t *buf) {
-        handle_jump(state, buf, state->search_forwards);
+        handle_search_jump(state, buf, state->search_forwards);
 }
 
 void handle_c_open_file(editor_state_t *state) {
@@ -398,7 +406,9 @@ void handle_c_macro_load(editor_state_t *state) {
 
 void handle_c_macro_call(editor_state_t *state) {
         if (state->tracking_macro) {
-                show_error(state, "CANNOT CALL MACRO IN CURRENTLY RECORDING MACRO");
+                show_error(state, "CANNOT CALL MACRO IN CURRENTLY RECORDING MACRO. RECORD AGAIN");
+                state->tracking_macro = false;
+                state->macro_register.len = 0;
                 return;
         }
         void (*esc_handler)(editor_state_t *, escape_sequence);
@@ -412,6 +422,62 @@ void handle_c_macro_call(editor_state_t *state) {
                         mode_from(state->mode)->input_handler(state, in.c);
                 }
         }
+}
+
+static bool passed_whitespace;
+
+bool next_non_whitespace(const char c) {
+        return c != ' ';
+}
+
+bool next_after_name(const char c) {
+        if (c == ' ') {
+                passed_whitespace = true;
+                return false;
+        }
+        return passed_whitespace || !is_name_char(c);
+}
+
+bool next_after_symbols(const char c) {
+        if (c == ' ') {
+                passed_whitespace = true;
+                return false;
+        }
+        return passed_whitespace || is_name_char(c);
+}
+
+// TODO: rewrite so works
+text_pos_t find_next_character(buf_t *buf, bool (*matcher)(const char)) {
+        passed_whitespace = false;
+        for (ssize_t y = 0; y <= buf->lines.len; ++y) {
+
+                size_t line_index = (y + buf->cursor_line - 1) % buf->lines.len;
+                dyn_str *line = buf->lines.items + line_index;
+                size_t start = (y == 0) ? buf->cursor_col : 0;
+                size_t end = (y == buf->lines.len) ? min(buf->cursor_col - 1, line->len) : line->len;
+
+                for (ssize_t x = start; x < end; ++x) {
+                        if (matcher(buf->lines.items[line_index].items[x])) {
+                                return (text_pos_t) {.line = line_index, .col = x};
+                        }
+                }
+                passed_whitespace = true;
+        }
+        return (text_pos_t) {0, 0};  // should never happen
+}
+
+void handle_c_next_word(buf_t *buf) {
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        char c;
+        bool (*matcher)(const char) = buf->cursor_col > line->len || (c = line->items[buf->cursor_col - 1] == ' ') ? next_non_whitespace
+                                    : is_name_char(c) ? next_after_name 
+                                    : next_after_symbols;
+        text_pos_t target = find_next_character(buf, matcher);
+        jump_to(buf, &target);
+}
+
+void handle_c_previous_word(buf_t *buf) {
+        
 }
 
 void handle_c_jump_line(editor_state_t *state, buf_t *buf) {
@@ -527,6 +593,7 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_SAVE: buf_save(buf); break;
                 case C_SAVE_ALL: handle_c_save_all(state); break;
 
+                case C_LEXICAL_SHUF: fill_ansi_color_table(); break;
                 case C_DELETE_LINE: handle_c_delete_line(state, buf); break;
                 case C_DELETE_ONE: handle_c_delete_one(state, buf); break;
                 case C_COPY_LINE: handle_c_copy_line(state, buf); break;
@@ -544,6 +611,8 @@ void handle_normal_input(editor_state_t *state, char c) {
 
                 case C_TAB_ADD: handle_c_tab_add(state, buf); break;
                 case C_TAB_REMOVE: handle_c_tab_remove(state, buf); break;
+                case C_NEXT_WORD: handle_c_next_word(buf); break;
+                case C_PREVIOUS_WORD: handle_c_previous_word(buf); break;
 
                 case C_MACRO_CALL: handle_c_macro_call(state); break;
                 case C_MACRO_LOAD: handle_c_macro_load(state); break;

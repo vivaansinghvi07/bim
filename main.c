@@ -41,6 +41,7 @@ void iterate_animated_displays(editor_state_t *state) {
 int main(const int argc, const char **argv) {
 
         input_set_tty_raw();
+
         editor_state_t state;
         struct pollfd in = {.fd = 0, .events = POLLIN};
 
@@ -87,6 +88,8 @@ int main(const int argc, const char **argv) {
                         if (state.buf_curr == state.buffers->len) {
                                 --state.buf_curr;
                         }
+                        display_buffer(&state);
+                        continue;   // avoid the input being recorded or needlessly handled
                 }
 
                 if (c == '\033') {

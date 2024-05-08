@@ -61,7 +61,8 @@ const char *num_to_str(const int n);
 void set_timer(struct timespec *timer);
 double get_ms_elapsed(const struct timespec *start);
 
-uint8_t get_hex_value(char c);
+uint8_t get_hex_value(const char c);
+bool is_name_char(const char c);
 bool is_dir(const char *path);
 
 #endif // !EDITOR_UTILS

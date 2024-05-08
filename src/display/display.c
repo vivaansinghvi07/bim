@@ -112,14 +112,6 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         return bar;
 }
 
-// check if [_a-zA-Z0-9] matches <c>
-bool is_name_char(const char c) {
-        return c >= 'a' && c <= 'z' ||
-               c >= 'A' && c <= 'Z' || 
-               c >= '0' && c <= '9' ||
-               c == '_';
-}
-
 /*
  * In the mode HIGH_ALPHA, the first character of each token corresponds to a color.
  * The below function must be called when the editor starts to fill the array.
