@@ -192,7 +192,9 @@ void run_screensaver(editor_state_t *state) {
 
                 double wait_time = max(0, state->display_state.screensaver_frame_length_ms - get_ms_elapsed(&t));
                 if (poll(&in, 1, wait_time)) {
-                        read(0, &c, 1); // this is here to get rid of what's in the poll
+                        do {
+                                read(0, &c, 1);
+                        } while (poll(&in, 1, 0));  // handle other characters that are present such as as a result of pressing arrow keys
                         show_cursor();
                         display_buffer(state);
 

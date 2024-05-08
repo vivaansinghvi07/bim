@@ -41,7 +41,6 @@ void iterate_animated_displays(editor_state_t *state) {
 int main(const int argc, const char **argv) {
 
         input_set_tty_raw();
-
         editor_state_t state;
         struct pollfd in = {.fd = 0, .events = POLLIN};
 

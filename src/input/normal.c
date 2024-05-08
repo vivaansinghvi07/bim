@@ -425,7 +425,6 @@ void handle_c_macro_call(editor_state_t *state) {
 }
 
 static bool passed_whitespace;
-
 bool next_non_whitespace(const char c) {
         return c != ' ';
 }
@@ -446,38 +445,91 @@ bool next_after_symbols(const char c) {
         return passed_whitespace || is_name_char(c);
 }
 
-// TODO: rewrite so works
 text_pos_t find_next_character(buf_t *buf, bool (*matcher)(const char)) {
         passed_whitespace = false;
-        for (ssize_t y = 0; y <= buf->lines.len; ++y) {
-
-                size_t line_index = (y + buf->cursor_line - 1) % buf->lines.len;
-                dyn_str *line = buf->lines.items + line_index;
-                size_t start = (y == 0) ? buf->cursor_col : 0;
-                size_t end = (y == buf->lines.len) ? min(buf->cursor_col - 1, line->len) : line->len;
-
-                for (ssize_t x = start; x < end; ++x) {
-                        if (matcher(buf->lines.items[line_index].items[x])) {
-                                return (text_pos_t) {.line = line_index, .col = x};
-                        }
+        ssize_t x = buf->cursor_col, y = buf->cursor_line - 1;
+        while (x != buf->cursor_col - 1 || y != buf->cursor_line - 1) {
+                if (x > buf->lines.items[y].len) {
+                        x = 0, y = (y + 1) % buf->lines.len;
+                        passed_whitespace = true;
                 }
-                passed_whitespace = true;
+                if (matcher(buf->lines.items[y].items[x])) {
+                        break;
+                }
+                ++x;
         }
-        return (text_pos_t) {0, 0};  // should never happen
+        return (text_pos_t) { .line = y, .col = x };
 }
 
 void handle_c_next_word(buf_t *buf) {
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
         char c;
-        bool (*matcher)(const char) = buf->cursor_col > line->len || (c = line->items[buf->cursor_col - 1] == ' ') ? next_non_whitespace
-                                    : is_name_char(c) ? next_after_name 
+        bool (*matcher)(const char) = buf->cursor_col > line->len || (c = line->items[buf->cursor_col - 1]) == ' ' ? next_non_whitespace
+                                    : is_name_char(c) ? next_after_name
                                     : next_after_symbols;
         text_pos_t target = find_next_character(buf, matcher);
         jump_to(buf, &target);
 }
 
+bool previous_before_name(const char c) {
+        return !is_name_char(c);
+}
+
+bool previous_before_symbol(const char c) {
+        return is_name_char(c) || c == ' ';
+}
+
+// 0 for whitespace, 1 for symbol, 2 for name char - i can't be bothered enuming this
+static uint8_t target_symbol_type;
+bool previous_non_whitespace(const char c) {
+        switch (target_symbol_type) {
+                case 0: {
+                        if (is_name_char(c)) { target_symbol_type = 2; }
+                        else if (c == ' ') { target_symbol_type = 0; }
+                        else { target_symbol_type = 1; }
+                }; return false;
+                case 1: return previous_before_symbol(c);
+                case 2: return previous_before_name(c);
+        }
+        return false;
+}
+
+text_pos_t find_previous_character(buf_t *buf, bool (*matcher)(const char)) {
+        target_symbol_type = 0;
+        bool starting = true;
+        ssize_t x = buf->cursor_col - 2, y = buf->cursor_line - 1;
+        while (x != buf->cursor_col - 1 || y != buf->cursor_line - 1) {
+                if (x < 0) {
+                        if (buf->lines.items[y].items[0] != ' ' && !starting) {
+                                return (text_pos_t) { .line = y, .col = 0 };
+                        }
+                        y = (y + buf->lines.len - 1) % buf->lines.len;
+                        x = buf->lines.items[y].len - 1;
+                }
+                if (matcher(buf->lines.items[y].items[x])) {
+                        return (text_pos_t) { .line = y, .col = x + 1};
+                }
+                --x;
+                starting = false;
+        }
+        return (text_pos_t) { .line = y, .col = x};
+}
+
 void handle_c_previous_word(buf_t *buf) {
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        char c;
         
+        // edge case hell
+        bool (*matcher)(const char);
+        if (buf->cursor_col > line->len || buf->cursor_col - 1 <= 0) {
+                matcher = previous_non_whitespace;
+        } else {
+                matcher = (c = line->items[buf->cursor_col - 2]) == ' ' ? previous_non_whitespace
+                        : is_name_char(c) ? previous_before_name
+                        : previous_before_symbol;
+        }
+        text_pos_t target = find_previous_character(buf, matcher);
+        jump_to(buf, &target);
 }
 
 void handle_c_jump_line(editor_state_t *state, buf_t *buf) {
