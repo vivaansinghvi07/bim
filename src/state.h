@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "buf.h"
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
 
@@ -52,8 +53,8 @@ typedef struct {
         text_style_mode text_style_mode;
 
         screensaver_mode screensaver_mode;
-        int screensaver_frame_length_ms;
-        int screensaver_ms_inactive;
+        ssize_t screensaver_frame_length_ms;
+        ssize_t screensaver_ms_inactive;
 
         // controls the tilt of the gradient when using HIGH_GRADIENT or HIGH_RGB
         // possibly overengineering but its cool
@@ -62,12 +63,12 @@ typedef struct {
         // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
         struct {
                 gradient_color_t gradient_color;  
-                int gradient_cycle_duration_ms;
+                ssize_t gradient_cycle_duration_ms;
         };
         // when syntax_mode is HIGH_RGB, these are the things that are used
         struct {
-                int rgb_cycle_duration_ms;
-                int rgb_state;  // represents how far along we are in rgb process
+                ssize_t rgb_cycle_duration_ms;
+                ssize_t rgb_state;  // represents how far along we are in rgb process
         };
 
 } display_state_t;

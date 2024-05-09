@@ -115,8 +115,8 @@ const angle_mode ANG_ENUM_OPTS[] = {ANG_0, ANG_45, ANG_90, ANG_135,
 #define parse_text_opts(setting, val_to_set, str_opts_arr, enum_opts_arr, info)                     \
         do {                                                                                        \
                 const char *ending_str = (info).line->items + (info).equal_index + 1;               \
-                size_t len = (info).line->len - (info).equal_index - 1;                             \
                 strip_whitespace((info).line);                                                      \
+                size_t len = (info).line->len - (info).equal_index - 1;                             \
                                                                                                     \
                 int i;                                                                              \
                 for (i = 0; i < sizeof(str_opts_arr) / sizeof(*str_opts_arr); ++i) {                \

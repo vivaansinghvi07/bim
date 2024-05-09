@@ -64,7 +64,8 @@ int main(const int argc, const char **argv) {
                 }
 
                 if (!poll(&in, 1, POLL_TIMEOUT_MS)) {
-                        if (get_ms_elapsed(&state.inactive_timer) > state.display_state.screensaver_ms_inactive) {
+                        if (get_ms_elapsed(&state.inactive_timer) > state.display_state.screensaver_ms_inactive
+                            && state.display_state.screensaver_ms_inactive >= 0) {
                                 run_screensaver(&state);
                                 set_timer(&state.inactive_timer);
                         } else if (skip_display) {
