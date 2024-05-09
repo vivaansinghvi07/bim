@@ -28,6 +28,9 @@ void insert_tab(buf_t *buf, dyn_str *line, const int tab_width) {
         memcpy(line->items + col + spaces_to_add, line->items + col, (line->len - col) * sizeof(*line->items));
         memset(line->items + col, ' ', spaces_to_add * sizeof(*line->items));
         buf->cursor_col += spaces_to_add;
+        if (buf->cursor_col - buf->screen_left_col > W() - 1) {
+                buf->screen_left_col += spaces_to_add;
+        }
 }
 
 void insert_newline(buf_t *buf, dyn_str *line) {
