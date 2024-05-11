@@ -49,7 +49,7 @@ static const editor_mode_t MODES[] = {
 void check_mode_array(void) {
         for (size_t i = 0; i < EDITOR_MODE_TYPE_COUNT; ++i) {
                 if (i != MODES[i].type) {
-                        exit_error("Fatal: Invalid mode detected in mode array. Mode enum must match index.\n");
+                        exit_error("Invalid mode detected in mode array. Mode enum must match index.\n");
                 }
         }
 }

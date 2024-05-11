@@ -175,16 +175,16 @@ bool is_valid_color_char(const char c) {
 
 rgb_t parse_color(const parse_info_t *info) {
         if (info->line->items[info->equal_index + 1] != '#') {
-                exit_error("Color must begin with a hex code.");
+                exit_error("Color must begin with a hex code.\n");
         } else if (info->line->len - info->equal_index - 2 < 6) {
-                exit_error("Color in hexadecimal must contain 6 characters.");
+                exit_error("Color in hexadecimal must contain 6 characters.\n");
         }
 
         rgb_t ret = {0};
         for (size_t i = info->equal_index + 2, j = 0; i < info->line->len && j < 6; ++i, ++j) {
                 char c = info->line->items[i];
                 if (!is_valid_color_char(c)) {
-                        exit_error("Invalid character detected in hexadecimal color.");
+                        exit_error("Invalid character detected in hexadecimal color.\n");
                 }
                 switch (j) {
                         case 0: ret.r = get_hex_value(c) << 4; break;

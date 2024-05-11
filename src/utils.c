@@ -22,7 +22,7 @@ bool resize_detected(const int sW, const int sH) {
 struct winsize get_window_size(void) {
         struct winsize w;
         if (ioctl(0, TIOCGWINSZ, &w) == -1) {
-                exit_error("Could not determine terminal size.");
+                exit_error("Could not determine terminal size.\n");
         }
         return w;
 }
