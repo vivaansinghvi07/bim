@@ -1,5 +1,16 @@
-# stupid-text-editor
-A text editor with the dumbest features imaginable.
+# bim
+
+I was originally going to make this have extrememly dumb features, but I ended up wanting
+to implement a lot of features of vim. 
+
+| Command | Description |
+| :-----  | :---------- |
+| `a`     | testing |
+
+
+## TODO
+
+- fix issue with adding tabs being weird
 
 ## Design
 
