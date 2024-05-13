@@ -142,7 +142,13 @@ void handle_c_move_left(buf_t *buf) {
 }
 
 void handle_c_big_move_left(buf_t *buf) {
-        buf->cursor_col = buf->screen_left_col = 1;
+        if (buf->screen_left_col <= 1) {
+                buf->cursor_col = 1;
+        } else {
+                int cols_to_move = min(W() - 4, buf->screen_left_col - 1);
+                buf->screen_left_col -= cols_to_move;
+                buf->cursor_col -= cols_to_move;
+        }
         prev_col = 0;
 }
 
@@ -157,9 +163,13 @@ void handle_c_move_right(buf_t *buf) {
 }
 
 void handle_c_big_move_right(buf_t *buf) {
-        buf->cursor_col = buf->lines.items[buf->cursor_line - 1].len + 1;
-        if (buf->cursor_col - buf->screen_left_col > W() - 1) {
-                buf->screen_left_col = buf->cursor_col - W() + 1;
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        if (buf->screen_left_col + W() - 1 >= line->len + 1) {
+                buf->cursor_col = line->len + 1;
+        } else {
+                int cols_to_move = min(W() - 4, line->len - (buf->screen_left_col + W() - 1));
+                buf->cursor_col += cols_to_move;
+                buf->screen_left_col += cols_to_move;
         }
         prev_col = 0;
 }
@@ -564,6 +574,10 @@ void handle_c_numbered_delete_line(editor_state_t *state, buf_t *buf) {
                         list_append(state->copy_register, '\n');
                 }
         }
+        if (buf->cursor_line > buf->lines.len) {
+                handle_c_move_up(buf);
+        }
+        restore_prev_col(buf);
 }
 
 void handle_c_numbered_copy_line(editor_state_t *state, buf_t *buf) {

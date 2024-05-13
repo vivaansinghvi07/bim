@@ -1,7 +1,7 @@
 CFLAGS = -Wall -Wno-logical-op-parentheses -O3
 FILES = main.c src/*.c src/*/*.c
-NAME = editor
-TEST_NAME = test_editor
+NAME = bim
+TEST_NAME = bim_test
 
 compile:
 	gcc $(CFLAGS) $(FILES) -o $(NAME)

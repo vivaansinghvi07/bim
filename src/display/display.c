@@ -224,8 +224,8 @@ const rgb_t RGB_PROGRESSION[] = {
         (rgb_t){218, 110, 247}, (rgb_t){224, 104, 237}, (rgb_t){229, 97, 227},  (rgb_t){234, 91, 216},
         (rgb_t){238, 85, 204},  (rgb_t){242, 78, 192},  (rgb_t){246, 72, 180},  (rgb_t){249, 65, 166},
         (rgb_t){252, 58, 152},  (rgb_t){254, 51, 138},  (rgb_t){255, 43, 123},  (rgb_t){255, 35, 107},
-        (rgb_t){255, 26, 90},   (rgb_t){255, 17, 71},   (rgb_t){255, 7, 47}, };
-
+        (rgb_t){255, 26, 90},   (rgb_t){255, 17, 71},   (rgb_t){255, 7, 47}
+};
 const uint8_t RGB_PROGRESSION_LEN = sizeof(RGB_PROGRESSION) / sizeof(rgb_t);
 
 void step_rgb_state(editor_state_t *state) {
