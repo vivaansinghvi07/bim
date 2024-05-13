@@ -18,6 +18,8 @@ Each command mode shares an input handler, but has different effects when the co
 The rest of these are `command` modes, which all create a prompt for the user at the bottom of the editor. The user then types in
 the response using printable characters. These can be exited with the escape key, or submitted with the enter key.
 
+| Command Name | Description |
+| :----------- | :---------- |
 | `search`     | Searches for a string in the buffer, and can be used in forwards or backwards order. Access this mode using `;` for a forwards search and `:` for a backwards search. |
 | `file search`| The variation of the above command that works in `files` mode. It is called with the same keys and also features forwards and backwards searching. |
 | `rename`     | Renames the file that the user was hovering over in `files` mode. |
