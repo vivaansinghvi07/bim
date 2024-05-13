@@ -59,11 +59,10 @@
 #define C_PREVIOUS_WORD   'N'
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
-static int prev_col = 0, prev_left_col = 0;
+static int prev_col = 0;
 void restore_prev_col(buf_t *buf) {
         if (prev_col == 0) {
                 prev_col = buf->cursor_col;
-                prev_left_col = buf->screen_left_col;
         }
 
         int curr_line_len = buf->lines.items[buf->cursor_line - 1].len;
@@ -73,10 +72,8 @@ void restore_prev_col(buf_t *buf) {
                 buf->cursor_col = prev_col;
         }
 
-        if (buf->cursor_col < buf->screen_left_col) {
-                buf->screen_left_col = 1;
-        } else if (buf->cursor_col > buf->screen_left_col + W() - 1) {
-                buf->screen_left_col = prev_left_col;
+        if (buf->cursor_col < buf->screen_left_col || buf->cursor_col - buf->screen_left_col >= W()) {
+                buf->screen_left_col = max(buf->cursor_col - W() / 2, 1);
         }
 }
 
@@ -305,19 +302,17 @@ void handle_backward_search(editor_state_t *state) {
         enter_command_mode(state, CMD_SEARCH);
 }
 
-typedef struct {
-        size_t line, col;  // 0 indexed to work with the following loop
-} text_pos_t;
 list_typedef(dyn_pos, text_pos_t);
 
 void jump_to(buf_t *buf, text_pos_t *pos) {
         buf->cursor_line = pos->line + 1;
-        if (buf->cursor_line - buf->screen_top_line >= H() - 1 
-            || buf->cursor_line - buf->screen_top_line < 0) {
+        if (buf->cursor_line - buf->screen_top_line >= H() - 1 || buf->cursor_line - buf->screen_top_line < 0) {
                 buf->screen_top_line = pos->line > H() - 2 ? pos->line - (H() - 1) / 2 : 1;  
         }
         buf->cursor_col = pos->col + 1;
-        buf->screen_left_col = pos->col > W() - 1 ? pos->col - W() / 2 : 1;
+        if (buf->cursor_col - buf->screen_left_col >= W() || buf->cursor_col - buf->screen_left_col < 0) {
+                buf->screen_left_col = pos->col > W() - 1 ? pos->col - W() / 2 : 1;
+        }
 }
 
 void handle_search_jump(const editor_state_t *state, buf_t *buf, const bool reverse) {

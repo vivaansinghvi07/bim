@@ -17,10 +17,10 @@ typedef struct {
          *   <cursor_col> represents what column number the cursor is on.
          *   <screen_left_col> represents the column number at the left of the screen.
          */
-        size_t cursor_line;  
-        size_t screen_top_line;
-        size_t cursor_col;
-        size_t screen_left_col;
+        ssize_t cursor_line;  
+        ssize_t screen_top_line;
+        ssize_t cursor_col;
+        ssize_t screen_left_col;
 
         const char *filename;
         dyn_contents lines;

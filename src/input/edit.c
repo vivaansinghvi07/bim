@@ -69,8 +69,7 @@ void delete_single_character(buf_t *buf, dyn_str *line, const int tab_width) {
                 memcpy(prev_line->items + prev_line_prev_len, line->items, line->len * sizeof(*prev_line->items));
                 free_list_items(1, line);
                 list_pop(buf->lines, buf->cursor_line - 1);
-                handle_c_move_up(buf);
-                buf->cursor_col = prev_line_prev_len + 1;
+                jump_to(buf, &(text_pos_t){.line = buf->cursor_line - 2, .col = prev_line_prev_len});
         } else {
                 int deletes = 1;
                 if (line->items[col] == ' ') {
