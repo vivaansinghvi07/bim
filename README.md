@@ -30,11 +30,17 @@ the response using printable characters. These can be exited with the escape key
 | `open` | Opens a file using either relative or absolute paths, toggled from `normal` mode. |
 | `create file` | Creates a file in `files` mode, in the current directory of the mode. |
 
+Here is a list of every key binding and its purpose within `bim`.
 
-
-| Command | Mode(s) | Description |
-| -----:  | :-----: | :---------- |
-| `w`/`d` | `normal`
+|   Key   |  Mode(s)   |  Description |
+| -----:  |  :-----:   |  :---------- |
+| `w`/`s` |  `normal`, `files`  | Moves the cursor up/down |
+| `A-U`/`A-D` |  `normal`, `files`, `edit`  | Moves the cursor up/down |
+| `a`/`d` |  `normal`  | Moves the cursor left/right |
+| `A-L`/`A-R` |  `normal`, `edit`  | Moves the cursor left/right |
+| `C-w`/`C-a`/`C-s`/`C-d`/ | `edit`| Moves the cursor up/left/down/right |
+| 'W'/'S' |  `normal`, `files` | If in the middle of a buffer, moves the cursor up/down half the screen height. Otherwise, if the start/end of the buffer is visible on the screen, jumps there. |
+| 'A'/'D' |  `normal`, `files` | If in the middle of a line, moves the cursor left/right half the screen width. Otherwise, if the start/end of the line is visible on the screen, jumps there. |
 
 ## Design
 

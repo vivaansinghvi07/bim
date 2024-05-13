@@ -170,9 +170,12 @@ void handle_c_big_move_right(buf_t *buf) {
         if (buf->screen_left_col + W() - 1 >= line->len + 1) {
                 buf->cursor_col = line->len + 1;
         } else {
-                int cols_to_move = min(W() / 2, line->len - (buf->screen_left_col + W() / 2 - 1));
+                int cols_to_move = min(W() / 2, line->len - buf->cursor_col + 1);
+                cols_to_move = max(0, cols_to_move);
                 buf->cursor_col += cols_to_move;
-                buf->screen_left_col += cols_to_move;
+                if (buf->cursor_col - buf->screen_left_col >= W()) {
+                        buf->screen_left_col += cols_to_move;
+                }
         }
         reset_prev_col();
 }
