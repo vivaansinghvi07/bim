@@ -45,8 +45,9 @@ void insert_newline(buf_t *buf, dyn_str *line) {
         memset(line->items + col, 0, split_text_len * sizeof(*line->items));
         next_line->len = split_text_len;
         line->len = col;
-        handle_c_move_down(buf); 
-        handle_c_big_move_left(buf);
+        handle_c_move_down(buf);
+        buf->cursor_col = buf->screen_left_col = 1;
+        reset_prev_col();
 }
 
 void insert_single_character(buf_t *buf, dyn_str *line, char c) {

@@ -20,6 +20,8 @@ void handle_c_macro_call(editor_state_t *state);
 void handle_c_macro_load(editor_state_t *state);
 void handle_search(editor_state_t *state);
 
+void reset_prev_col(void);
+
 typedef struct {
         size_t line, col;  // 0 indexed to work with the following loop
 } text_pos_t;

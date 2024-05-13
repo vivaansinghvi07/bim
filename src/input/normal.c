@@ -60,6 +60,9 @@
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
 static int prev_col = 0;
+void reset_prev_col(void) {
+        prev_col = 0;
+}
 void restore_prev_col(buf_t *buf) {
         if (prev_col == 0) {
                 prev_col = buf->cursor_col;
@@ -97,7 +100,7 @@ void handle_c_big_move_up(buf_t *buf) {
         if (buf->screen_top_line <= 1) {
                 buf->cursor_line = 1;
         } else {
-                int lines_to_move = min(H() - 5, buf->screen_top_line - 1);
+                int lines_to_move = min(H() / 2, buf->screen_top_line - 1);
                 buf->screen_top_line -= lines_to_move;
                 buf->cursor_line -= lines_to_move;
         }
@@ -124,7 +127,7 @@ void handle_c_big_move_down(buf_t *buf) {
         if (buf->screen_top_line + H() - 2 >= buf->lines.len) {
                 buf->cursor_line = buf->lines.len;
         } else {
-                int lines_to_move = min(H() - 5, buf->lines.len - (buf->screen_top_line + H() - 2));
+                int lines_to_move = min(H() / 2, buf->lines.len - (buf->screen_top_line + H() - 2));
                 buf->screen_top_line += lines_to_move;
                 buf->cursor_line += lines_to_move;
         }
@@ -137,7 +140,7 @@ void handle_c_move_left(buf_t *buf) {
                         --buf->screen_left_col;
                 }
                 --buf->cursor_col;
-                prev_col = 0;
+                reset_prev_col();
         }
 }
 
@@ -145,11 +148,11 @@ void handle_c_big_move_left(buf_t *buf) {
         if (buf->screen_left_col <= 1) {
                 buf->cursor_col = 1;
         } else {
-                int cols_to_move = min(W() - 4, buf->screen_left_col - 1);
+                int cols_to_move = min(W() / 2, buf->screen_left_col - 1);
                 buf->screen_left_col -= cols_to_move;
                 buf->cursor_col -= cols_to_move;
         }
-        prev_col = 0;
+        reset_prev_col();
 }
 
 void handle_c_move_right(buf_t *buf) {
@@ -158,7 +161,7 @@ void handle_c_move_right(buf_t *buf) {
                         ++buf->screen_left_col;
                 }
                 ++buf->cursor_col;
-                prev_col = 0;
+                reset_prev_col();
         }
 }
 
@@ -167,11 +170,11 @@ void handle_c_big_move_right(buf_t *buf) {
         if (buf->screen_left_col + W() - 1 >= line->len + 1) {
                 buf->cursor_col = line->len + 1;
         } else {
-                int cols_to_move = min(W() - 4, line->len - (buf->screen_left_col + W() - 1));
+                int cols_to_move = min(W() / 2, line->len - (buf->screen_left_col + W() / 2 - 1));
                 buf->cursor_col += cols_to_move;
                 buf->screen_left_col += cols_to_move;
         }
-        prev_col = 0;
+        reset_prev_col();
 }
 
 void handle_c_enter_edit(editor_state_t *state) {
