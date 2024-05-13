@@ -11,20 +11,20 @@ Each command mode shares an input handler, but has different effects when the co
 
 |     Mode     | Description |
 | :----------- | ----------: |
-| `normal`     | Pretty much like `vim`'s normal mode, this mode allows fast navigations and features many keybindings\
-                 to make text editing faster. A list of these bindings is in the next table. This mode is activated\
-                 by default when the editor is open and can be accessed using the escape key. |
-| `files`      | This allows for a manipulation of your file tree through the editor. Access this mode with the `f`\
-                 keybinding from `normal` mode. Like normal mode, many bindings are featured to make navigation and\
-                 file manipulation easy. |
-| `edit`       | This is a pure edit mode, taking all printable characters (defined by `isprint()` in C) and using\
-                 them to modify the current buffer. You can exit this using the escape key. |
+| `normal`     | Pretty much like `vim`'s normal mode, this mode allows fast navigations and features many keybindings |
+|              | to make text editing faster. A list of these bindings is in the next table. This mode is activated |
+|              | by default when the editor is open and can be accessed using the escape key. |
+| `files`      | This allows for a manipulation of your file tree through the editor. Access this mode with the `f` |
+|              | keybinding from `normal` mode. Like normal mode, many bindings are featured to make navigation and |
+|              | file manipulation easy. |
+| `edit`       | This is a pure edit mode, taking all printable characters (defined by `isprint()` in C) and using |
+|              | them to modify the current buffer. You can exit this using the escape key. |
 | ------------ | ----------- |
-| `search`     | This searches for a string in the buffer, and can be used in forwards or backwards order. Access this\
-                 mode using `;` for a forwards search and `:` for a backwards search.
-| `file search`| This is the variation of the above command that works in `files` mode. It is called with the same\
-                 keys and also features forwards and backwards searching.
-| `rename`     |
+| `search`     | This searches for a string in the buffer, and can be used in forwards or backwards order. Access this |
+|              | mode using `;` for a forwards search and `:` for a backwards search. |
+| `file search`| This is the variation of the above command that works in `files` mode. It is called with the same |
+|              | keys and also features forwards and backwards searching. |
+| `rename`     ||
 
 | Command | Mode(s) | Description |
 | -----:  | :-----: | :---------- |
