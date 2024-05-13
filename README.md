@@ -12,12 +12,20 @@ Each command mode shares an input handler, but has different effects when the co
 |     Mode     | Description |
 | :----------- | :---------- |
 | `normal`     | Pretty much like `vim`'s normal mode, this mode allows fast navigations and features many keybindings to make text editing faster. A list of these bindings is in the next table. This mode is activated by default when the editor is open and can be accessed using the escape key. |
-| `files`      | This allows for a manipulation of your file tree through the editor. Access this mode with the `f` keybinding from `normal` mode. Like normal mode, many bindings are featured to make navigation and file manipulation easy. |
-| `edit`       | This is a pure edit mode, taking all printable characters (defined by `isprint()` in C) and using them to modify the current buffer. You can exit this using the escape key. |
-| ------------ | ----------- |
-| `search`     | This searches for a string in the buffer, and can be used in forwards or backwards order. Access this mode using `;` for a forwards search and `:` for a backwards search. |
-| `file search`| This is the variation of the above command that works in `files` mode. It is called with the same keys and also features forwards and backwards searching. |
-| `rename`     ||
+| `files`      | Allows for a manipulation of your file tree through the editor. Access this mode with the `f` keybinding from `normal` mode. Like normal mode, many bindings are featured to make navigation and file manipulation easy. |
+| `edit`       | A pure edit mode, taking all printable characters (defined by `isprint()` in C) and using them to modify the current buffer. You can exit this using the escape key. |
+
+The rest of these are `command` modes, which all create a prompt for the user at the bottom of the editor. The user then types in
+the response using printable characters. These can be exited with the escape key, or submitted with the enter key.
+
+| `search`     | Searches for a string in the buffer, and can be used in forwards or backwards order. Access this mode using `;` for a forwards search and `:` for a backwards search. |
+| `file search`| The variation of the above command that works in `files` mode. It is called with the same keys and also features forwards and backwards searching. |
+| `rename`     | Renames the file that the user was hovering over in `files` mode. |
+| `confirm delete`| A confirmation for deleting the file that the user was hovering over in `files` mode. |
+| `open` | Opens a file using either relative or absolute paths, toggled from `normal` mode. |
+| `create file` | Creates a file in `files` mode, in the current directory of the mode. |
+
+
 
 | Command | Mode(s) | Description |
 | -----:  | :-----: | :---------- |
