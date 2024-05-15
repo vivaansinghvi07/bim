@@ -33,7 +33,7 @@ Below is a table of all configuration options and their usages.
 
 | Option | Values | Description |
 | :----- | :----: | :---------- |
-| `text_style` | `BOLD`, `NORMAL`, `ITALIC` | Sets the style of any text displayed |
+| `text_style` | `BOLD`, `NORMAL`, `ITALIC` | Sets the style of the text displayed |
 | `highlight_mode` | `GRADIENT`, `LEXICAL`, `RGB`, `RANDOM`, `NONE` | Sets the way in which text is highlighted |
 | `gradient_left` | An RGB color in hex notation (with the hashtag) | Sets the left color of the gradient when `highlight_mode` is GRADIENT |
 | `gradient_right` | An RGB color in hex notation (with the hashtag) | Sets the right color of the gradient when `highlight_mode` is GRADIENT |

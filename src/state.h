@@ -98,7 +98,6 @@ typedef struct {
         buf_list *buffers;
 
         dyn_str error_message;
-        dyn_str input_history;
         dyn_str copy_register;
         dyn_str command_target;
 

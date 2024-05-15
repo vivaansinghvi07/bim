@@ -102,8 +102,7 @@ int main(const int argc, const char **argv) {
                 if (state.tracking_macro) {
                         list_append(state.macro_register, ((input_t) {.is_escape_sequence = false, .c = c}));
                 }
-                list_append(state.input_history, c);
-                mode_from(state.mode)->input_handler(&state, c);
+                mode_from(state.mode)->input_handler(&state, c);  // most of the logic happens in the handler
 
                 if (skip_display) {
                         continue;
