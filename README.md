@@ -76,10 +76,10 @@ Like `vim`, `bim` also features plenty of useful keybindings with their own func
 |   Key   |  Mode(s)   |  Description |
 | -----:  |  :-----:   |  :---------- |
 | `w`/`s` |  `normal`, `files`  | Moves the cursor up/down |
-| `A-U`/`A-D` |  `normal`, `files`, `edit`  | Moves the cursor up/down |
+| `A‑U`/`A‑D` |  `normal`, `files`, `edit`  | Moves the cursor up/down |
 | `a`/`d` |  `normal`  | Moves the cursor left/right |
-| `A-L`/`A-R` |  `normal`, `edit`  | Moves the cursor left/right |
-| `C-w`/`C-a`/`C-s`/`C-d`/ | `edit`| Moves the cursor up/left/down/right |
+| `A‑L`/`A‑R` |  `normal`, `edit`  | Moves the cursor left/right |
+| `C‑w`/`C‑a`/`C‑s`/`C‑d`/ | `edit`| Moves the cursor up/left/down/right |
 | `W`/`S` |  `normal`, `files` | If in the middle of a buffer, moves the cursor up/down half the screen height. Otherwise, if the start/end of the buffer is visible on the screen, jumps there. |
 | `A`/`D` |  `normal`, `files` | If in the middle of a line, moves the cursor left/right half the screen width. Otherwise, if the start/end of the line is visible on the screen, jumps there. |
 
