@@ -9,6 +9,45 @@ Simply run `$ make` to build the editor in the current directory. To install it 
 
 ## Usage
 
+### Configuration
+
+All configuration for `bim` is done in the `.bim_rc` file in your home directory. Each line that is a 
+configuration option must contain the option immediately followed by an equals sign, which is then immediately followed by the value.
+
+Here is an example configuration:
+
+```
+highlight_mode=RGB
+tab_width=8
+
+screensaver_mode=ROCK_PAPER_SCISSORS 
+screensaver_ms_inactive=-1
+
+gradient_cycle_duration_ms=100
+
+rgb_cycle_duration_ms=20
+rgb_angle=315
+```
+
+Below is a table of all configuration options and their usages.
+
+| Option | Values | Description |
+| :----- | :----: | :---------- |
+| text_style | `BOLD`, `NORMAL`, `ITALIC` | Sets the style of any text displayed |
+| highlight_mode | `GRADIENT`, `LEXICAL`, `RGB`, `RANDOM`, `NONE` | Sets the way in which text is highlighted |
+| gradient_left | An RGB color in hex notation (with the hashtag) | Sets the left color of the gradient when `highlight_mode` is GRADIENT |
+| gradient_right | An RGB color in hex notation (with the hashtag) | Sets the right color of the gradient when `highlight_mode` is GRADIENT |
+| screensaver_mode | `LEFT_SLIDE`, `RIGHT_SLIDE`, `TOP_SLIDE`, `BOTTOM_SLIDE`, `ROCK_PAPER_SCISSORS`, `FALLING_SAND`, `GAME_OF_LIFE` | Sets the screensaver to use when inactive |
+| gradient_angle | `0`, `45`, `90`, `135`, `180`, `225`, `270`, `315` | Sets the angle of tilt for the gradient when `highlight_mode` is GRADIENT |
+| rgb_angle | `0`, `45`, `90`, `135`, `180`, `225`, `270`, `315` | Sets the angle of tilt for the RGB pattern when `highlight_mode` is RGB |
+| screensaver_ms_inactive | A whole number | Sets the number of milliseconds to be inactive until the screensaver starts playing |
+| screensaver_frame_length_ms | A whole number | Sets the frame length of each tick of the screensaver |
+| gradient_cycle_duration_ms | A whole number | Sets the frame length of each tick of the rotating animation when `highlight_mode` is GRADIENT |
+| rgb_cycle_duration_ms | A whole number | Sets the frame length of each tick of the RGB animation when `highlight_mode` is RGB |
+| tab_width | A whole number | Sets the tab width of the editor (tabs are automatically converted to spaces) |
+
+### Modes
+
 Like `vim`, this is a modal editor. Currently, there are three main modes and several "command" modes.
 Each command mode shares an input handler, but has different effects when the command is entered.
 
@@ -30,7 +69,9 @@ the response using printable characters. These can be exited with the escape key
 | `open` | Opens a file using either relative or absolute paths, toggled from `normal` mode. |
 | `create file` | Creates a file in `files` mode, in the current directory of the mode. |
 
-Here is a list of every key binding and its purpose within `bim`.
+### Keybindings
+
+Like `vim`, `bim` also features plenty of useful keybindings with their own functions in the editor.
 
 |   Key   |  Mode(s)   |  Description |
 | -----:  |  :-----:   |  :---------- |
@@ -39,8 +80,8 @@ Here is a list of every key binding and its purpose within `bim`.
 | `a`/`d` |  `normal`  | Moves the cursor left/right |
 | `A-L`/`A-R` |  `normal`, `edit`  | Moves the cursor left/right |
 | `C-w`/`C-a`/`C-s`/`C-d`/ | `edit`| Moves the cursor up/left/down/right |
-| 'W'/'S' |  `normal`, `files` | If in the middle of a buffer, moves the cursor up/down half the screen height. Otherwise, if the start/end of the buffer is visible on the screen, jumps there. |
-| 'A'/'D' |  `normal`, `files` | If in the middle of a line, moves the cursor left/right half the screen width. Otherwise, if the start/end of the line is visible on the screen, jumps there. |
+| `W`/`S` |  `normal`, `files` | If in the middle of a buffer, moves the cursor up/down half the screen height. Otherwise, if the start/end of the buffer is visible on the screen, jumps there. |
+| `A`/`D` |  `normal`, `files` | If in the middle of a line, moves the cursor left/right half the screen width. Otherwise, if the start/end of the line is visible on the screen, jumps there. |
 
 ## Design
 

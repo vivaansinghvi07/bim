@@ -79,7 +79,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
 /* Config file-related functions */
 
-#define CONFIG_FILE_NAME ".stupid_editor_rc"
+#define CONFIG_FILE_NAME ".bim_rc"
 
 #define GRADIENT_LEFT_SETTING "gradient_left"
 #define GRADIENT_RIGHT_SETTING "gradient_right"

@@ -35,8 +35,8 @@ void open_new_files_view(editor_state_t *state, const char *filename) {
         buf->filename = filename;
         buf_fill_files_view(&state->files_view_buf);
         buf->cursor_line = min(buf->cursor_line, buf->lines.len);
-        if (buf->cursor_line - buf->screen_top_line >= H() - 1) {
-                 buf->screen_top_line = buf->cursor_line > H() / 2 ? buf->cursor_line - H() / 2 : 1;
+        if (buf->cursor_line - buf->screen_top_line >= H() - 1 || buf->cursor_line < buf->screen_top_line) {
+                buf->screen_top_line = buf->cursor_line > H() / 2 ? buf->cursor_line - H() / 2 : 1;
         }
         state->mode = FILES;
 }
