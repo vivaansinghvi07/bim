@@ -33,18 +33,18 @@ Below is a table of all configuration options and their usages.
 
 | Option | Values | Description |
 | :----- | :----: | :---------- |
-| text_style | `BOLD`, `NORMAL`, `ITALIC` | Sets the style of any text displayed |
-| highlight_mode | `GRADIENT`, `LEXICAL`, `RGB`, `RANDOM`, `NONE` | Sets the way in which text is highlighted |
-| gradient_left | An RGB color in hex notation (with the hashtag) | Sets the left color of the gradient when `highlight_mode` is GRADIENT |
-| gradient_right | An RGB color in hex notation (with the hashtag) | Sets the right color of the gradient when `highlight_mode` is GRADIENT |
-| screensaver_mode | `LEFT_SLIDE`, `RIGHT_SLIDE`, `TOP_SLIDE`, `BOTTOM_SLIDE`, `ROCK_PAPER_SCISSORS`, `FALLING_SAND`, `GAME_OF_LIFE` | Sets the screensaver to use when inactive |
-| gradient_angle | `0`, `45`, `90`, `135`, `180`, `225`, `270`, `315` | Sets the angle of tilt for the gradient when `highlight_mode` is GRADIENT |
-| rgb_angle | `0`, `45`, `90`, `135`, `180`, `225`, `270`, `315` | Sets the angle of tilt for the RGB pattern when `highlight_mode` is RGB |
-| screensaver_ms_inactive | A whole number | Sets the number of milliseconds to be inactive until the screensaver starts playing |
-| screensaver_frame_length_ms | A whole number | Sets the frame length of each tick of the screensaver |
-| gradient_cycle_duration_ms | A whole number | Sets the frame length of each tick of the rotating animation when `highlight_mode` is GRADIENT |
-| rgb_cycle_duration_ms | A whole number | Sets the frame length of each tick of the RGB animation when `highlight_mode` is RGB |
-| tab_width | A whole number | Sets the tab width of the editor (tabs are automatically converted to spaces) |
+| `text_style` | `BOLD`, `NORMAL`, `ITALIC` | Sets the style of any text displayed |
+| `highlight_mode` | `GRADIENT`, `LEXICAL`, `RGB`, `RANDOM`, `NONE` | Sets the way in which text is highlighted |
+| `gradient_left` | An RGB color in hex notation (with the hashtag) | Sets the left color of the gradient when `highlight_mode` is GRADIENT |
+| `gradient_right` | An RGB color in hex notation (with the hashtag) | Sets the right color of the gradient when `highlight_mode` is GRADIENT |
+| `screensaver_mode` | `LEFT_SLIDE`, `RIGHT_SLIDE`, `TOP_SLIDE`, `BOTTOM_SLIDE`, `ROCK_PAPER_SCISSORS`, `FALLING_SAND`, `GAME_OF_LIFE` | Sets the screensaver to use when inactive |
+| `gradient_angle` | `0`, `45`, `90`, `135`, `180`, `225`, `270`, `315` | Sets the angle of tilt for the gradient when `highlight_mode` is GRADIENT |
+| `rgb_angle` | `0`, `45`, `90`, `135`, `180`, `225`, `270`, `315` | Sets the angle of tilt for the RGB pattern when `highlight_mode` is RGB |
+| `screensaver_ms_inactive` | A whole number | Sets the number of milliseconds to be inactive until the screensaver starts playing |
+| `screensaver_frame_length_ms` | A whole number | Sets the frame length of each tick of the screensaver |
+| `gradient_cycle_duration_ms` | A whole number | Sets the frame length of each tick of the rotating animation when `highlight_mode` is GRADIENT |
+| `rgb_cycle_duration_ms` | A whole number | Sets the frame length of each tick of the RGB animation when `highlight_mode` is RGB |
+| `tab_width` | A whole number | Sets the tab width of the editor (tabs are automatically converted to spaces) |
 
 ### Modes
 
