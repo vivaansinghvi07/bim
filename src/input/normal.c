@@ -269,14 +269,20 @@ void handle_c_paste_inline(editor_state_t *state, buf_t *buf) {
                 return;
         }
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
-        size_t prev_len = line->len;
+        ssize_t prev_len = line->len;
         list_create_space(*line, state->copy_register.len);
+
         memmove(line->items + buf->cursor_col - 1 + state->copy_register.len,
                 line->items + buf->cursor_col - 1, (prev_len - buf->cursor_col + 1) * sizeof(*line->items));
         memcpy(line->items + buf->cursor_col - 1, state->copy_register.items,
                state->copy_register.len * sizeof(*line->items));
 
         ssize_t lines_down = split_newlines(buf, buf->cursor_line - 1);
+
+        // i have no damn idea why but this fixes a very niche bug where this function makes the whole thing go ham
+        // at this point i'm too afraid to even try to understand it
+        list_append(*line, '\0');       
+        --line->len;
 
         ssize_t cols_right = 0;
         for (ssize_t i = 0; i < state->copy_register.len; ++i) {
@@ -286,15 +292,8 @@ void handle_c_paste_inline(editor_state_t *state, buf_t *buf) {
                 ++cols_right;
         }
 
-        // TODO: fix this make it better and more optimized
-        ssize_t old_col = buf->cursor_col - 1;
-        handle_c_big_move_left(buf);
-        for (ssize_t y = 0; y < lines_down; ++y) {
-                handle_c_move_down(buf);
-        }
-        for (ssize_t x = 0; x < (lines_down ? cols_right : state->copy_register.len + old_col); ++x) {
-                handle_c_move_right(buf);
-        }
+        jump_to(buf, &(text_pos_t){.line = buf->cursor_line - 1 + lines_down,
+                                   .col = lines_down ? cols_right - 1 : state->copy_register.len + buf->cursor_col - 1});
 }
 
 void handle_c_paste_newline(editor_state_t *state, buf_t *buf) {
