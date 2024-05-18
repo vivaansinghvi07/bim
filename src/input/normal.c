@@ -255,6 +255,7 @@ ssize_t split_newlines(buf_t *buf, const ssize_t index) {
                 if (line->items[i] == '\n') {
                         list_insert(buf->lines, index + 1, list_init(dyn_str, 128));
                         list_create_space(buf->lines.items[index + 1], last_newline - i - 1);
+                        line = buf->lines.items + index;  // potential reallocation in list_create_space moves the memory
                         memcpy(buf->lines.items[index + 1].items, line->items + i + 1, last_newline - i - 1);
                         ++lines_detected;
                         last_newline = i;
@@ -278,11 +279,6 @@ void handle_c_paste_inline(editor_state_t *state, buf_t *buf) {
                state->copy_register.len * sizeof(*line->items));
 
         ssize_t lines_down = split_newlines(buf, buf->cursor_line - 1);
-
-        // i have no damn idea why but this fixes a very niche bug where this function makes the whole thing go ham
-        // at this point i'm too afraid to even try to understand it
-        list_append(*line, '\0');       
-        --line->len;
 
         ssize_t cols_right = 0;
         for (ssize_t i = 0; i < state->copy_register.len; ++i) {
