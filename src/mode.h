@@ -26,6 +26,7 @@ typedef struct {
 } editor_mode_t;
 
 void check_mode_array(void);
-const editor_mode_t *mode_from(editor_mode_type_t mode);
+bool is_command_mode(editor_mode_type_t mode);
+const editor_mode_t *mode_from(const editor_mode_type_t mode);
 
 #endif

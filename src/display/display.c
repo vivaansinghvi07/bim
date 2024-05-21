@@ -140,11 +140,6 @@ uint8_t get_ansi_style(const uint8_t key) {
         return ANSI_NORMAL;
 }
 
-typedef struct {
-        size_t start;
-        size_t end;
-} token_t;
-
 uint8_t get_style_from_style_enum(const text_style_mode mode) {
         switch (mode) {
                 case STYLE_BOLD: return ANSI_BOLD; 
@@ -244,7 +239,7 @@ void fill_rgb_mode_rgb(ansi_code_t *rgb_style, const highlighting_info_t *info,
 char *get_highlighting_for_token(const highlighting_info_t *info, const token_t t, const display_state_t *state) {
         char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
         ansi_code_t rgb_style = {0};
-        switch (state->syntax_mode) {
+        switch (state->highlighting_mode) {
                 case HIGH_NONE: {
                         rgb_style.rgb = (rgb_t) {255, 255, 255};
                         rgb_style.style = get_style_from_style_enum(state->text_style_mode);
@@ -274,7 +269,7 @@ char *get_highlighting_for_token(const highlighting_info_t *info, const token_t 
         return code;
 }
 
-const char *apply_syntax_highlighting(const highlighting_info_t *info, const display_state_t *state) {
+const char *apply_highlighting(const highlighting_info_t *info, const display_state_t *state) {
 
         // assuming one code per character, allocate enough to fill everything + \0
         char *output = malloc(((ANSI_ESCAPE_LEN + 1) * info->W) * sizeof(char));
@@ -287,7 +282,7 @@ const char *apply_syntax_highlighting(const highlighting_info_t *info, const dis
         for (size_t c = info->col_start - 1, i = 0; c < info->line->len && i < info->W; ++c, ++i) {
                 bool current_token_ending = c < info->line->len - 1 
                                             && !is_name_char(info->line->items[c + 1]);
-                if (state->syntax_mode == HIGH_GRADIENT || state->syntax_mode == HIGH_RGB
+                if (state->highlighting_mode == HIGH_GRADIENT || state->highlighting_mode == HIGH_RGB
                     || !is_name_char(info->line->items[c]) 
                     || current_token_ending) {
                         tokens[t++].end = c + 1;
@@ -297,7 +292,7 @@ const char *apply_syntax_highlighting(const highlighting_info_t *info, const dis
         tokens[t].end = info->line->len - (info->col_start - 1) < info->W 
                         ? info->line->len : info->col_start - 1 + info->W - 1;
 
-        // for each token in the info->line, build a new string with syntax highlighting
+        // for each token in the info->line, build a new string with highlighting
         size_t len = 0;
         for (size_t i = 0; i <= t; ++i) {
                 token_t *tok = tokens + i;
@@ -362,7 +357,7 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
                 const highlighting_info_t info = {
                         .W = W, .H = H, .line = line, .line_index = i, .col_start = buf->screen_left_col
                 };
-                const char *formatted_line = apply_syntax_highlighting(&info, &state->display_state);
+                const char *formatted_line = apply_highlighting(&info, &state->display_state);
                 const size_t formatted_len = strlen(formatted_line);
                 memcpy(output + len, formatted_line, formatted_len);
                 len += formatted_len;

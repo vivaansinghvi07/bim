@@ -15,7 +15,12 @@
 typedef struct {
         rgb_t rgb;
         uint8_t style;
-} ansi_code_t;
+} ansi_code_t;  // todo - test if attribute packed makes this faster or not
+
+typedef struct {
+        size_t start;
+        size_t end;
+} token_t;
 
 void display_buffer(const editor_state_t *state);
 char *get_displayed_buffer_string(const editor_state_t *state);

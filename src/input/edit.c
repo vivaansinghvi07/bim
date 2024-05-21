@@ -38,6 +38,7 @@ void insert_newline(buf_t *buf, dyn_str *line) {
         size_t split_text_len = line->len - col;
         size_t new_len = max(MIN_NEW_LINE_LEN, split_text_len * 2);   // times 2 for some leeway
         list_insert(buf->lines, buf->cursor_line, list_init(dyn_str, new_len));
+        line = buf->lines.items + buf->cursor_line - 1;   // in case of reallocation
         
         // for characters sent into the newline, copy them over
         dyn_str *next_line = buf->lines.items + buf->cursor_line;

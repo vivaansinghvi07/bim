@@ -58,3 +58,7 @@ void check_mode_array(void) {
 const editor_mode_t *mode_from(editor_mode_type_t mode) {
         return MODES + mode;
 }
+
+bool is_command_mode(editor_mode_type_t mode) {
+        return mode_from(mode)->input_handler == handle_command_input;
+}

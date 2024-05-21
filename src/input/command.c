@@ -74,7 +74,7 @@ void handle_create_command(editor_state_t *state) {
         dyn_str *target = &state->command_target;
         strip_whitespace(target);
         if (!target->len) {
-                show_error(state, "CANNOT CREATE EMPTY FILE.");
+                show_error(state, "CANNOT CREATE EMPTY FILE");
                 return;
         }
         
@@ -99,7 +99,7 @@ void handle_rename_command(editor_state_t *state) {
         dyn_str *target = &state->command_target;
         strip_whitespace(target);
         if (!target->len) {
-                show_error(state, "CANNOT GIVE FILE NO NAME.");
+                show_error(state, "CANNOT GIVE FILE NO NAME");
                 return;
         }
 

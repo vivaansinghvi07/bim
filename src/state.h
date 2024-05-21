@@ -49,7 +49,7 @@ typedef enum {
 } escape_sequence;
 
 typedef struct {
-        highlighting_mode syntax_mode;
+        highlighting_mode highlighting_mode;
         text_style_mode text_style_mode;
 
         screensaver_mode screensaver_mode;
@@ -60,12 +60,12 @@ typedef struct {
         // possibly overengineering but its cool
         angle_mode angle;
 
-        // when syntax_mode is HIGH_GRADIENT, these are the colors that are used
+        // when highlighting_mode is HIGH_GRADIENT, these are the colors that are used
         struct {
                 gradient_color_t gradient_color;  
                 ssize_t gradient_cycle_duration_ms;
         };
-        // when syntax_mode is HIGH_RGB, these are the things that are used
+        // when highlighting_mode is HIGH_RGB, these are the things that are used
         struct {
                 ssize_t rgb_cycle_duration_ms;
                 ssize_t rgb_state;  // represents how far along we are in rgb process
@@ -110,7 +110,7 @@ typedef struct {
         buf_t files_view_buf;
 } editor_state_t;
 
-bool is_command_mode(editor_mode_type_t mode);
+void load_config(editor_state_t *state);
 void show_error(editor_state_t *state, const char *format, ...);
 void clear_error_message(editor_state_t *state);
 void setup_state(editor_state_t *state, const int argc, const char **argv);

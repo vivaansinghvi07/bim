@@ -16,10 +16,6 @@
 
 /* State-related functions */
 
-bool is_command_mode(editor_mode_type_t mode) {
-        return mode_from(mode)->input_handler == handle_command_input;
-}
-
 void show_error(editor_state_t *state, const char *format, ...) {
         clear_error_message(state);
         va_list arg_ptr, other_args;
@@ -35,9 +31,6 @@ void show_error(editor_state_t *state, const char *format, ...) {
 void clear_error_message(editor_state_t *state) {
         state->error_message.len = 0;
 }
-
-// forward decl, i want the state function on the top here
-void load_config(editor_state_t *state);
 
 void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
@@ -129,13 +122,8 @@ const angle_mode ANG_ENUM_OPTS[] = {ANG_0, ANG_45, ANG_90, ANG_135,
                         char invalid[len + 1];                                                      \
                         memcpy(invalid, ending_str, len);                                           \
                         invalid[len] = '\0';                                                        \
-                        printf("Invalid setting for '%s' detected: %s.\n\r", setting, invalid);     \
-                        printf("Possible options include:\n\r");                                    \
-                        for (i = 0; i < sizeof(str_opts_arr) / sizeof(*str_opts_arr); ++i) {        \
-                                printf(" - %s\n\r", str_opts_arr[i]);                               \
-                        }                                                                           \
-                        input_restore_tty();                                                        \
-                        exit(1);                                                                    \
+                        show_error(state, "INVALID CONFIG FOR '%s': %s", setting, invalid);         \
+                        return;                                                                     \
                 }                                                                                   \
         } while (0)
 
@@ -172,26 +160,28 @@ bool is_valid_color_char(const char c) {
         return isdigit(c) || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F';
 }
 
-rgb_t parse_color(const parse_info_t *info) {
+rgb_t *parse_color(const parse_info_t *info, editor_state_t *state) {
         if (info->line->items[info->equal_index + 1] != '#') {
-                exit_error("Color must begin with a hex code.\n");
+                show_error(state, "ERROR PARSING CONFIG: COLOR MUST BE A HEX CODE");
+                return NULL;
         } else if (info->line->len - info->equal_index - 2 < 6) {
-                exit_error("Color in hexadecimal must contain 6 characters.\n");
+                show_error(state, "ERROR PARSING CONFIG: INVALID HEX CODE DETECTED");
+                return NULL;
         }
 
-        rgb_t ret = {0};
+        rgb_t *ret = malloc(sizeof(rgb_t));
         for (size_t i = info->equal_index + 2, j = 0; i < info->line->len && j < 6; ++i, ++j) {
                 char c = info->line->items[i];
                 if (!is_valid_color_char(c)) {
-                        exit_error("Invalid character detected in hexadecimal color.\n");
+                        show_error(state, "ERROR PARSING CONFIG: INVALID HEX CODE DETECTED");
                 }
                 switch (j) {
-                        case 0: ret.r = get_hex_value(c) << 4; break;
-                        case 1: ret.r += get_hex_value(c); break;
-                        case 2: ret.g = get_hex_value(c) << 4; break;
-                        case 3: ret.g += get_hex_value(c); break;
-                        case 4: ret.b = get_hex_value(c) << 4; break;
-                        case 5: ret.b += get_hex_value(c); break;
+                        case 0: ret->r = get_hex_value(c) << 4; break;
+                        case 1: ret->r += get_hex_value(c); break;
+                        case 2: ret->g = get_hex_value(c) << 4; break;
+                        case 3: ret->g += get_hex_value(c); break;
+                        case 4: ret->b = get_hex_value(c) << 4; break;
+                        case 5: ret->b += get_hex_value(c); break;
                 }
         }
         return ret;
@@ -207,14 +197,24 @@ int parse_number(const parse_info_t *info) {
         return strtol(buf, NULL, 10);
 }
 
-void parse_gradient_left(const parse_info_t *info, editor_state_t *state) {
-        rgb_t color = parse_color(info);
-        state->display_state.gradient_color.left = color;
+int parse_gradient_left(const parse_info_t *info, editor_state_t *error_state, editor_state_t *mod_state) {
+        rgb_t *color;
+        if ((color = parse_color(info, error_state))) {
+                mod_state->display_state.gradient_color.left = *color;
+                free(color);
+                return 0;
+        }
+        return 1;
 }
 
-void parse_gradient_right(const parse_info_t *info, editor_state_t *state) {
-        rgb_t color = parse_color(info);
-        state->display_state.gradient_color.right = color;
+int parse_gradient_right(const parse_info_t *info, editor_state_t *error_state, editor_state_t *mod_state) {
+        rgb_t *color;
+        if ((color = parse_color(info, error_state))) {
+                mod_state->display_state.gradient_color.right = *color;
+                free(color);
+                return 0;
+        }
+        return 1;
 }
 
 void parse_screensaver_frame_length(const parse_info_t *info, editor_state_t *state) {
@@ -241,7 +241,7 @@ void parse_tab_width(const parse_info_t *info, editor_state_t *state) {
 void load_default_config(editor_state_t *state) {
 
         state->tab_width = 4;
-        state->display_state.syntax_mode = HIGH_NONE;
+        state->display_state.highlighting_mode = HIGH_NONE;
         state->display_state.text_style_mode = STYLE_NORMAL;
 
         state->display_state.gradient_color.left = (rgb_t) DEFAULT_GRAD_LEFT;
@@ -249,7 +249,7 @@ void load_default_config(editor_state_t *state) {
         state->display_state.angle = ANG_0;
         state->display_state.gradient_cycle_duration_ms = 0;
 
-        state->display_state.screensaver_mode = SS_RPS;
+        state->display_state.screensaver_mode = SS_SAND;
         state->display_state.screensaver_ms_inactive = 5000;
         state->display_state.screensaver_frame_length_ms = 20;
 
@@ -258,7 +258,7 @@ void load_default_config(editor_state_t *state) {
 }
 
 void load_config(editor_state_t *state) {
-
+        
         char *config_path = get_config_path();
         load_default_config(state);
         if (!config_path) {
@@ -271,6 +271,7 @@ void load_config(editor_state_t *state) {
                 exit_error("Invalid config file path. This is an error with the program itself.\n");
         }
 
+        editor_state_t temp_state = *state;
         for (size_t l = 0; l < buf->lines.len; ++l) {
 
                 dyn_str *line = buf->lines.items + l;
@@ -289,47 +290,52 @@ void load_config(editor_state_t *state) {
                 // literal spaghetti code lmao
                 parse_info_t info = {line, key_len};
                 if (!strncmp(line->items, HIGHLIGHT_MODE_SETTING, key_len)) {
-                        parse_text_opts(HIGHLIGHT_MODE_SETTING, state->display_state.syntax_mode,
+                        parse_text_opts(HIGHLIGHT_MODE_SETTING, temp_state.display_state.highlighting_mode,
                                         HIGH_STR_OPTS, HIGH_ENUM_OPTS, info);
                 }
 
                 // case-wise - this is done to ignore settings for which there is no use
-                if (state->display_state.syntax_mode == HIGH_GRADIENT) {
+                if (temp_state.display_state.highlighting_mode == HIGH_GRADIENT) {
                         if (!strncmp(line->items, GRADIENT_LEFT_SETTING, key_len)) {
-                                parse_gradient_left(&info, state);
+                                if(parse_gradient_left(&info, state, &temp_state)) {
+                                        return;
+                                }
                         } else if (!strncmp(line->items, GRADIENT_RIGHT_SETTING, key_len)) {
-                                parse_gradient_right(&info, state);
+                                if (parse_gradient_right(&info, state, &temp_state)) {
+                                        return;
+                                }
                         } else if (!strncmp(line->items, GRADIENT_CYCLE_DURATION_MS, key_len)) {
-                                parse_gradient_cycle_duration_ms(&info, state);
+                                parse_gradient_cycle_duration_ms(&info, &temp_state);
                         } else if (!strncmp(line->items, GRADIENT_ANGLE_SETTING, key_len)) {
-                                parse_text_opts(GRADIENT_ANGLE_SETTING, state->display_state.angle,
+                                parse_text_opts(GRADIENT_ANGLE_SETTING, temp_state.display_state.angle,
                                                 ANG_STR_OPTS, ANG_ENUM_OPTS, info);
                         }
-                } else if (state->display_state.syntax_mode == HIGH_RGB) {
+                } else if (temp_state.display_state.highlighting_mode == HIGH_RGB) {
                         if (!strncmp(line->items, RGB_CYCLE_DURATION_MS, key_len)) {
-                                parse_rgb_cycle_duration_ms(&info, state);
+                                parse_rgb_cycle_duration_ms(&info, &temp_state);
                         } else if (!strncmp(line->items, RGB_ANGLE_SETTING, key_len)) {
-                                parse_text_opts(RGB_ANGLE_SETTING, state->display_state.angle,
+                                parse_text_opts(RGB_ANGLE_SETTING, temp_state.display_state.angle,
                                                 ANG_STR_OPTS, ANG_ENUM_OPTS, info);
                         }
                 }
 
                 if (!strncmp(line->items, TEXT_STYLE_SETTING, key_len)) {
-                        parse_text_opts(TEXT_STYLE_SETTING, state->display_state.text_style_mode,
+                        parse_text_opts(TEXT_STYLE_SETTING, temp_state.display_state.text_style_mode,
                                         STYLE_STR_OPTS, STYLE_ENUM_OPTS, info);
                 } else if (!strncmp(line->items, SCREENSAVER_MODE_SETTING, key_len)) {
-                        parse_text_opts(SCREENSAVER_MODE_SETTING, state->display_state.screensaver_mode,
+                        parse_text_opts(SCREENSAVER_MODE_SETTING, temp_state.display_state.screensaver_mode,
                                         SS_STR_OPTS, SS_ENUM_OPTS, info);
                 } else if (!strncmp(line->items, SCREENSAVER_FRAME_LENGTH_SETTING, key_len)) {
-                        parse_screensaver_frame_length(&info, state);
+                        parse_screensaver_frame_length(&info, &temp_state);
                 } else if (!strncmp(line->items, SCREENSAVER_MS_INACTIVE, key_len)) {
-                        parse_screensaver_ms_inactive(&info, state);
+                        parse_screensaver_ms_inactive(&info, &temp_state);
                 } else if (!strncmp(line->items, TAB_WIDTH_SETTING, key_len)) {
-                        parse_tab_width(&info, state);
+                        parse_tab_width(&info, &temp_state);
                 }
 
         next_line:;
         }
 
+        *state = temp_state;
         buf_free(buf);
 }
