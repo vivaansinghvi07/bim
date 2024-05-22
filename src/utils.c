@@ -207,12 +207,13 @@ uint8_t get_hex_value(const char c) {
         }
 }
  
-// check if [_a-zA-Z0-9] matches <c>
+// check if [_a-zA-Z0-9#$] matches <c>
 bool is_name_char(const char c) {
         return c >= 'a' && c <= 'z' ||
                c >= 'A' && c <= 'Z' || 
                c >= '0' && c <= '9' ||
-               c == '_';
+               c == '_' || c == '#' || 
+               c == '$';
 }
 
 bool is_dir(const char *path) {

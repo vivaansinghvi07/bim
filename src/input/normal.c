@@ -102,8 +102,10 @@ void handle_c_big_move_up(buf_t *buf) {
                 buf->cursor_line = 1;
         } else {
                 int lines_to_move = min(H() / 2, buf->screen_top_line - 1);
-                buf->screen_top_line -= lines_to_move;
                 buf->cursor_line -= lines_to_move;
+                if (buf->screen_top_line > buf->cursor_line) {
+                        buf->screen_top_line -= lines_to_move;
+                }
         }
         restore_prev_col(buf);
 }
@@ -129,8 +131,10 @@ void handle_c_big_move_down(buf_t *buf) {
                 buf->cursor_line = buf->lines.len;
         } else {
                 int lines_to_move = min(H() / 2, buf->lines.len - (buf->screen_top_line + H() - 2));
-                buf->screen_top_line += lines_to_move;
                 buf->cursor_line += lines_to_move;
+                if (buf->cursor_line - buf->screen_top_line >= H() - 1) {
+                        buf->screen_top_line += lines_to_move;
+                }
         }
         restore_prev_col(buf);
 }
@@ -150,8 +154,10 @@ void handle_c_big_move_left(buf_t *buf) {
                 buf->cursor_col = 1;
         } else {
                 int cols_to_move = min(W() / 2, buf->screen_left_col - 1);
-                buf->screen_left_col -= cols_to_move;
                 buf->cursor_col -= cols_to_move;
+                if (buf->screen_left_col > buf->cursor_col) {
+                        buf->screen_left_col -= cols_to_move;
+                }
         }
         reset_prev_col();
 }
@@ -652,7 +658,7 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_SAVE: buf_save(buf); break;
                 case C_SAVE_ALL: handle_c_save_all(state); break;
 
-                case C_LEXICAL_SHUF: fill_ansi_color_table(); break;
+                case C_LEXICAL_SHUF: fill_color_tables(); break;
                 case C_CONFIG_RELOAD: load_config(state); break;
                 case C_DELETE_LINE: handle_c_delete_line(state, buf); break;
                 case C_DELETE_ONE: handle_c_delete_one(state, buf); break;

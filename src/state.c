@@ -36,7 +36,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
         check_mode_array();
         update_screen_dimensions();
-        fill_ansi_color_table();
+        fill_color_tables();
         load_config(state);
 
         // open all buffers passed in cli
@@ -86,8 +86,8 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
 #define RGB_CYCLE_DURATION_MS "rgb_cycle_duration_ms"
 #define TAB_WIDTH_SETTING "tab_width"
 
-const char *HIGH_STR_OPTS[] = {"GRADIENT", "LEXICAL", "RANDOM", "NONE", "RGB"};
-const highlighting_mode HIGH_ENUM_OPTS[] = {HIGH_GRADIENT, HIGH_ALPHA, HIGH_RANDOM, HIGH_NONE, HIGH_RGB};
+const char *HIGH_STR_OPTS[] = {"GRADIENT", "LEXICAL", "RANDOM", "NONE", "RGB", "SYNTAX"};
+const highlighting_mode HIGH_ENUM_OPTS[] = {HIGH_GRADIENT, HIGH_ALPHA, HIGH_RANDOM, HIGH_NONE, HIGH_RGB, HIGH_SYNTAX};
 
 const char *STYLE_STR_OPTS[] = {"BOLD", "NORMAL", "ITALIC"};
 const text_style_mode STYLE_ENUM_OPTS[] = {STYLE_BOLD, STYLE_NORMAL, STYLE_ITALIC};

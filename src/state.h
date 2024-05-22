@@ -20,7 +20,7 @@ typedef enum {
 #define EDITOR_MODE_TYPE_COUNT 9   // keep in sync!!
 
 typedef enum {
-        HIGH_ALPHA, HIGH_RANDOM, HIGH_GRADIENT, HIGH_NONE, HIGH_RGB
+        HIGH_ALPHA, HIGH_RANDOM, HIGH_GRADIENT, HIGH_NONE, HIGH_RGB, HIGH_SYNTAX
 } highlighting_mode;
 
 // this will only be used in certain scenarios, such as when 

@@ -1,4 +1,5 @@
 #include "display.h"
+#include "syntax.h"
 #include "../buf.h"
 #include "../utils.h"
 #include "../mode.h"
@@ -116,14 +117,22 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
  * In the mode HIGH_ALPHA, the first character of each token corresponds to a color.
  * The below function must be called when the editor starts to fill the array.
  */
-ansi_code_t ANSI_COLOR_TABLE[256];
+static ansi_code_t ANSI_COLOR_TABLE[256];
 void fill_ansi_color_table(void) {
-        for (uint16_t i = 0; i < 256; ++i) {
+        for (uint16_t i = 0; i < sizeof(ANSI_COLOR_TABLE) / sizeof(ansi_code_t); ++i) {
                 ANSI_COLOR_TABLE[i].rgb.r = arc4random_uniform(156) + 100;
                 ANSI_COLOR_TABLE[i].rgb.g = arc4random_uniform(156) + 100;
                 ANSI_COLOR_TABLE[i].rgb.b = arc4random_uniform(156) + 100;
                 ANSI_COLOR_TABLE[i].style = arc4random_uniform(ANSI_STYLE_VARIATION);
         }
+}
+
+// putting a function here that fills all the color tables for all syntax modes
+void fill_color_tables(void) {
+        fill_token_type_color_table();
+        fill_special_token_type_color_table();
+        fill_keyword_type_color_table();
+        fill_ansi_color_table();
 }
 
 // return a random ANSI styling code 
@@ -152,6 +161,7 @@ uint8_t get_style_from_style_enum(const text_style_mode mode) {
 typedef struct {
         const dyn_str *line;
         const int W, H, line_index, col_start; 
+        const ssize_t line_number;
 } highlighting_info_t;
 
 void increment_angle(editor_state_t *state) {
@@ -240,6 +250,10 @@ char *get_highlighting_for_token(const highlighting_info_t *info, const token_t 
         char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
         ansi_code_t rgb_style = {0};
         switch (state->highlighting_mode) {
+                case HIGH_SYNTAX: {
+                        rgb_style = get_syntax_highlighting(info->line_number, info->line, &t);
+                        rgb_style.style = get_ansi_style(rgb_style.style);
+                } break;
                 case HIGH_NONE: {
                         rgb_style.rgb = (rgb_t) {255, 255, 255};
                         rgb_style.style = get_style_from_style_enum(state->text_style_mode);
@@ -330,7 +344,12 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
         // determine information about the screen
         const struct winsize w = get_window_size();
         const int W = w.ws_col, H = w.ws_row;
+        
         const buf_t *buf = get_buffer_by_state(state);
+        if (state->display_state.highlighting_mode == HIGH_SYNTAX) {
+                setup_syntax_highlighting(buf);
+        }
+
         char blank_space_block[ANSI_ESCAPE_LEN + 2];
         snprintf(blank_space_block, ANSI_ESCAPE_LEN + 1, ANSI_COLOR_FORMAT, 0, 0, 0, 22);
         blank_space_block[ANSI_ESCAPE_LEN] = ' ';
@@ -355,7 +374,8 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
                 // after doing a benchmark, i found that strlen + memcpy seems to be faster  
                 // for small strings than using snprintf
                 const highlighting_info_t info = {
-                        .W = W, .H = H, .line = line, .line_index = i, .col_start = buf->screen_left_col
+                        .W = W, .H = H, .line_number = buf->screen_top_line + i - 1,
+                        .line = line, .line_index = i, .col_start = buf->screen_left_col,
                 };
                 const char *formatted_line = apply_highlighting(&info, &state->display_state);
                 const size_t formatted_len = strlen(formatted_line);
