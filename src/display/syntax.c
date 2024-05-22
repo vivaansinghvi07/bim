@@ -43,6 +43,32 @@ static syntax_rules_t MD_RULES = {NULL, "```", "```", {
         {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL},
 }};
 
+static keyword_t FT_PY_A[] = {{"and", KW_SPECIAL_FUNC}, {"as", KW_DECL}, {"assert", KW_DECL},
+                              {"async", KW_MODIFIER}, {"await", KW_DECL}};
+static keyword_t FT_PY_B[] = {{"break", KW_CTRL_FLOW}};
+static keyword_t FT_PY_C[] = {{"class", KW_DECL}, {"continue", KW_CTRL_FLOW}};
+static keyword_t FT_PY_D[] = {{"def", KW_DECL}, {"del", KW_DECL}};
+static keyword_t FT_PY_E[] = {{"elif", KW_CTRL_FLOW}, {"else", KW_CTRL_FLOW}, {"except", KW_CTRL_FLOW}};
+static keyword_t FT_PY_F[] = {{"False", KW_CONST}, {"finally", KW_CTRL_FLOW}, {"for", KW_CTRL_FLOW}, {"from", KW_DECL}};
+static keyword_t FT_PY_G[] = {{"global", KW_DECL}};
+static keyword_t FT_PY_I[] = {{"if", KW_CTRL_FLOW}, {"import", KW_DECL}, {"in", KW_SPECIAL_FUNC}, {"is", KW_SPECIAL_FUNC}};
+static keyword_t FT_PY_L[] = {{"lambda", KW_DECL}};
+static keyword_t FT_PY_N[] = {{"None", KW_CONST}, {"nonlocal", KW_DECL}, {"not", KW_SPECIAL_FUNC}};
+static keyword_t FT_PY_O[] = {{"or", KW_SPECIAL_FUNC}};
+static keyword_t FT_PY_P[] = {{"pass", KW_CTRL_FLOW}};
+static keyword_t FT_PY_R[] = {{"raise", KW_CTRL_FLOW}, {"return", KW_CTRL_FLOW}};
+static keyword_t FT_PY_T[] = {{"True", KW_CONST}, {"try", KW_CTRL_FLOW}};
+static keyword_t FT_PY_W[] = {{"while", KW_CTRL_FLOW}, {"with", KW_DECL}};
+static keyword_t FT_PY_Y[] = {{"yield", KW_CTRL_FLOW}};
+
+static syntax_rules_t PY_RULES = {"#", "\"\"\"", "\"\"\"", {
+        {5, FT_PY_A}, {1, FT_PY_B}, {2, FT_PY_C}, {2, FT_PY_D}, {3, FT_PY_E}, {4, FT_PY_F},
+        {1, FT_PY_G}, {0, NULL},    {4, FT_PY_I}, {0, NULL},    {0, NULL},    {1, FT_PY_L},
+        {0, NULL},    {3, FT_PY_N}, {1, FT_PY_O}, {1, FT_PY_P}, {0, NULL},    {2, FT_PY_R}, 
+        {0, NULL},    {2, FT_PY_T}, {0, NULL},    {0, NULL},    {2, FT_PY_W}, {0, NULL},
+        {1, FT_PY_Y}, {0, NULL},    {0, NULL}
+}};
+
 // uhhh what am i doing
 typedef enum {
         STT_NONE = 0,
@@ -69,6 +95,9 @@ void store_syntax_rules_from_filename(const char *filename) {
                 syntax_rules = &C_RULES;
         } else if (n - i == 2 && !strncmp(filename + i, "md", 2)) {
                 syntax_rules = &MD_RULES;
+        } else if (n - i == 2 && !strncmp(filename + i, "py", 2)
+                   || n - i == 3 && !strncmp(filename + i, "pyi", 3)) {
+                syntax_rules = &PY_RULES;
         } else {
                 syntax_rules = NULL;
         }
@@ -136,13 +165,6 @@ void setup_syntax_highlighting(const buf_t *buf) {
                                 continue;
                         }
                         
-                        // string starts
-                        if (c == '"' || c == '\'') {
-                                map.items[y].items[x] = STT_STRING;
-                                in_string = c;
-                                continue;
-                        }
-
                         // short comment starts
                         if (syntax_rules->short_comment != NULL) {
                                 size_t sc_len = strlen(syntax_rules->short_comment);
@@ -169,6 +191,13 @@ void setup_syntax_highlighting(const buf_t *buf) {
                                 }
                         }
         
+                        // string starts
+                        if (c == '"' || c == '\'') {
+                                map.items[y].items[x] = STT_STRING;
+                                in_string = c;
+                                continue;
+                        }
+
                         // is function call here -- for now i'm not going to go all the way to making it look in previous lines
                         if (c == '(') {
                                 ssize_t other_x = x - 1;
@@ -241,13 +270,13 @@ ansi_code_t *get_highlighting_by_token_type(token_type_t type) {
  * Order of precedence:
  *  - Check for a comment or a string with TT_COMMENT and TT_STRING respectively.
  *  - Check for a keyword by checking against the list of keywords.
- *  - Check for a function call with TT_FUNCTION (so something like if (...) {...} isn't a function)
  *  - Check for a lone operator (not an alph character, one-wide token)
  *  - Check for a number (only containing digits)
  *  - POSSIBLE IN FUTURE: Check for a number in binary, octal, and hex form (0b, 0, and 0x respectively)
  *    - May not be done due to inconsistencies (with octals in Python being 0o and C just being 0)
  *  - Check for a constant value (all caps)
  *  - Check for a class name or something (starts with capital letter)
+ *  - Check for a function call with TT_FUNCTION (so something like if (...) {...} isn't a function)
  *  - Treat as normal
  */
 ansi_code_t get_syntax_highlighting(const ssize_t line_index, const dyn_str *line, const token_t *token) {
@@ -270,10 +299,6 @@ ansi_code_t get_syntax_highlighting(const ssize_t line_index, const dyn_str *lin
                 }
         }
         
-        if (tt == STT_FUNCTION) {
-                return *get_highlighting_by_special_token_type(tt);
-        }
-
         if (!is_name_char(c) && token->start + 1 == token->end) {  // todo - prob modify to make this include $ and #
                 return *get_highlighting_by_token_type(TT_OPERATOR);
         }
@@ -293,6 +318,10 @@ ansi_code_t get_syntax_highlighting(const ssize_t line_index, const dyn_str *lin
         if (isupper(c)) {
                 return *get_highlighting_by_token_type(TT_START_CAPS);
         }
-        
+
+        if (tt == STT_FUNCTION) {
+                return *get_highlighting_by_special_token_type(tt);
+        }
+
         return *get_highlighting_by_token_type(TT_NAME);
 }
