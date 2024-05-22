@@ -36,6 +36,13 @@ static syntax_rules_t C_RULES = {"//", "/*", "*/", {
         {2, FT_C_V}, {1, FT_C_W}, {0, NULL},   {0, NULL},   {0, NULL},   {18, FT_C__}
 }};
 
+static syntax_rules_t MD_RULES = {NULL, "```", "```", {
+        {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, 
+        {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, 
+        {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, 
+        {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL},
+}};
+
 // uhhh what am i doing
 typedef enum {
         STT_NONE = 0,
@@ -60,6 +67,8 @@ void store_syntax_rules_from_filename(const char *filename) {
         ++i;
         if (n - i == 1 && (filename[i] == 'c' || filename[i] == 'h')) {
                 syntax_rules = &C_RULES;
+        } else if (n - i == 2 && !strncmp(filename + i, "md", 2)) {
+                syntax_rules = &MD_RULES;
         } else {
                 syntax_rules = NULL;
         }
@@ -135,25 +144,29 @@ void setup_syntax_highlighting(const buf_t *buf) {
                         }
 
                         // short comment starts
-                        size_t sc_len = strlen(syntax_rules->short_comment);
-                        if (line->len - x >= sc_len && !strncmp(syntax_rules->short_comment, line->items + x, sc_len)) {  // long comment ends
-                                map.items[y].items[x] = STT_COMMENT;
-                                for (; sc_len-->1; ++x) {
-                                        map.items[y].items[x + 1] = STT_COMMENT;
+                        if (syntax_rules->short_comment != NULL) {
+                                size_t sc_len = strlen(syntax_rules->short_comment);
+                                if (line->len - x >= sc_len && !strncmp(syntax_rules->short_comment, line->items + x, sc_len)) {  // long comment ends
+                                        map.items[y].items[x] = STT_COMMENT;
+                                        for (; sc_len-->1; ++x) {
+                                                map.items[y].items[x + 1] = STT_COMMENT;
+                                        }
+                                        in_short_comment = true;
+                                        continue;
                                 }
-                                in_short_comment = true;
-                                continue;
                         }
 
                         // long comment starts -- this is the same code as above consider abstraction
-                        size_t lcs_len = strlen(syntax_rules->long_comment_start);
-                        if (line->len - x >= lcs_len && !strncmp(syntax_rules->long_comment_start, line->items + x, lcs_len)) {  // long comment ends
-                                map.items[y].items[x] = STT_COMMENT;
-                                for (; lcs_len-->1; ++x) {
-                                        map.items[y].items[x + 1] = STT_COMMENT;
+                        if (syntax_rules->long_comment_start != NULL) {
+                                size_t lcs_len = strlen(syntax_rules->long_comment_start);
+                                if (line->len - x >= lcs_len && !strncmp(syntax_rules->long_comment_start, line->items + x, lcs_len)) {  // long comment ends
+                                        map.items[y].items[x] = STT_COMMENT;
+                                        for (; lcs_len-->1; ++x) {
+                                                map.items[y].items[x + 1] = STT_COMMENT;
+                                        }
+                                        in_long_comment = true;
+                                        continue;
                                 }
-                                in_long_comment = true;
-                                continue;
                         }
         
                         // is function call here -- for now i'm not going to go all the way to making it look in previous lines
