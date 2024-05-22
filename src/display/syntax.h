@@ -27,6 +27,7 @@ typedef struct {
 } keyword_list_t;
 
 typedef struct {
+        const char *string_chars;
         const char *short_comment;
         const char *long_comment_start;
         const char *long_comment_end;

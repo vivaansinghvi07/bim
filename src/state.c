@@ -241,7 +241,7 @@ void parse_tab_width(const parse_info_t *info, editor_state_t *state) {
 void load_default_config(editor_state_t *state) {
 
         state->tab_width = 4;
-        state->display_state.highlighting_mode = HIGH_NONE;
+        state->display_state.highlighting_mode = HIGH_SYNTAX;
         state->display_state.text_style_mode = STYLE_NORMAL;
 
         state->display_state.gradient_color.left = (rgb_t) DEFAULT_GRAD_LEFT;

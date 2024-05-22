@@ -28,7 +28,7 @@ static keyword_t FT_C__[] = {{"_Atomic", KW_MODIFIER}, {"_BitInt", KW_TYPE}, {"#
                              {"#include", KW_DECL}, {"#embed", KW_DECL}, {"#line", KW_DECL}, {"#error", KW_DECL},
                              {"#warning", KW_DECL}, {"#pragma", KW_DECL}};
 
-static syntax_rules_t C_RULES = {"//", "/*", "*/", {
+static syntax_rules_t C_RULES = {"'\"", "//", "/*", "*/", {
         // i know alignof and sizeof are operators but im calling them functions
         {3, FT_C_A}, {1, FT_C_B}, {5, FT_C_C}, {3, FT_C_D}, {3, FT_C_E}, {3, FT_C_F}, {1, FT_C_G},
         {0, NULL},   {3, FT_C_I}, {0, NULL},   {0, NULL},   {1, FT_C_L}, {0, NULL},   {2, FT_C_N}, 
@@ -36,7 +36,7 @@ static syntax_rules_t C_RULES = {"//", "/*", "*/", {
         {2, FT_C_V}, {1, FT_C_W}, {0, NULL},   {0, NULL},   {0, NULL},   {18, FT_C__}
 }};
 
-static syntax_rules_t MD_RULES = {NULL, "```", "```", {
+static syntax_rules_t MD_RULES = {"`", NULL, "```", "```", {
         {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, 
         {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, 
         {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, 
@@ -61,7 +61,7 @@ static keyword_t FT_PY_T[] = {{"True", KW_CONST}, {"try", KW_CTRL_FLOW}};
 static keyword_t FT_PY_W[] = {{"while", KW_CTRL_FLOW}, {"with", KW_DECL}};
 static keyword_t FT_PY_Y[] = {{"yield", KW_CTRL_FLOW}};
 
-static syntax_rules_t PY_RULES = {"#", "\"\"\"", "\"\"\"", {
+static syntax_rules_t PY_RULES = {"'\"", "#", "\"\"\"", "\"\"\"", {
         {5, FT_PY_A}, {1, FT_PY_B}, {2, FT_PY_C}, {2, FT_PY_D}, {3, FT_PY_E}, {4, FT_PY_F},
         {1, FT_PY_G}, {0, NULL},    {4, FT_PY_I}, {0, NULL},    {0, NULL},    {1, FT_PY_L},
         {0, NULL},    {3, FT_PY_N}, {1, FT_PY_O}, {1, FT_PY_P}, {0, NULL},    {2, FT_PY_R}, 
@@ -146,8 +146,12 @@ void setup_syntax_highlighting(const buf_t *buf) {
                         c = line->items[x];
                         if (in_string) {
                                 map.items[y].items[x] = STT_STRING;
-                                if (in_string == c && line->items[x - 1] != '\\') {  // string ends
-                                        in_string = 0;
+                                if (c == in_string) {
+                                        ssize_t i = 1;
+                                        for (; x >= i && line->items[x - i] == '\\'; ++i);
+                                        if (i % 2 == 1) {
+                                                in_string = 0;
+                                        }
                                 }
                                 continue;
                         } else if (in_long_comment) {
@@ -190,11 +194,15 @@ void setup_syntax_highlighting(const buf_t *buf) {
                                         continue;
                                 }
                         }
-        
+
                         // string starts
-                        if (c == '"' || c == '\'') {
-                                map.items[y].items[x] = STT_STRING;
-                                in_string = c;
+                        for (const char *string_char = syntax_rules->string_chars; *string_char; ++string_char) {
+                                if (c == *string_char) {
+                                        map.items[y].items[x] = STT_STRING;
+                                        in_string = c;
+                                }
+                        }
+                        if (in_string) {
                                 continue;
                         }
 
