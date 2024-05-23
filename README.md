@@ -121,5 +121,7 @@ Like `vim`, `bim` also features plenty of useful keybindings with their own func
 | `f` | `normal` | Enters `files` mode. |
 | `n` | `normal` | Jumps to the next word, which can be either a name (defined as matching `[A-Za-z0-9_#$]+`) or a combination of symbols. |
 | `N` | `normal` | Jumps to the previous word. |
+| `b` | `normal` | Deletes the word under the cursor, including succeeding whitespace. |
+| `B` | `normal` | Deletes the text in a line from the cursor to the end. |
 | `Esc` | any mode | Returns to `normal` mode. If is done in a `command` mode, discards any inputted text. |
 | `Enter` | `command` mode | Submits the inputted text to the command. |

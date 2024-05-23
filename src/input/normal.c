@@ -58,6 +58,8 @@
 
 #define C_NEXT_WORD       'n'
 #define C_PREVIOUS_WORD   'N'
+#define C_DELETE_WORD     'b'
+#define C_DELETE_TO_END   'B'
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
 static int prev_col = 0;
@@ -544,6 +546,40 @@ void handle_c_previous_word(buf_t *buf) {
         jump_to(buf, &target);
 }
 
+bool is_whitespace(char c) {
+        return c == ' ';
+}
+
+bool is_symbol(char c) {
+        return !(is_whitespace(c) || is_name_char(c));
+}
+
+void handle_c_delete_word(editor_state_t *state, buf_t *buf) {
+        ssize_t start = buf->cursor_col - 1;
+        ssize_t end = buf->cursor_col - 1;  // gonna make this inclusive
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        if (buf->cursor_col == line->len + 1) {
+                return;
+        }
+        bool (*matcher)(char) = is_name_char(line->items[start]) ? is_name_char 
+                              : is_whitespace(line->items[start]) ? is_whitespace 
+                              : is_symbol;
+        for (; start > 0 && matcher(line->items[start - 1]); --start);
+        for (bool w_passed = false; end < line->len - 1 && (!w_passed && matcher(line->items[end + 1]) 
+                                                            || is_whitespace(line->items[end + 1]) && (w_passed = true)); ++end);
+        ssize_t len = end - start + 1;
+        set_copy_register(state, line->items + start, len);
+        memmove(line->items + start, line->items + start + len, line->len - end - 1);
+        line->len -= len;
+        buf->cursor_col = start + 1;
+        restore_prev_col(buf);
+}
+
+void handle_c_delete_to_end(buf_t *buf) {
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        line->len = buf->cursor_col - 1;
+}
+
 void handle_c_jump_line(editor_state_t *state, buf_t *buf) {
         uint64_t clamped_bottom = max(1, state->number_repeat);
         buf->cursor_line = min(buf->lines.len, clamped_bottom);
@@ -688,6 +724,8 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_TAB_REMOVE: handle_c_tab_remove(state, buf); break;
                 case C_NEXT_WORD: handle_c_next_word(buf); break;
                 case C_PREVIOUS_WORD: handle_c_previous_word(buf); break;
+                case C_DELETE_WORD: handle_c_delete_word(state, buf); break;
+                case C_DELETE_TO_END: handle_c_delete_to_end(buf); break;
 
                 case C_MACRO_CALL: handle_c_macro_call(state); break;
                 case C_MACRO_LOAD: handle_c_macro_load(state); break;
