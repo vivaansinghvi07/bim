@@ -99,7 +99,7 @@ const screensaver_mode SS_ENUM_OPTS[] = {SS_LEFT, SS_RIGHT, SS_TOP, SS_BOTTOM,
 
 const char *ANG_STR_OPTS[] = {"0", "45", "90", "135", "180", "225", "270", "315"};
 const angle_mode ANG_ENUM_OPTS[] = {ANG_0, ANG_45, ANG_90, ANG_135,
-                                         ANG_180, ANG_225, ANG_270, ANG_315};
+                                    ANG_180, ANG_225, ANG_270, ANG_315};
 
 #define DEFAULT_GRAD_LEFT {255, 255, 0}
 #define DEFAULT_GRAD_RIGHT {0, 255, 255}

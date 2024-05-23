@@ -671,6 +671,7 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_BACK_SEARCH: handle_backward_search(state); break;
                 case C_JUMP_NEXT: handle_c_jump_next(state, buf); break;
                 case C_JUMP_PREVIOUS: handle_c_jump_previous(state, buf); break;
+                case C_JUMP_LINE: handle_c_jump_line(state, buf); break;
 
                 case C_OPEN_FILE: handle_c_open_file(state); break;
                 case C_ENTER_FILES: handle_c_enter_files(state); break;

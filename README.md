@@ -3,10 +3,6 @@
 I was originally going to make this have extrememly dumb features, but I ended up wanting
 to implement a lot of the features of vim. 
 
-## Todo
-
-Fix bug with reallocation in the `split_newlines` function causing the old line pointer to be arbitrary. Additionally look for this issue in other parts of the code.
-
 ## Installation
 
 Simply run `$ make` to build the editor in the current directory. To install it to `usr/local/bin/`, run `$ make install`.
@@ -38,7 +34,7 @@ Below is a table of all configuration options and their usages.
 | Option | Values | Description |
 | :----- | :----: | :---------- |
 | `text_style` | `BOLD`, `NORMAL`, `ITALIC` | Sets the style of the text displayed |
-| `highlight_mode` | `GRADIENT`, `LEXICAL`, `RGB`, `RANDOM`, `NONE` | Sets the way in which text is highlighted |
+| `highlight_mode` | `SYNTAX`, `GRADIENT`, `LEXICAL`, `RGB`, `RANDOM`, `NONE` | Sets the way in which text is highlighted |
 | `gradient_left` | An RGB color in hex notation (with the hashtag) | Sets the left color of the gradient when `highlight_mode` is GRADIENT |
 | `gradient_right` | An RGB color in hex notation (with the hashtag) | Sets the right color of the gradient when `highlight_mode` is GRADIENT |
 | `screensaver_mode` | `LEFT_SLIDE`, `RIGHT_SLIDE`, `TOP_SLIDE`, `BOTTOM_SLIDE`, `ROCK_PAPER_SCISSORS`, `FALLING_SAND`, `GAME_OF_LIFE` | Sets the screensaver to use when inactive |
@@ -52,7 +48,7 @@ Below is a table of all configuration options and their usages.
 
 ### Modes
 
-Like `vim`, this is a modal editor. Currently, there are three main modes and several "command" modes.
+Like `vim`, this is a modal editor. Currently, there are three main modes and several 'command' modes.
 Each command mode shares an input handler, but has different effects when the command is entered.
 
 |     Mode     | Description |
@@ -79,27 +75,45 @@ Like `vim`, `bim` also features plenty of useful keybindings with their own func
 
 |   Key   |  Mode(s)   |  Description |
 | -----:  |  :-----:   |  :---------- |
-| `w`/`s` |  `normal`, `files`  | Moves the cursor up/down |
-| `A-U`/`A-D` |  `normal`, `files`, `edit`  | Moves the cursor up/down |
-| `a`/`d` |  `normal`  | Moves the cursor left/right |
-| `A-L`/`A-R` |  `normal`, `edit`  | Moves the cursor left/right |
-| `C-w`/`C-a`/`C-s`/`C-d` | `edit`| Moves the cursor up/left/down/right |
+| `w`/`s` |  `normal`, `files`  | Moves the cursor up/down. |
+| `A-U`/`A-D` |  `normal`, `files`, `edit`  | Moves the cursor up/down. |
+| `a`/`d` |  `normal`  | Moves the cursor left/right. |
+| `A-L`/`A-R` |  `normal`, `edit`  | Moves the cursor left/right. |
+| `C-w`/`C-a`/`C-s`/`C-d` | `edit`| Moves the cursor up/left/down/right. |
 | `W`/`S` |  `normal`, `files` | If in the middle of a buffer, moves the cursor up/down half the screen height. Otherwise, if the start/end of the buffer is visible on the screen, jumps there. |
 | `A`/`D` |  `normal`, `files` | If in the middle of a line, moves the cursor left/right half the screen width. Otherwise, if the start/end of the line is visible on the screen, jumps there. |
-
-## Design
-
-These are ideas and may or may not end up being implemented. If this message is displayed, this editor is still under development.
-
-- "Syntax" Highlighting: Highlights each word with a RGB value according to the first letter of the word. Punctuation all get the same highlighting.
-- Modality: Like Vim, this editor will have multiple modes. However, many of these modes will be strange and very weird.
-    - Substitution mode: write over whatever is currently there (I'm pretty sure Vim already has this)
-    - Distinguish between uppercase and lowercase modes.
-        - Optional: Make it impossible to type in the other case when in a certain case mode.
-    - Have ASCII mode where each key correlates to its ASCII value.
-    - File mode: Allow you to edit your directory where each line is a file, backspace goes to the parent dir, enter enters the file, etc
-        - THIS IS VERY DANGEROUS. I CANNOT MESS THIS UP FOR THE SAKE OF MY SYSTEM.
-- Exiting: The only way to exit this text editor is to remain inactive for more than ten seconds. 
-    - After five seconds, your code falls to the ground like in the [Cellular Automata Neovim plugin](https://github.com/Eandrju/cellular-automaton.nvim) plugin.
-- Similar to Vim, you can move using given keys; however, which keys do this is yet to be decided. I can either make it stupid or functional.
-- For syntax highlighting in the gradient mode, allow the user to press a key to rotate the direction of the gradient by 45 degress counter/clockwise.
+| `?` | `normal` | Shuffles the color theme when `highlight_mode` is `LEXICAL` or `SYNTAX`. |
+| `!` | `normal` | Reloads the configuration settings (useful when editing the `.bim_rc` file within `bim` to see changes instantly). |
+| `+` | `normal` | Increments the angle of the display when `highlight_mode` is `RGB` or `GRADIENT`. |
+| `-` | `normal` | Decrements the angle of the display when `highlight_mode` is `RGB` or `GRADIENT`. |
+| `]` | `normal` | Goes to the next open buffer. |
+| `[` | `normal` | Goes to the previous open buffer. |
+| `e` | `normal` | Enters `edit` mode. |
+| `z` | `normal` | Saves the current buffer. |
+| `Z` | `normal` | Saves all open buffers. |
+| `R` | `normal` | Removes a line and writes it to the copy register. |
+| `r` | `normal` | Removes a character and writes it to the copy register. When this and the above are used with a number beforehand, all the lines/characters are added to the copy register. |
+| `C` | `normal` | Writes a line to the copy register. |
+| `c` | `normal` | Writes a character to the copy register. These two are also affected by a preceding number. |
+| `P` | `normal` | Pastes the copy register onto a newline below the current one. |
+| `p` | `normal` | Pastes the copy register at the location of the cursor. |
+| `l` | `normal` | Jumps to the line specified by the number entered beforehand. If there is no number, jumps to the top of the buffer. |
+| `;` | `normal` | Enters `search` mode, searching forwards. |
+| `;` | `files`  | Enters `file search` mode, searching forwards. |
+| `:` | `normal` | Enters `search` mode, searching backwards. |
+| `:` | `files`  | Enters `file search` mode, searching backwards. |
+| `j` | `normal`, `files` | Jumps to the next match (of the phrase entered in `search` or `file search` mode). If searching backwards, the direction is backwards. |
+| `J` | `normal`, `files` | Jumps to the previous match. If searching backwards, the direction is forwards. |
+| `>` | `normal` | Shifts the current line forwards by one tab. |
+| `<` | `normal` | Shifts the current line backwards by one tab. |
+| `<` | `files` | Navigates to the parent directory. |
+| `M` | `normal`, `files` | Starts recording a macro. If already recording a macro, ends recording the macro. |
+| `m` | `normal`, `files` | Plays a macro. This cannot be used while recording a macro. |
+| `o` | `normal` | Enters `open` mode. |
+| `o` | `files`  | Enters `create file` mode. |
+| `Bksp` | `files` | Enters `confirm delete` mode, which deletes the file under the cursor if prompted "y". |
+| `f` | `normal` | Enters `files` mode. |
+| `n` | `normal` | Jumps to the next word, which can be either a name (defined as matching `[A-Za-z0-9_#$]+`) or a combination of symbols. |
+| `N` | `normal` | Jumps to the previous word. |
+| `Esc` | any mode | Returns to `normal` mode. If is done in a `command` mode, discards any inputted text. |
+| `Enter` | `command` mode | Submits the inputted text to the command. |
