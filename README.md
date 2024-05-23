@@ -3,6 +3,8 @@
 Yet another text editor! I was originally going to make this have extrememly dumb features, but I ended up wanting
 to implement a lot of the features of `vim`. Hence the name, bum `vim`, or `bim`.
 
+https://github.com/vivaansinghvi07/bim/assets/122464874/ee71cd21-af5b-4e97-a15f-39c790764696
+
 ## Installation
 
 Simply run `$ make` to build the editor in the current directory. To install it to `usr/local/bin/`, run `$ make install`.
