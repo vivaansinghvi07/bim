@@ -215,14 +215,17 @@ void handle_c_save_all(editor_state_t *state) {
 }
 
 void handle_c_delete_line(editor_state_t *state, buf_t *buf) {
-        if (buf->lines.len <= 1) {
-                return;
-        }
+
         dyn_str *line = buf->lines.items + buf->cursor_line - 1;
         set_copy_register(state, line->items, line->len);
-        free_list_items(1, line);
 
-        // this moves first and then deletes in case deleting messes with the moving
+        if (buf->lines.len == 1) {
+                buf->lines.items[0].len = 0;  // delete without popping line
+                restore_prev_col(buf);
+                return;
+        }
+
+        free_list_items(1, line);
         list_pop(buf->lines, buf->cursor_line - 1);
         if (buf->cursor_line > buf->lines.len) {
                 handle_c_move_up(buf);
@@ -577,7 +580,12 @@ void handle_c_numbered_delete_line(editor_state_t *state, buf_t *buf) {
                 dyn_str *line = buf->lines.items + buf->cursor_line - 1;
                 list_create_space(state->copy_register, line->len);
                 memcpy(state->copy_register.items + state->copy_register.len - line->len, line->items, line->len);
-                list_pop(buf->lines, buf->cursor_line - 1);
+                if (buf->lines.len == 1) {
+                        line->len = 0;
+                } else {
+                        free_list_items(1, line);
+                        list_pop(buf->lines, buf->cursor_line - 1);
+                }
                 if (i < num_to_delete - 1) {
                         list_append(state->copy_register, '\n');
                 }

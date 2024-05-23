@@ -1,11 +1,17 @@
 # bim
 
-I was originally going to make this have extrememly dumb features, but I ended up wanting
-to implement a lot of the features of vim. 
+Yet another text editor! I was originally going to make this have extrememly dumb features, but I ended up wanting
+to implement a lot of the features of `vim`. Hence the name, bum `vim`, or `bim`.
 
 ## Installation
 
 Simply run `$ make` to build the editor in the current directory. To install it to `usr/local/bin/`, run `$ make install`.
+
+## Limitations & Potential Improvements
+
+- This may or may not work on Windows, as I've only tested it on my Macbook.
+- There is no support for Unicode or other text encodings. I may consider adding support for them in the future, though.
+- There is no LSP support. However, I am considering learning some basic LSP protocol to get something working.
 
 ## Usage
 
