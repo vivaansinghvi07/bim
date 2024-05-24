@@ -15,51 +15,53 @@
 #include <unistd.h>
 #include <dirent.h>
 
-#define C_MOVE_UP         'w'
-#define C_MOVE_LEFT       'a'
-#define C_MOVE_DOWN       's'
-#define C_MOVE_RIGHT      'd'
-#define C_BIG_MOVE_UP     'W'
-#define C_BIG_MOVE_LEFT   'A'
-#define C_BIG_MOVE_DOWN   'S'
-#define C_BIG_MOVE_RIGHT  'D'
+#define C_MOVE_UP               'w'
+#define C_MOVE_LEFT             'a'
+#define C_MOVE_DOWN             's'
+#define C_MOVE_RIGHT            'd'
+#define C_BIG_MOVE_UP           'W'
+#define C_BIG_MOVE_LEFT         'A'
+#define C_BIG_MOVE_DOWN         'S'
+#define C_BIG_MOVE_RIGHT        'D'
 
-#define C_LEXICAL_SHUF    '?'
-#define C_CONFIG_RELOAD   '!'
-#define C_GRAD_ANG_INCRE  '+'
-#define C_GRAD_ANG_DECRE  '-'
-#define C_BUF_INCRE       ']'
-#define C_BUF_DECRE       '['
-#define C_ENTER_EDIT      'e'
-#define C_SAVE            'z'
-#define C_SAVE_ALL        'Z'
+#define C_LEXICAL_SHUF          '?'
+#define C_CONFIG_RELOAD         '!'
+#define C_GRAD_ANG_INCRE        '+'
+#define C_GRAD_ANG_DECRE        '-'
+#define C_BUF_INCRE             ']'
+#define C_BUF_DECRE             '['
+#define C_ENTER_EDIT            'e'
+#define C_SAVE                  'z'
+#define C_SAVE_ALL              'Z'
 
-#define C_DELETE_LINE     'R'
-#define C_DELETE_ONE      'r'
-#define C_COPY_LINE       'C'
-#define C_COPY_ONE        'c'
-#define C_PASTE_NEWLINE   'P'
-#define C_PASTE_INLINE    'p'
+#define C_DELETE_LINE           'R'
+#define C_DELETE_ONE            'r'
+#define C_COPY_LINE             'C'
+#define C_COPY_ONE              'c'
+#define C_PASTE_NEWLINE         'P'
+#define C_PASTE_INLINE          'p'
 
-#define C_JUMP_LINE       'l'
-#define C_SEARCH          ';'
-#define C_BACK_SEARCH     ':'
-#define C_JUMP_NEXT       'j'
-#define C_JUMP_PREVIOUS   'J'
+#define C_JUMP_LINE             'l'
+#define C_SEARCH                ';'
+#define C_BACK_SEARCH           ':'
+#define C_JUMP_NEXT             'j'
+#define C_JUMP_PREVIOUS         'J'
 
-#define C_TAB_ADD         '>'
-#define C_TAB_REMOVE      '<'
+#define C_TAB_ADD               '>'
+#define C_TAB_REMOVE            '<'
 
-#define C_MACRO_LOAD      'M' 
-#define C_MACRO_CALL      'm'
+#define C_MACRO_LOAD            'M' 
+#define C_MACRO_CALL            'm'
 
-#define C_OPEN_FILE       'o'
-#define C_ENTER_FILES     'f'
+#define C_OPEN_FILE             'o'
+#define C_ENTER_FILES           'f'
 
-#define C_NEXT_WORD       'n'
-#define C_PREVIOUS_WORD   'N'
-#define C_DELETE_WORD     'b'
-#define C_DELETE_TO_END   'B'
+#define C_SEARCH_WORD_NEXT      'v'
+#define C_SEARCH_WORD_PREV      'V'
+#define C_NEXT_WORD             'n'
+#define C_PREVIOUS_WORD         'N'
+#define C_DELETE_WORD           'b'
+#define C_DELETE_TO_END         'B'
 
 // this is here in order to mimic the behavior of "saving" a column upon going up and down in files
 static int prev_col = 0;
@@ -555,25 +557,59 @@ bool is_symbol(char c) {
         return !(is_whitespace(c) || is_name_char(c));
 }
 
-void handle_c_delete_word(editor_state_t *state, buf_t *buf) {
-        ssize_t start = buf->cursor_col - 1;
-        ssize_t end = buf->cursor_col - 1;  // gonna make this inclusive
-        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+// stores the start and end (inclusive) of the token under the cursor in <start> and <end>
+// returns true if the cursor is out of bounds
+bool store_cursor_token(ssize_t *start, ssize_t *end, const buf_t *buf) {
+        const dyn_str *line = buf->lines.items + buf->cursor_line - 1;
         if (buf->cursor_col == line->len + 1) {
+                return false;
+        }
+        *start = *end = buf->cursor_col - 1;
+        bool (*matcher)(char) = is_name_char(line->items[*start]) ? is_name_char 
+                              : is_whitespace(line->items[*start]) ? is_whitespace 
+                              : NULL;
+        if (matcher != NULL) {
+                for (; *start > 0 && matcher(line->items[*start - 1]); --(*start));
+                for (; *end < line->len - 1 && matcher(line->items[*end + 1]); ++(*end));
+        }
+        return true;
+}
+
+void handle_c_delete_word(editor_state_t *state, buf_t *buf) {
+
+        ssize_t start, end, len;
+        if (!store_cursor_token(&start, &end, buf)) {
                 return;
         }
-        bool (*matcher)(char) = is_name_char(line->items[start]) ? is_name_char 
-                              : is_whitespace(line->items[start]) ? is_whitespace 
-                              : is_symbol;
-        for (; start > 0 && matcher(line->items[start - 1]); --start);
-        for (bool w_passed = false; end < line->len - 1 && (!w_passed && matcher(line->items[end + 1]) 
-                                                            || is_whitespace(line->items[end + 1]) && (w_passed = true)); ++end);
-        ssize_t len = end - start + 1;
+        len = end - start + 1;
+
+        dyn_str *line = buf->lines.items + buf->cursor_line - 1;
         set_copy_register(state, line->items + start, len);
         memmove(line->items + start, line->items + start + len, line->len - end - 1);
         line->len -= len;
         buf->cursor_col = start + 1;
         restore_prev_col(buf);
+}
+
+void handle_c_search_word(editor_state_t *state, buf_t *buf, bool forwards) {
+
+        ssize_t start, end, len;
+        if (!store_cursor_token(&start, &end, buf)) {
+                return;
+        }
+        len = end - start;
+
+        const dyn_str *line = buf->lines.items + buf->cursor_line - 1;
+        state->command_target.len = 0;
+        list_create_space(state->command_target, len);
+        memcpy(state->command_target.items, line->items + start, len);
+        state->search_forwards = forwards;
+        
+        ssize_t new_start, new_end;
+        do {
+                handle_search_jump(state, buf, !state->search_forwards);
+                store_cursor_token(&new_start, &new_end, buf);
+        } while (new_end - new_start != len);
 }
 
 void handle_c_delete_to_end(editor_state_t *state, buf_t *buf) {
@@ -724,6 +760,9 @@ void handle_normal_input(editor_state_t *state, char c) {
 
                 case C_TAB_ADD: handle_c_tab_add(state, buf); break;
                 case C_TAB_REMOVE: handle_c_tab_remove(state, buf); break;
+        
+                case C_SEARCH_WORD_NEXT: handle_c_search_word(state, buf, true); break;
+                case C_SEARCH_WORD_PREV: handle_c_search_word(state, buf, false); break;
                 case C_NEXT_WORD: handle_c_next_word(buf); break;
                 case C_PREVIOUS_WORD: handle_c_previous_word(buf); break;
                 case C_DELETE_WORD: handle_c_delete_word(state, buf); break;
