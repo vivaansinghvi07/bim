@@ -1,7 +1,8 @@
 # bim
 
 Yet another text editor! I was originally going to make this have extrememly dumb features, but I ended up wanting
-to implement a lot of the features of `vim`. Hence the name, bum `vim`, or `bim`.
+to implement a lot of the features of `vim`. Hence the name, bum `vim`, or `bim`. Additionally, I challenged myself to
+create this without using any third-party dependencies!
 
 https://github.com/vivaansinghvi07/bim/assets/122464874/ee71cd21-af5b-4e97-a15f-39c790764696
 
@@ -11,6 +12,7 @@ Simply run `$ make` to build the editor in the current directory. To install it 
 
 ## Limitations & Potential Improvements
 
+- There are some memory leaks that I will eventually look for and patch.
 - This may or may not work on Windows, as I've only tested it on my Macbook.
 - There is no support for Unicode or other text encodings. I may consider adding support for them in the future, though.
 - There is no LSP support. However, I am considering learning some basic LSP protocol to get something working.
