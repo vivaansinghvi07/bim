@@ -46,26 +46,27 @@ static syntax_rules_t MD_RULES = {"`", NULL, "```", "```", {
 static keyword_t FT_PY_A[] = {{"and", KW_SPECIAL_FUNC}, {"as", KW_DECL}, {"assert", KW_DECL},
                               {"async", KW_MODIFIER}, {"await", KW_DECL}};
 static keyword_t FT_PY_B[] = {{"break", KW_CTRL_FLOW}};
-static keyword_t FT_PY_C[] = {{"class", KW_DECL}, {"continue", KW_CTRL_FLOW}};
+static keyword_t FT_PY_C[] = {{"class", KW_DECL}, {"continue", KW_CTRL_FLOW}, {"case", KW_CTRL_FLOW}};
 static keyword_t FT_PY_D[] = {{"def", KW_DECL}, {"del", KW_DECL}};
 static keyword_t FT_PY_E[] = {{"elif", KW_CTRL_FLOW}, {"else", KW_CTRL_FLOW}, {"except", KW_CTRL_FLOW}};
 static keyword_t FT_PY_F[] = {{"False", KW_CONST}, {"finally", KW_CTRL_FLOW}, {"for", KW_CTRL_FLOW}, {"from", KW_DECL}};
 static keyword_t FT_PY_G[] = {{"global", KW_DECL}};
 static keyword_t FT_PY_I[] = {{"if", KW_CTRL_FLOW}, {"import", KW_DECL}, {"in", KW_SPECIAL_FUNC}, {"is", KW_SPECIAL_FUNC}};
 static keyword_t FT_PY_L[] = {{"lambda", KW_DECL}};
+static keyword_t FT_PY_M[] = {{"match", KW_CTRL_FLOW}};
 static keyword_t FT_PY_N[] = {{"None", KW_CONST}, {"nonlocal", KW_DECL}, {"not", KW_SPECIAL_FUNC}};
 static keyword_t FT_PY_O[] = {{"or", KW_SPECIAL_FUNC}};
 static keyword_t FT_PY_P[] = {{"pass", KW_CTRL_FLOW}};
 static keyword_t FT_PY_R[] = {{"raise", KW_CTRL_FLOW}, {"return", KW_CTRL_FLOW}};
-static keyword_t FT_PY_T[] = {{"True", KW_CONST}, {"try", KW_CTRL_FLOW}};
+static keyword_t FT_PY_T[] = {{"True", KW_CONST}, {"try", KW_CTRL_FLOW}, {"type", KW_DECL}};
 static keyword_t FT_PY_W[] = {{"while", KW_CTRL_FLOW}, {"with", KW_DECL}};
 static keyword_t FT_PY_Y[] = {{"yield", KW_CTRL_FLOW}};
 
 static syntax_rules_t PY_RULES = {"'\"", "#", "\"\"\"", "\"\"\"", {
-        {5, FT_PY_A}, {1, FT_PY_B}, {2, FT_PY_C}, {2, FT_PY_D}, {3, FT_PY_E}, {4, FT_PY_F},
+        {5, FT_PY_A}, {1, FT_PY_B}, {3, FT_PY_C}, {2, FT_PY_D}, {3, FT_PY_E}, {4, FT_PY_F},
         {1, FT_PY_G}, {0, NULL},    {4, FT_PY_I}, {0, NULL},    {0, NULL},    {1, FT_PY_L},
-        {0, NULL},    {3, FT_PY_N}, {1, FT_PY_O}, {1, FT_PY_P}, {0, NULL},    {2, FT_PY_R}, 
-        {0, NULL},    {2, FT_PY_T}, {0, NULL},    {0, NULL},    {2, FT_PY_W}, {0, NULL},
+        {1, FT_PY_M}, {3, FT_PY_N}, {1, FT_PY_O}, {1, FT_PY_P}, {0, NULL},    {2, FT_PY_R}, 
+        {0, NULL},    {3, FT_PY_T}, {0, NULL},    {0, NULL},    {2, FT_PY_W}, {0, NULL},
         {1, FT_PY_Y}, {0, NULL},    {0, NULL}
 }};
 
@@ -130,6 +131,9 @@ void free_token_map(void) {
  */
 void setup_syntax_highlighting(const buf_t *buf) {
 
+        if (syntax_rules != NULL) {
+                free_token_map();
+        }
         init_token_map(buf);
         store_syntax_rules_from_filename(buf->filename);
         if (syntax_rules == NULL) {

@@ -134,7 +134,7 @@ void handle_c_big_move_down(buf_t *buf) {
         if (buf->screen_top_line + H() - 2 >= buf->lines.len) {
                 buf->cursor_line = buf->lines.len;
         } else {
-                int lines_to_move = min(H() / 2, buf->lines.len - (buf->screen_top_line + H() - 2));
+                int lines_to_move = min(H() / 2, buf->lines.len - buf->cursor_line);
                 buf->cursor_line += lines_to_move;
                 if (buf->cursor_line - buf->screen_top_line >= H() - 1) {
                         buf->screen_top_line += lines_to_move;

@@ -110,8 +110,7 @@ color_group determine_color_group(const char *code) {
 cell_t *build_cells(const char *buf_str) {
         struct winsize window_size = get_window_size();
         const int W = window_size.ws_col, H = window_size.ws_row;
-        cell_t *cells = malloc((H - 1) * W * sizeof(cell_t));
-        bzero(cells, (H - 1) * W * sizeof(cell_t));
+        cell_t *cells = calloc((H - 1) * W, sizeof(cell_t));
 
         // i am about to write the most god-awful code in order to traverse this string 
         // it will use so many assumptions about string structure, so changing something 
@@ -168,7 +167,7 @@ cell_t *update_cells_dimensions(cell_t *old_cells, const int old_W, const int ol
 
 void run_screensaver(editor_state_t *state) {
 
-        void (*func)(cell_t *, const int, const int) = get_ss_func(state);
+        void (*ss_func)(cell_t *, const int, const int) = get_ss_func(state);
         hide_cursor();
         struct winsize window_size = get_window_size();
         int sW = window_size.ws_col, sH = window_size.ws_row;
@@ -203,7 +202,7 @@ void run_screensaver(editor_state_t *state) {
                         break;
                 }
                 set_timer(&t);
-                func(cells, sW, sH);
+                ss_func(cells, sW, sH);
                 move_to_top_left();
                 display_cells(state, cells, sW, sH);
         }

@@ -22,15 +22,15 @@
 #define ANSI_BLINKING 5
 
 /*
-* Creates a bottom bar like so: 
-*   == MODE ==                                       filename.ext | curr/len 
-* The length of the bar is guaranteed to be <width>
-* Alternatively, if there is a message, it returns this:
-*   MESSAGE...............................................................
-*/
+ * Creates a bottom bar like so: 
+ *   == MODE ==                                       filename.ext | curr/len 
+ * The length of the bar is guaranteed to be <width>
+ * Alternatively, if there is a message, it returns this:
+ *   MESSAGE...............................................................
+ */
 char *get_bottom_bar(const int W, const editor_state_t *state) {
 
-        char *bar = malloc(W * sizeof(char));  // TOFREE
+        char *bar = malloc(W * sizeof(char));
         memset(bar, ' ', W * sizeof(char));
 
         // error message?!?!?!?!?!?!?
@@ -96,6 +96,10 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                 // copy the filename and the straight line
                 memcpy(bar + W - used_up_back_space - 3, " | ", 3);
                 memcpy(bar + W - used_up_back_space - 3 - filename_len, filename, filename_len);
+
+                free((void *) curr_line_str);
+                free((void *) total_lines_str);
+
         } else if (state->mode == FILES) {
 
                 const char *filename = state->files_view_buf.filename;
@@ -247,7 +251,7 @@ void fill_rgb_mode_rgb(ansi_code_t *rgb_style, const highlighting_info_t *info,
 }
 
 char *get_highlighting_for_token(const highlighting_info_t *info, const token_t t, const display_state_t *state) {
-        char *code = malloc(ANSI_ESCAPE_LEN + 1);   // TO_FREE OUTSIDE
+        char *code = malloc(ANSI_ESCAPE_LEN + 1);
         ansi_code_t rgb_style = {0};
         switch (state->highlighting_mode) {
                 case HIGH_SYNTAX: {
@@ -371,8 +375,8 @@ char *get_displayed_buffer_string(const editor_state_t *state) {
 
                 const dyn_str *line = buf->lines.items + buf->screen_top_line - 1 + i;
 
-                // after doing a benchmark, i found that strlen + memcpy seems to be faster  
-                // for small strings than using snprintf
+                // after doing a benchmark, i found that strlen + memcpy seems to be faster
+                // for small strings than using sprintf
                 const highlighting_info_t info = {
                         .W = W, .H = H, .line_number = buf->screen_top_line + i - 1,
                         .line = line, .line_index = i, .col_start = buf->screen_left_col,
