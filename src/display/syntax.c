@@ -110,7 +110,9 @@ void init_token_map(const buf_t *buf) {
         for (ssize_t i = 0; i < map.len; ++i) {
                 map.items[i] = list_init(special_token_str, buf->lines.items[i].len);
                 map.items[i].len = buf->lines.items[i].len;
-                memset(map.items[i].items, STT_NONE, map.items[i].len);
+                for (ssize_t j = 0; j < map.items[i].len; ++j) {
+                        map.items[i].items[j] = STT_NONE;        
+                }
         }
 }
 
