@@ -587,8 +587,12 @@ void handle_c_delete_word(editor_state_t *state, buf_t *buf) {
         set_copy_register(state, line->items + start, len);
         memmove(line->items + start, line->items + start + len, line->len - end - 1);
         line->len -= len;
+
+        reset_prev_col();
         buf->cursor_col = start + 1;
-        restore_prev_col(buf);
+        if (buf->cursor_col < buf->screen_left_col || buf->cursor_col - buf->screen_left_col >= W()) {
+                buf->screen_left_col = max(buf->cursor_col - W() / 2, 1);
+        }
 }
 
 void handle_c_search_word(editor_state_t *state, buf_t *buf, bool forwards) {
@@ -597,7 +601,7 @@ void handle_c_search_word(editor_state_t *state, buf_t *buf, bool forwards) {
         if (!store_cursor_token(&start, &end, buf)) {
                 return;
         }
-        len = end - start;
+        len = end - start + 1;
 
         const dyn_str *line = buf->lines.items + buf->cursor_line - 1;
         state->command_target.len = 0;
@@ -609,7 +613,7 @@ void handle_c_search_word(editor_state_t *state, buf_t *buf, bool forwards) {
         do {
                 handle_search_jump(state, buf, !state->search_forwards);
                 store_cursor_token(&new_start, &new_end, buf);
-        } while (new_end - new_start != len);
+        } while (new_end - new_start + 1 != len);
 }
 
 void handle_c_delete_to_end(editor_state_t *state, buf_t *buf) {
