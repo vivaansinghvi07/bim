@@ -13,6 +13,7 @@ Simply run `$ make` to build the editor in the current directory. To install it 
 ## Limitations & Potential Improvements
 
 - There are some memory leaks that I will eventually look for and patch.
+        - Current ones I know about include in the `handle_c_search_word` function, and a little in displaying the buffer.
 - This may or may not work on Windows, as I've only tested it on my Macbook.
 - There is no support for Unicode or other text encodings. I may consider adding support for them in the future, though.
 - There is no LSP support. However, I am considering learning some basic LSP protocol to get something working.
