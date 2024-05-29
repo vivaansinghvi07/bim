@@ -36,7 +36,7 @@ static syntax_rules_t C_RULES = {"'\"", "//", "/*", "*/", {
         {2, FT_C_V}, {1, FT_C_W}, {0, NULL},   {0, NULL},   {0, NULL},   {18, FT_C__}
 }};
 
-static syntax_rules_t MD_RULES = {"`", NULL, "```", "```", {
+static syntax_rules_t MARKDOWN_RULES = {"`", NULL, "```", "```", {
         {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, 
         {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, 
         {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL}, 
@@ -62,12 +62,67 @@ static keyword_t FT_PY_T[] = {{"True", KW_CONST}, {"try", KW_CTRL_FLOW}, {"type"
 static keyword_t FT_PY_W[] = {{"while", KW_CTRL_FLOW}, {"with", KW_DECL}};
 static keyword_t FT_PY_Y[] = {{"yield", KW_CTRL_FLOW}};
 
-static syntax_rules_t PY_RULES = {"'\"", "#", "\"\"\"", "\"\"\"", {
+static syntax_rules_t PYTHON_RULES = {"'\"", "#", "\"\"\"", "\"\"\"", {
         {5, FT_PY_A}, {1, FT_PY_B}, {3, FT_PY_C}, {2, FT_PY_D}, {3, FT_PY_E}, {4, FT_PY_F},
         {1, FT_PY_G}, {0, NULL},    {4, FT_PY_I}, {0, NULL},    {0, NULL},    {1, FT_PY_L},
         {1, FT_PY_M}, {3, FT_PY_N}, {1, FT_PY_O}, {1, FT_PY_P}, {0, NULL},    {2, FT_PY_R}, 
         {0, NULL},    {3, FT_PY_T}, {0, NULL},    {0, NULL},    {2, FT_PY_W}, {0, NULL},
         {1, FT_PY_Y}, {0, NULL},    {0, NULL}
+}};
+
+// using javascript rules, reference here: https://www.w3schools.com/js/js_reserved.asp
+static keyword_t FT_TS_A[] = {{"abstract", KW_DECL}, {"arguments", KW_CONST}, {"await", KW_CTRL_FLOW}};
+static keyword_t FT_TS_B[] = {{"boolean", KW_TYPE}, {"break", KW_CTRL_FLOW}, {"byte", KW_TYPE}};
+static keyword_t FT_TS_C[] = {{"case", KW_CTRL_FLOW}, {"catch", KW_CTRL_FLOW}, {"char", KW_TYPE}, {"class", KW_DECL}, {"const", KW_DECL}, {"continue", KW_CTRL_FLOW}};
+static keyword_t FT_TS_D[] = {{"debugger", KW_CTRL_FLOW}, {"default", KW_CTRL_FLOW}, {"delete", KW_DECL}, {"do", KW_CTRL_FLOW}, {"double", KW_TYPE}};
+static keyword_t FT_TS_E[] = {{"else", KW_CTRL_FLOW}, {"enum", KW_DECL}, {"eval", KW_SPECIAL_FUNC}, {"export", KW_DECL}, {"extends", KW_DECL}};
+static keyword_t FT_TS_F[] = {{"false", KW_CONST}, {"final", KW_DECL}, {"finally", KW_CTRL_FLOW}, {"float", KW_TYPE}, {"for", KW_CTRL_FLOW}, {"function", KW_DECL}};
+static keyword_t FT_TS_G[] = {{"goto", KW_CTRL_FLOW}};
+static keyword_t FT_TS_I[] = {{"if", KW_CTRL_FLOW}, {"implements", KW_DECL}, {"import", KW_DECL}, {"in", KW_SPECIAL_FUNC}, {"instanceof", KW_SPECIAL_FUNC}, {"int", KW_TYPE}, {"interface", KW_DECL}};
+static keyword_t FT_TS_L[] = {{"let", KW_DECL}, {"long", KW_TYPE}};
+static keyword_t FT_TS_N[] = {{"native", KW_MODIFIER}, {"new", KW_SPECIAL_FUNC}, {"null", KW_CONST}};
+static keyword_t FT_TS_P[] = {{"package", KW_DECL}, {"private", KW_MODIFIER}, {"protected", KW_MODIFIER}, {"public", KW_MODIFIER}};
+static keyword_t FT_TS_R[] = {{"return", KW_CTRL_FLOW}};
+static keyword_t FT_TS_S[] = {{"short", KW_TYPE}, {"static", KW_MODIFIER}, {"super", KW_SPECIAL_FUNC}, {"switch", KW_CTRL_FLOW}, {"synchronized", KW_MODIFIER}};
+static keyword_t FT_TS_T[] = {{"this", KW_CONST}, {"throw", KW_CTRL_FLOW}, {"throws", KW_DECL}, {"transient", KW_MODIFIER}, {"true", KW_CONST}, {"try", KW_CTRL_FLOW}, {"typeof", KW_SPECIAL_FUNC}};
+static keyword_t FT_TS_V[] = {{"var", KW_DECL}, {"void", KW_TYPE}, {"volatile", KW_MODIFIER}};
+static keyword_t FT_TS_W[] = {{"while", KW_CTRL_FLOW}, {"with", KW_DECL}};
+static keyword_t FT_TS_Y[] = {{"yield", KW_CTRL_FLOW}};
+
+static syntax_rules_t TYPESCRIPT_RULES = {"'\"`", "//", "/*", "*/", {
+        {3, FT_TS_A}, {3, FT_TS_B}, {6, FT_TS_C}, {5, FT_TS_D}, {5, FT_TS_E}, {6, FT_TS_F}, {1, FT_TS_G},
+        {0, NULL}, {7, FT_TS_I}, {0, NULL}, {0, NULL}, {2, FT_TS_L}, {0, NULL}, {3, FT_TS_N},
+        {0, NULL}, {4, FT_TS_P}, {0, NULL}, {1, FT_TS_R}, {5, FT_TS_S}, {7, FT_TS_T}, {0, NULL},
+        {3, FT_TS_V}, {2, FT_TS_W}, {0, NULL}, {1, FT_TS_Y}, {0, NULL}, {0, NULL},
+}};
+
+static keyword_t FT_HTML_A[] = {{"a", KW_DECL}, {"abbr", KW_DECL}, {"acronym", KW_DECL}, {"address", KW_DECL}, {"applet", KW_DECL}, {"area", KW_DECL}, {"article", KW_DECL}, {"aside", KW_DECL}, {"audio", KW_DECL}, {"accept-charset", KW_MODIFIER}, {"accesskey", KW_MODIFIER}, {"action", KW_MODIFIER}, {"align", KW_MODIFIER}, {"alt", KW_MODIFIER}, {"async", KW_MODIFIER}, {"autocomplete", KW_MODIFIER}, {"autofocus", KW_MODIFIER}, {"autoplay", KW_MODIFIER}};
+static keyword_t FT_HTML_B[] = {{"b", KW_DECL}, {"base", KW_DECL}, {"basefont", KW_DECL}, {"bdi", KW_DECL}, {"bdo", KW_DECL}, {"big", KW_DECL}, {"blockquote", KW_DECL}, {"body", KW_DECL}, {"br", KW_DECL}, {"button", KW_DECL}, {"bgcolor", KW_MODIFIER}, {"border", KW_MODIFIER}};
+static keyword_t FT_HTML_C[] = {{"canvas", KW_DECL}, {"caption", KW_DECL}, {"center", KW_DECL}, {"cite", KW_DECL}, {"code", KW_DECL}, {"col", KW_DECL}, {"colgroup", KW_DECL}, {"charset", KW_MODIFIER}, {"checked", KW_MODIFIER}, {"cite", KW_MODIFIER}, {"class", KW_MODIFIER}, {"color", KW_MODIFIER}, {"cols", KW_MODIFIER}, {"colspan", KW_MODIFIER}, {"content", KW_MODIFIER}, {"contenteditable", KW_MODIFIER}, {"controls", KW_MODIFIER}, {"coords", KW_MODIFIER}};
+static keyword_t FT_HTML_D[] = {{"DOCTYPE", KW_DECL}, {"data", KW_DECL}, {"datalist", KW_DECL}, {"dd", KW_DECL}, {"del", KW_DECL}, {"details", KW_DECL}, {"dfn", KW_DECL}, {"dialog", KW_DECL}, {"dir", KW_DECL}, {"div", KW_DECL}, {"dl", KW_DECL}, {"dt", KW_DECL}, {"data", KW_MODIFIER}, {"data-*", KW_MODIFIER}, {"datetime", KW_MODIFIER}, {"default", KW_MODIFIER}, {"defer", KW_MODIFIER}, {"dir", KW_MODIFIER}, {"dirname", KW_MODIFIER}, {"disabled", KW_MODIFIER}, {"download", KW_MODIFIER}, {"draggable", KW_MODIFIER}};
+static keyword_t FT_HTML_E[] = {{"em", KW_DECL}, {"embed", KW_DECL}, {"enctype", KW_MODIFIER}, {"enterkeyhint", KW_MODIFIER}};
+static keyword_t FT_HTML_F[] = {{"fieldset", KW_DECL}, {"figcaption", KW_DECL}, {"figure", KW_DECL}, {"font", KW_DECL}, {"footer", KW_DECL}, {"form", KW_DECL}, {"frame", KW_DECL}, {"frameset", KW_DECL}, {"for", KW_MODIFIER}, {"form", KW_MODIFIER}, {"formaction", KW_MODIFIER}};
+static keyword_t FT_HTML_H[] = {{"h1", KW_DECL}, {"h2", KW_DECL}, {"h3", KW_DECL}, {"h4", KW_DECL}, {"h5", KW_DECL}, {"h6", KW_DECL}, {"head", KW_DECL}, {"header", KW_DECL}, {"hgroup", KW_DECL}, {"hr", KW_DECL}, {"html", KW_DECL}, {"headers", KW_MODIFIER}, {"height", KW_MODIFIER}, {"hidden", KW_MODIFIER}, {"high", KW_MODIFIER}, {"href", KW_MODIFIER}, {"hreflang", KW_MODIFIER}, {"http-equiv", KW_MODIFIER}};
+static keyword_t FT_HTML_I[] = {{"i", KW_DECL}, {"iframe", KW_DECL}, {"img", KW_DECL}, {"input", KW_DECL}, {"ins", KW_DECL}, {"id", KW_MODIFIER}, {"inert", KW_MODIFIER}, {"inputmode", KW_MODIFIER}, {"ismap", KW_MODIFIER}};
+static keyword_t FT_HTML_K[] = {{"kbd", KW_DECL}, {"kind", KW_MODIFIER}};
+static keyword_t FT_HTML_L[] = {{"label", KW_DECL}, {"legend", KW_DECL}, {"li", KW_DECL}, {"link", KW_DECL}, {"label", KW_MODIFIER}, {"lang", KW_MODIFIER}, {"list", KW_MODIFIER}, {"loop", KW_MODIFIER}, {"low", KW_MODIFIER}};
+static keyword_t FT_HTML_M[] = {{"main", KW_DECL}, {"map", KW_DECL}, {"mark", KW_DECL}, {"menu", KW_DECL}, {"meta", KW_DECL}, {"meter", KW_DECL}, {"max", KW_MODIFIER}, {"maxlength", KW_MODIFIER}, {"media", KW_MODIFIER}, {"method", KW_MODIFIER}, {"min", KW_MODIFIER}, {"multiple", KW_MODIFIER}, {"muted", KW_MODIFIER}};
+static keyword_t FT_HTML_N[] = {{"nav", KW_DECL}, {"noframes", KW_DECL}, {"noscript", KW_DECL}, {"name", KW_MODIFIER}, {"novalidate", KW_MODIFIER}};
+static keyword_t FT_HTML_O[] = {{"object", KW_DECL}, {"ol", KW_DECL}, {"optgroup", KW_DECL}, {"option", KW_DECL}, {"output", KW_DECL}, {"onabort", KW_MODIFIER}, {"onafterprint", KW_MODIFIER}, {"onbeforeprint", KW_MODIFIER}, {"onbeforeunload", KW_MODIFIER}, {"onblur", KW_MODIFIER}, {"oncanplay", KW_MODIFIER}, {"oncanplaythrough", KW_MODIFIER}, {"onchange", KW_MODIFIER}, {"onclick", KW_MODIFIER}, {"oncontextmenu", KW_MODIFIER}, {"oncopy", KW_MODIFIER}, {"oncuechange", KW_MODIFIER}, {"oncut", KW_MODIFIER}, {"ondblclick", KW_MODIFIER}, {"ondrag", KW_MODIFIER}, {"ondragend", KW_MODIFIER}, {"ondragenter", KW_MODIFIER}, {"ondragleave", KW_MODIFIER}, {"ondragover", KW_MODIFIER}, {"ondragstart", KW_MODIFIER}, {"ondrop", KW_MODIFIER}, {"ondurationchange", KW_MODIFIER}, {"onemptied", KW_MODIFIER}, {"onended", KW_MODIFIER}, {"onerror", KW_MODIFIER}, {"onfocus", KW_MODIFIER}, {"onhashchange", KW_MODIFIER}, {"oninput", KW_MODIFIER}, {"oninvalid", KW_MODIFIER}, {"onkeydown", KW_MODIFIER}, {"onkeypress", KW_MODIFIER}, {"onkeyup", KW_MODIFIER}, {"onload", KW_MODIFIER}, {"onloadeddata", KW_MODIFIER}, {"onloadedmetadata", KW_MODIFIER}, {"onloadstart", KW_MODIFIER}, {"onmousedown", KW_MODIFIER}, {"onmousemove", KW_MODIFIER}, {"onmouseout", KW_MODIFIER}, {"onmouseover", KW_MODIFIER}, {"onmouseup", KW_MODIFIER}, {"onmousewheel", KW_MODIFIER}, {"onoffline", KW_MODIFIER}, {"ononline", KW_MODIFIER}, {"onpagehide", KW_MODIFIER}, {"onpageshow", KW_MODIFIER}, {"onpaste", KW_MODIFIER}, {"onpause", KW_MODIFIER}, {"onplay", KW_MODIFIER}, {"onplaying", KW_MODIFIER}, {"onpopstate", KW_MODIFIER}, {"onprogress", KW_MODIFIER}, {"onratechange", KW_MODIFIER}, {"onreset", KW_MODIFIER}, {"onresize", KW_MODIFIER}, {"onscroll", KW_MODIFIER}, {"onsearch", KW_MODIFIER}, {"onseeked", KW_MODIFIER}, {"onseeking", KW_MODIFIER}, {"onselect", KW_MODIFIER}, {"onstalled", KW_MODIFIER}, {"onstorage", KW_MODIFIER}, {"onsubmit", KW_MODIFIER}, {"onsuspend", KW_MODIFIER}, {"ontimeupdate", KW_MODIFIER}, {"ontoggle", KW_MODIFIER}, {"onunload", KW_MODIFIER}, {"onvolumechange", KW_MODIFIER}, {"onwaiting", KW_MODIFIER}, {"onwheel", KW_MODIFIER}, {"open", KW_MODIFIER}, {"optimum", KW_MODIFIER}};
+static keyword_t FT_HTML_P[] = {{"p", KW_DECL}, {"param", KW_DECL}, {"picture", KW_DECL}, {"pre", KW_DECL}, {"progress", KW_DECL}, {"pattern", KW_MODIFIER}, {"placeholder", KW_MODIFIER}, {"popover", KW_MODIFIER}, {"popovertarget", KW_MODIFIER}, {"popovertargetaction", KW_MODIFIER}, {"poster", KW_MODIFIER}, {"preload", KW_MODIFIER}};
+static keyword_t FT_HTML_Q[] = {{"q", KW_DECL}};
+static keyword_t FT_HTML_R[] = {{"rp", KW_DECL}, {"rt", KW_DECL}, {"ruby", KW_DECL}, {"readonly", KW_MODIFIER}, {"rel", KW_MODIFIER}, {"required", KW_MODIFIER}, {"reversed", KW_MODIFIER}, {"rows", KW_MODIFIER}, {"rowspan", KW_MODIFIER}};
+static keyword_t FT_HTML_S[] = {{"s", KW_DECL}, {"samp", KW_DECL}, {"script", KW_DECL}, {"search", KW_DECL}, {"section", KW_DECL}, {"select", KW_DECL}, {"small", KW_DECL}, {"source", KW_DECL}, {"span", KW_DECL}, {"strike", KW_DECL}, {"strong", KW_DECL}, {"style", KW_DECL}, {"sub", KW_DECL}, {"summary", KW_DECL}, {"sup", KW_DECL}, {"svg", KW_DECL}, {"sandbox", KW_MODIFIER}, {"scope", KW_MODIFIER}, {"selected", KW_MODIFIER}, {"shape", KW_MODIFIER}, {"size", KW_MODIFIER}, {"sizes", KW_MODIFIER}, {"span", KW_MODIFIER}, {"spellcheck", KW_MODIFIER}, {"src", KW_MODIFIER}, {"srcdoc", KW_MODIFIER}, {"srclang", KW_MODIFIER}, {"srcset", KW_MODIFIER}, {"start", KW_MODIFIER}, {"step", KW_MODIFIER}, {"style", KW_MODIFIER}};
+static keyword_t FT_HTML_T[] = {{"table", KW_DECL}, {"tbody", KW_DECL}, {"td", KW_DECL}, {"template", KW_DECL}, {"textarea", KW_DECL}, {"tfoot", KW_DECL}, {"th", KW_DECL}, {"thead", KW_DECL}, {"time", KW_DECL}, {"title", KW_DECL}, {"tr", KW_DECL}, {"track", KW_DECL}, {"tt", KW_DECL}, {"tabindex", KW_MODIFIER}, {"target", KW_MODIFIER}, {"title", KW_MODIFIER}, {"translate", KW_MODIFIER}, {"type", KW_MODIFIER}};
+static keyword_t FT_HTML_U[] = {{"u", KW_DECL}, {"ul", KW_DECL}, {"usemap", KW_MODIFIER}};
+static keyword_t FT_HTML_V[] = {{"var", KW_DECL}, {"video", KW_DECL}, {"value", KW_MODIFIER}};
+static keyword_t FT_HTML_W[] = {{"wbraccept", KW_DECL}, {"width", KW_MODIFIER}, {"wrap", KW_MODIFIER}};
+
+static syntax_rules_t HTML_RULES = {"'\"", NULL, "<!--", "-->", {
+        {18, FT_HTML_A}, {12, FT_HTML_B}, {18, FT_HTML_C}, {22, FT_HTML_D}, {4, FT_HTML_E}, {11, FT_HTML_F}, {0, NULL},
+        {18, FT_HTML_H}, {9, FT_HTML_I}, {0, NULL}, {2, FT_HTML_K}, {9, FT_HTML_L}, {13, FT_HTML_M}, {5, FT_HTML_N},
+        {77, FT_HTML_O}, {12, FT_HTML_P}, {1, FT_HTML_Q}, {9, FT_HTML_R}, {31, FT_HTML_S}, {18, FT_HTML_T}, {3, FT_HTML_U},
+        {3, FT_HTML_V}, {3, FT_HTML_W}, {0, NULL}, {0, NULL}, {0, NULL}, {0, NULL},
 }};
 
 // uhhh what am i doing
@@ -95,10 +150,15 @@ void store_syntax_rules_from_filename(const char *filename) {
         if (n - i == 1 && (filename[i] == 'c' || filename[i] == 'h')) {
                 syntax_rules = &C_RULES;
         } else if (n - i == 2 && !strncmp(filename + i, "md", 2)) {
-                syntax_rules = &MD_RULES;
+                syntax_rules = &MARKDOWN_RULES;
         } else if (n - i == 2 && !strncmp(filename + i, "py", 2)
                    || n - i == 3 && !strncmp(filename + i, "pyi", 3)) {
-                syntax_rules = &PY_RULES;
+                syntax_rules = &PYTHON_RULES;
+        } else if (n - i == 2 && (!strncmp(filename + i, "ts", 2) || !strncmp(filename + i, "js", 2))) {
+                syntax_rules = &TYPESCRIPT_RULES;
+        } else if (n - i == 3 && !strncmp(filename + i, "htm", 3)
+                   || n - i == 4 && !strncmp(filename + i, "html", 4)) {
+                syntax_rules = &HTML_RULES;
         } else {
                 syntax_rules = NULL;
         }
@@ -321,21 +381,24 @@ ansi_code_t get_syntax_highlighting(const ssize_t line_index, const dyn_str *lin
                 return *get_highlighting_by_token_type(TT_NUMBER);
         }
 
-        bool can_be_all_upper = true;
-        for (ssize_t i = token->start; can_be_all_upper && i < token->end; ++i) {
-                can_be_all_upper = isupper(line->items[i]) || !islower(line->items[i]);
-        }
-        if (can_be_all_upper) {
-                return *get_highlighting_by_token_type(TT_ALL_CAPS);
-        }
+        if (syntax_rules != &HTML_RULES && syntax_rules != &MARKDOWN_RULES) {
+                bool can_be_all_upper = true;
+                for (ssize_t i = token->start; can_be_all_upper && i < token->end; ++i) {
+                        can_be_all_upper = isupper(line->items[i]) || !islower(line->items[i]);
+                }
+                if (can_be_all_upper) {
+                        return *get_highlighting_by_token_type(TT_ALL_CAPS);
+                }
 
-        if (isupper(c)) {
-                return *get_highlighting_by_token_type(TT_START_CAPS);
-        }
+                if (isupper(c)) {
+                        return *get_highlighting_by_token_type(TT_START_CAPS);
+                }
 
-        if (tt == STT_FUNCTION) {
-                return *get_highlighting_by_special_token_type(tt);
+                if (tt == STT_FUNCTION) {
+                        return *get_highlighting_by_special_token_type(tt);
+                }
         }
 
         return *get_highlighting_by_token_type(TT_NAME);
 }
+        

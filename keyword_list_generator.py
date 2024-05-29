@@ -20,7 +20,7 @@ def fill_keyword_list() -> list[list[tuple[str, str]]]:
 
         for keyword in all_keywords:
                 kw_type = input(f"Enter the type of the keyword \"{keyword}\" [d/t/c/m/o/f]: ")
-                while kw_type not in "dtcmof":
+                while kw_type not in "dtcmof" or not kw_type:
                         kw_type = input("Enter a valid keyword type. Refer to the src/display/syntax.h file for the types: ")
                 if (c := keyword[0].upper()) in ascii_uppercase:
                         keywords_by_letter[ord(c) - ord('A')].append((keyword, kw_type))
@@ -43,10 +43,10 @@ def generate_keyword_string(keywords: list[list[tuple[str, str]]], abbr: str) ->
         for c, kw_list in enumerate(keywords):
                 if not kw_list:
                         continue
-                line = f"static keyword_t FT_{abbr.upper()}_{'_' if c == 26 else ascii_uppercase[c]} = {{"
+                line = f"static keyword_t FT_{abbr.upper()}_{'_' if c == 26 else ascii_uppercase[c]}[] = {{"
                 for kw, typ in kw_list:
-                        line += f"{{\"{kw}\", {get_keyword_type(typ)}}},"
-                code += line[:-1] + "};\n"
+                        line += f"{{\"{kw}\", {get_keyword_type(typ)}}}, "
+                code += line[:-2] + "};\n"
         return code[:-1]
 
 def generate_syntax_rules_string(info: SyntaxInfo, keywords: list[list[tuple[str, str]]]) -> str:

@@ -105,11 +105,12 @@ void handle_c_big_move_up(buf_t *buf) {
         if (buf->screen_top_line <= 1) {
                 buf->cursor_line = 1;
         } else {
-                int lines_to_move = min(H() / 2, buf->screen_top_line - 1);
+                int lines_to_move = min(H() / 2, buf->cursor_line - 1);
                 buf->cursor_line -= lines_to_move;
                 if (buf->screen_top_line > buf->cursor_line) {
                         buf->screen_top_line -= lines_to_move;
                 }
+                buf->screen_top_line = max(1, buf->screen_top_line);
         }
         restore_prev_col(buf);
 }
@@ -157,11 +158,12 @@ void handle_c_big_move_left(buf_t *buf) {
         if (buf->screen_left_col <= 1) {
                 buf->cursor_col = 1;
         } else {
-                int cols_to_move = min(W() / 2, buf->screen_left_col - 1);
+                int cols_to_move = min(W() / 2, buf->cursor_col - 1);
                 buf->cursor_col -= cols_to_move;
                 if (buf->screen_left_col > buf->cursor_col) {
                         buf->screen_left_col -= cols_to_move;
                 }
+                buf->screen_left_col = max(1, buf->screen_left_col);
         }
         reset_prev_col();
 }
