@@ -181,9 +181,9 @@ size_t num_len(const int n) {
         return len;
 }
 
-const char *num_to_str(const int n) {
+const char *num_to_str(const ssize_t n) {
         char *buf = malloc(num_len(n) * sizeof(char) + 1);
-        sprintf(buf, "%d", n);
+        sprintf(buf, "%ld", n);
         return buf;
 }
 
