@@ -3,8 +3,12 @@
 
 #include <ctype.h>
 
-list_typedef(ssize_list, ssize_t);
-dyn_str *generate_json_request(const json_value_t *json_value, const bool is_parent) {
+typedef struct {
+        ssize_t loc;
+        char c;
+} special_loc_t;
+list_typedef(special_loc_list, special_loc_t);
+dyn_str *generate_json_string(const json_value_t *json_value, const bool is_parent) {
         static dyn_str *value = NULL;
         if (is_parent) {
                 value = malloc(sizeof(dyn_str));
@@ -22,19 +26,32 @@ dyn_str *generate_json_request(const json_value_t *json_value, const bool is_par
                 case JSON_STR: {
                         list_append(*value, '"');
                         ssize_t len = strlen(json_value->str);
-                        ssize_list quote_locations = list_init(ssize_list, 64);
+                        special_loc_list locations = list_init(special_loc_list, 128);
                         for (ssize_t i = 0; i < len; ++i) {
                                 if (json_value->str[i] == '"') {
-                                        list_append(quote_locations, i);
+                                        list_append(locations, ((special_loc_t) {.loc = i, .c = '"'}));
+                                } else if (json_value->str[i] == '\n') {
+                                        list_append(locations, ((special_loc_t) {.loc = i, .c = '\n'}));
+                                } else if (json_value->str[i] == '\\') {
+                                        list_append(locations, ((special_loc_t) {.loc = i, .c = '\\'}));
                                 }
                         }
-                        for (ssize_t i = 0; i < quote_locations.len + 1; ++i) {
-                                ssize_t start = i == 0 ? 0 : quote_locations.items[i - 1];
-                                ssize_t end = i == quote_locations.len ? len : quote_locations.items[i];
+                        for (ssize_t i = 0; i < locations.len + 1; ++i) {
+                                ssize_t start = i == 0 ? 0 : locations.items[i - 1].loc + 1;
+                                ssize_t end = i == locations.len ? len : locations.items[i].loc;
                                 list_create_space(*value, end - start);
                                 memcpy(value->items + value->len - (end - start), json_value->str + start, end - start);
-                                if (i < quote_locations.len) {
-                                        list_append(*value, '\\');
+                                if (i < locations.len) {
+                                        if (locations.items[i].c == '"') {
+                                                list_append(*value, '\\');
+                                                list_append(*value, '"');
+                                        } else if (locations.items[i].c == '\n') {
+                                                list_append(*value, '\\');
+                                                list_append(*value, 'n');
+                                        } else if (locations.items[i].c == '\\') {
+                                                list_append(*value, '\\');
+                                                list_append(*value, '\\');
+                                        }
                                 }
                         }
                         list_append(*value, '"');
@@ -42,7 +59,7 @@ dyn_str *generate_json_request(const json_value_t *json_value, const bool is_par
                 case JSON_LIST: {
                         list_append(*value, '[');
                         for (ssize_t i = 0; i < json_value->list.len; ++i) {
-                                (void) generate_json_request(json_value->list.values[i], false);
+                                (void) generate_json_string(json_value->list.values[i], false);
                                 if (i < json_value->list.len - 1) {
                                         list_append(*value, ',');
                                 }
@@ -60,7 +77,7 @@ dyn_str *generate_json_request(const json_value_t *json_value, const bool is_par
                                 list_append(*value, '"');
                                 list_append(*value, ':');
 
-                                (void) generate_json_request(json_value->object.values[i], false);
+                                (void) generate_json_string(json_value->object.values[i], false);
 
                                 if (i < json_value->list.len - 1) {
                                         list_append(*value, ',');

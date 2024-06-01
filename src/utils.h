@@ -49,6 +49,8 @@ void hide_cursor(void);
 void show_cursor(void);
 void set_cursor_block(void);
 void set_cursor_bar(void);
+void enter_altscr(void);
+void exit_altscr(void);
 void move_to_top_left(void);
 void move_cursor_to(const int y, const int x);
 

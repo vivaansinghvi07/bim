@@ -40,6 +40,7 @@ void iterate_animated_displays(editor_state_t *state) {
 
 int main(const int argc, const char **argv) {
 
+        enter_altscr();
         input_set_tty_raw();
         editor_state_t state;
         struct pollfd in = {.fd = 0, .events = POLLIN};
@@ -121,5 +122,6 @@ int main(const int argc, const char **argv) {
 
         buf_free_list(state.buffers);
         move_to_top_left();
-        return input_restore_tty();
+        input_restore_tty();
+        exit_altscr();
 }

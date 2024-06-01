@@ -150,6 +150,14 @@ void clear_screen(void) {
 #endif
 }
 
+void enter_altscr(void) {
+        printf("\033[?1049h");
+}
+
+void exit_altscr(void) {
+        printf("\033[?1049l");
+}
+
 void hide_cursor(void) {
         printf("\033[?25l");
 }

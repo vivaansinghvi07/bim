@@ -33,7 +33,7 @@ typedef struct _json_value_t {
         };
 } json_value_t;
 
-dyn_str *generate_json_request(const json_value_t *json_value, const bool is_parent);
+dyn_str *generate_json_string(const json_value_t *json_value, const bool is_parent);
 json_value_t *load_json_value(const char *str, bool is_parent);
 
 #endif
