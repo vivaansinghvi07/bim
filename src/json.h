@@ -14,13 +14,13 @@ typedef struct _json_value_t json_value_t;
 
 typedef struct {
         ssize_t len;
-        json_value_t *values;
+        json_value_t **values;
 } json_list_t;
 
 typedef struct {
         ssize_t len;
         const char **keys;
-        json_value_t *values;
+        json_value_t **values;
 } json_object_t;
 
 typedef struct _json_value_t {
@@ -34,5 +34,6 @@ typedef struct _json_value_t {
 } json_value_t;
 
 dyn_str *generate_json_request(const json_value_t *json_value, const bool is_parent);
+json_value_t *load_json_value(const char *str, bool is_parent);
 
 #endif
