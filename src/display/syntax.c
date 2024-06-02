@@ -203,13 +203,14 @@ void setup_syntax_highlighting(const buf_t *buf) {
         }
         
         char in_string = 0;
-        bool in_short_comment = false, in_long_comment = false;
+        bool in_short_comment = false, in_long_comment = false, ends_with_backslash = false;
         dyn_str *line;
         char c;
         for (ssize_t y = 0; y < buf->lines.len; ++y) {
                 line = buf->lines.items + y;
                 for (ssize_t x = 0; x < line->len; ++x) {
                         c = line->items[x];
+                        ends_with_backslash = (in_string || in_short_comment) && c == '\\' && x == line->len - 1;
                         if (in_string) {
                                 map.items[y].items[x] = STT_STRING;
                                 if (c == in_string) {
@@ -284,8 +285,11 @@ void setup_syntax_highlighting(const buf_t *buf) {
                                 }
                         }
                 }
-                in_short_comment = false;
-                in_string = 0;
+                if (!ends_with_backslash) {
+                        in_short_comment = false;
+                        in_string = 0;
+                }
+                ends_with_backslash = false;
         }
 }
 
