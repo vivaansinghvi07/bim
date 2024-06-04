@@ -56,6 +56,10 @@ typedef struct {
         ssize_t screensaver_frame_length_ms;
         ssize_t screensaver_ms_inactive;
 
+        // detects if the terminal supports a 256 color mode
+        // if not, then randomly generated colors will be better
+        bool supports_256_color;
+
         // controls the tilt of the gradient when using HIGH_GRADIENT or HIGH_RGB
         // possibly overengineering but its cool
         angle_mode angle;

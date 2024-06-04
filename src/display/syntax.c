@@ -294,22 +294,16 @@ void setup_syntax_highlighting(const buf_t *buf) {
 }
 
 static ansi_code_t SPECIAL_TOKEN_TYPE_COLOR_TABLE[SPECIAL_TOKEN_TYPE_COUNT];
-void fill_special_token_type_color_table(void) {
+void fill_special_token_type_color_table(bool supports_256_color) {
         for (uint8_t i = 0; i < SPECIAL_TOKEN_TYPE_COUNT; ++i) {
-                SPECIAL_TOKEN_TYPE_COLOR_TABLE[i].rgb.r = arc4random_uniform(156) + 100;
-                SPECIAL_TOKEN_TYPE_COLOR_TABLE[i].rgb.g = arc4random_uniform(156) + 100;
-                SPECIAL_TOKEN_TYPE_COLOR_TABLE[i].rgb.b = arc4random_uniform(156) + 100;
-                SPECIAL_TOKEN_TYPE_COLOR_TABLE[i].style = arc4random_uniform(ANSI_STYLE_VARIATION);
+                SPECIAL_TOKEN_TYPE_COLOR_TABLE[i] = get_random_ansi_code(supports_256_color);
         }
 }
 
 static ansi_code_t KEYWORD_TYPE_COLOR_TABLE[KEYWORD_TYPE_COUNT];
-void fill_keyword_type_color_table(void) {
+void fill_keyword_type_color_table(bool supports_256_color) {
         for (uint8_t i = 0; i < KEYWORD_TYPE_COUNT; ++i) {
-                KEYWORD_TYPE_COLOR_TABLE[i].rgb.r = arc4random_uniform(156) + 100;
-                KEYWORD_TYPE_COLOR_TABLE[i].rgb.g = arc4random_uniform(156) + 100;
-                KEYWORD_TYPE_COLOR_TABLE[i].rgb.b = arc4random_uniform(156) + 100;
-                KEYWORD_TYPE_COLOR_TABLE[i].style = arc4random_uniform(ANSI_STYLE_VARIATION);
+                KEYWORD_TYPE_COLOR_TABLE[i] = get_random_ansi_code(supports_256_color);
         }
 }
 
@@ -323,12 +317,9 @@ typedef enum {
 #define TOKEN_TYPE_COUNT 5
 
 static ansi_code_t TOKEN_TYPE_COLOR_TABLE[TOKEN_TYPE_COUNT];
-void fill_token_type_color_table(void) {
+void fill_token_type_color_table(bool supports_256_color) {
         for (uint8_t i = 0; i < TOKEN_TYPE_COUNT; ++i) {
-                TOKEN_TYPE_COLOR_TABLE[i].rgb.r = arc4random_uniform(156) + 100;
-                TOKEN_TYPE_COLOR_TABLE[i].rgb.g = arc4random_uniform(156) + 100;
-                TOKEN_TYPE_COLOR_TABLE[i].rgb.b = arc4random_uniform(156) + 100;
-                TOKEN_TYPE_COLOR_TABLE[i].style = arc4random_uniform(ANSI_STYLE_VARIATION);
+                TOKEN_TYPE_COLOR_TABLE[i] = get_random_ansi_code(supports_256_color);
         }
 }
 

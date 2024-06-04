@@ -18,7 +18,8 @@ Simply run `$ make` to build the editor in the current directory. To install it 
 - There is no support for Unicode or other text encodings. I may consider adding support for them in the future, though.
 - There is no LSP support. However, I am considering learning some basic LSP protocol to get something working.
         - Reference: [neovim](https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/client.lua] - search for `initialize`
-- There is bad support for terminals with less color options, like the Mac default terminal - consider adding checks for this.
+- The non-256-color terminal support is only limited to non-256-color terminals, and if it is enabled in a 256-color terminal, the colors do not work properly.
+  This is because I was too lazy to change the ANSI format that styles are printed with.
 
 ## Usage
 
@@ -46,6 +47,7 @@ Below is a table of all configuration options and their usages.
 
 | Option | Values | Description |
 | :----- | :----: | :---------- |
+| `supports_256_color` | `TRUE`, `FALSE`, `Y`, `N` | Sets if the terminal has 256-color support. This should not be set false in a 256-color terminal. |
 | `text_style` | `BOLD`, `NORMAL`, `ITALIC` | Sets the style of the text displayed |
 | `highlight_mode` | `SYNTAX`, `GRADIENT`, `LEXICAL`, `RGB`, `RANDOM`, `NONE` | Sets the way in which text is highlighted |
 | `gradient_left` | An RGB color in hex notation (with the hashtag) | Sets the left color of the gradient when `highlight_mode` is GRADIENT |

@@ -40,9 +40,9 @@ typedef struct {
 
 syntax_rules_t *get_keywords_from_filename(const char *filename);
 void setup_syntax_highlighting(const buf_t *buf);
-void fill_token_type_color_table(void);
-void fill_special_token_type_color_table(void);
-void fill_keyword_type_color_table(void);
+void fill_token_type_color_table(bool supports_256_color);
+void fill_special_token_type_color_table(bool supports_256_color);
+void fill_keyword_type_color_table(bool supports_256_color);
 ansi_code_t get_syntax_highlighting(const ssize_t line_index, const dyn_str *line, const token_t *token);
 
 #endif

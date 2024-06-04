@@ -117,29 +117,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
         return bar;
 }
 
-/*
- * In the mode HIGH_ALPHA, the first character of each token corresponds to a color.
- * The below function must be called when the editor starts to fill the array.
- */
-static ansi_code_t ANSI_COLOR_TABLE[256];
-void fill_ansi_color_table(void) {
-        for (uint16_t i = 0; i < sizeof(ANSI_COLOR_TABLE) / sizeof(ansi_code_t); ++i) {
-                ANSI_COLOR_TABLE[i].rgb.r = arc4random_uniform(156) + 100;
-                ANSI_COLOR_TABLE[i].rgb.g = arc4random_uniform(156) + 100;
-                ANSI_COLOR_TABLE[i].rgb.b = arc4random_uniform(156) + 100;
-                ANSI_COLOR_TABLE[i].style = arc4random_uniform(ANSI_STYLE_VARIATION);
-        }
-}
-
-// putting a function here that fills all the color tables for all syntax modes
-void fill_color_tables(void) {
-        fill_token_type_color_table();
-        fill_special_token_type_color_table();
-        fill_keyword_type_color_table();
-        fill_ansi_color_table();
-}
-
-// return a random ANSI styling code 
+// return an ansi style code based on the key
 uint8_t get_ansi_style(const uint8_t key) {
         switch (key) {
                 case 0: return ANSI_NORMAL;
@@ -151,6 +129,40 @@ uint8_t get_ansi_style(const uint8_t key) {
                 case 6: return ANSI_BLINKING;
         }
         return ANSI_NORMAL;
+}
+
+ansi_code_t get_random_ansi_code(bool supports_256_color) {
+        if (supports_256_color) {
+                return (ansi_code_t) { .rgb = (rgb_t) {
+                        arc4random_uniform(156) + 100,
+                        arc4random_uniform(156) + 100,
+                        arc4random_uniform(156) + 100
+                }, .style = get_ansi_style(arc4random_uniform(ANSI_STYLE_VARIATION))};
+        } else {
+                uint8_t style = get_ansi_style(arc4random_uniform(ANSI_STYLE_VARIATION));
+                return (ansi_code_t) { .rgb = (rgb_t) {
+                        0, 0, arc4random_uniform(7) + arc4random_uniform(2) * 60 + 31,  // random color mode, 31-37 normally, and 91-97 for bright versions
+                }, .style = style};
+        }
+}
+
+/*
+ * In the mode HIGH_ALPHA, the first character of each token corresponds to a color.
+ * The below function must be called when the editor starts to fill the array.
+ */
+static ansi_code_t ANSI_COLOR_TABLE[256];
+void fill_ansi_color_table(bool supports_256_color) {
+        for (uint16_t i = 0; i < sizeof(ANSI_COLOR_TABLE) / sizeof(ansi_code_t); ++i) {
+                ANSI_COLOR_TABLE[i] = get_random_ansi_code(supports_256_color);
+        }
+}
+
+// putting a function here that fills all the color tables for all syntax modes
+void fill_color_tables(bool supports_256_color) {
+        fill_token_type_color_table(supports_256_color);
+        fill_special_token_type_color_table(supports_256_color);
+        fill_keyword_type_color_table(supports_256_color);
+        fill_ansi_color_table(supports_256_color);
 }
 
 uint8_t get_style_from_style_enum(const text_style_mode mode) {
@@ -256,22 +268,16 @@ char *get_highlighting_for_token(const highlighting_info_t *info, const token_t 
         switch (state->highlighting_mode) {
                 case HIGH_SYNTAX: {
                         rgb_style = get_syntax_highlighting(info->line_number, info->line, &t);
-                        rgb_style.style = get_ansi_style(rgb_style.style);
                 } break;
                 case HIGH_NONE: {
                         rgb_style.rgb = (rgb_t) {255, 255, 255};
                         rgb_style.style = get_style_from_style_enum(state->text_style_mode);
                 } break;
                 case HIGH_RANDOM: {
-                        rgb_style.style = info->line->items[t.start] == ' ' ? 22 
-                                : get_ansi_style(arc4random_uniform(ANSI_STYLE_VARIATION));
-                        rgb_style.rgb.r = arc4random_uniform(156) + 100;
-                        rgb_style.rgb.g = arc4random_uniform(156) + 100;
-                        rgb_style.rgb.b = arc4random_uniform(156) + 100;
+                        rgb_style = get_random_ansi_code(state->supports_256_color);
                 } break;
                 case HIGH_ALPHA: {
                         rgb_style = ANSI_COLOR_TABLE[(uint8_t) info->line->items[t.start]];
-                        rgb_style.style = get_ansi_style(rgb_style.style);
                 } break;
                 case HIGH_GRADIENT: {
                         rgb_style.style = get_style_from_style_enum(state->text_style_mode);

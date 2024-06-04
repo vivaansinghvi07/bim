@@ -36,8 +36,8 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
         check_mode_array();
         update_screen_dimensions();
-        fill_color_tables();
         load_config(state);
+        fill_color_tables(state->display_state.supports_256_color);
 
         // open all buffers passed in cli
         buf_list *buffers = malloc(sizeof(buf_list));
@@ -73,6 +73,7 @@ void setup_state(editor_state_t *state, const int argc, const char **argv) {
 
 #define CONFIG_FILE_NAME ".bim_rc"
 
+#define SUPPORTS_256_COLOR_SETTING "supports_256_color"
 #define GRADIENT_LEFT_SETTING "gradient_left"
 #define GRADIENT_RIGHT_SETTING "gradient_right"
 #define TEXT_STYLE_SETTING "text_style"
@@ -100,6 +101,9 @@ const screensaver_mode SS_ENUM_OPTS[] = {SS_LEFT, SS_RIGHT, SS_TOP, SS_BOTTOM,
 const char *ANG_STR_OPTS[] = {"0", "45", "90", "135", "180", "225", "270", "315"};
 const angle_mode ANG_ENUM_OPTS[] = {ANG_0, ANG_45, ANG_90, ANG_135,
                                     ANG_180, ANG_225, ANG_270, ANG_315};
+
+const char *SUPPORTS_256_STR_OPTS[] = {"TRUE", "FALSE", "Y", "N"};
+const bool SUPPORTS_256_ENUM_OPTS[] = {true, false, true, false};  // not really an enum, whatever
 
 #define DEFAULT_GRAD_LEFT {255, 255, 0}
 #define DEFAULT_GRAD_RIGHT {0, 255, 255}
@@ -241,6 +245,7 @@ void parse_tab_width(const parse_info_t *info, editor_state_t *state) {
 void load_default_config(editor_state_t *state) {
 
         state->tab_width = 4;
+        state->display_state.supports_256_color = true;
         state->display_state.highlighting_mode = HIGH_SYNTAX;
         state->display_state.text_style_mode = STYLE_NORMAL;
 
@@ -292,6 +297,15 @@ void load_config(editor_state_t *state) {
                 if (!strncmp(line->items, HIGHLIGHT_MODE_SETTING, key_len)) {
                         parse_text_opts(HIGHLIGHT_MODE_SETTING, temp_state.display_state.highlighting_mode,
                                         HIGH_STR_OPTS, HIGH_ENUM_OPTS, info);
+                } else if (!strncmp(line->items, SUPPORTS_256_COLOR_SETTING, key_len)) {
+                        parse_text_opts(SUPPORTS_256_COLOR_SETTING, temp_state.display_state.supports_256_color,
+                                        SUPPORTS_256_STR_OPTS, SUPPORTS_256_ENUM_OPTS, info);
+                        if ((temp_state.display_state.highlighting_mode == HIGH_GRADIENT
+                             || temp_state.display_state.highlighting_mode == HIGH_RGB)
+                            && !temp_state.display_state.supports_256_color) {
+                                show_error(state, "CONFIG: CANNOT USE HIGH_RGB OR HIGH_GRADIENT WITHOUT 256 COLOR SUPPORT.");
+                                return;
+                        }
                 }
 
                 // case-wise - this is done to ignore settings for which there is no use

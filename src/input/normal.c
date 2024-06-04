@@ -24,7 +24,7 @@
 #define C_BIG_MOVE_DOWN         'S'
 #define C_BIG_MOVE_RIGHT        'D'
 
-#define C_LEXICAL_SHUF          '?'
+#define C_COLOR_SHUF            '?'
 #define C_CONFIG_RELOAD         '!'
 #define C_GRAD_ANG_INCRE        '+'
 #define C_GRAD_ANG_DECRE        '-'
@@ -746,7 +746,7 @@ void handle_normal_input(editor_state_t *state, char c) {
                 case C_SAVE: buf_save(buf); break;
                 case C_SAVE_ALL: handle_c_save_all(state); break;
 
-                case C_LEXICAL_SHUF: fill_color_tables(); break;
+                case C_COLOR_SHUF: fill_color_tables(state->display_state.supports_256_color); break;
                 case C_CONFIG_RELOAD: load_config(state); break;
                 case C_DELETE_LINE: handle_c_delete_line(state, buf); break;
                 case C_DELETE_ONE: handle_c_delete_one(state, buf); break;

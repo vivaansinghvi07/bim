@@ -25,7 +25,8 @@ typedef struct {
 void display_buffer(const editor_state_t *state);
 char *get_displayed_buffer_string(const editor_state_t *state);
 char *get_bottom_bar(const int W, const editor_state_t *state);
-void fill_color_tables(void);
+ansi_code_t get_random_ansi_code(bool supports_256_color);
+void fill_color_tables(bool supports_256_color);
 void increment_angle(editor_state_t *state);
 void decrement_angle(editor_state_t *state);
 void step_rgb_state(editor_state_t *state);
