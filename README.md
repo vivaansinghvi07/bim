@@ -18,6 +18,7 @@ Simply run `$ make` to build the editor in the current directory. To install it 
 - There is no support for Unicode or other text encodings. I may consider adding support for them in the future, though.
 - There is no LSP support. However, I am considering learning some basic LSP protocol to get something working.
         - Reference: [neovim](https://github.com/neovim/neovim/blob/master/runtime/lua/vim/lsp/client.lua] - search for `initialize`
+        - TODO: Add all the params shown in the repo there, then if that does not work, look into adding the params within the other requests itself
 - The non-256-color terminal support is only limited to non-256-color terminals, and if it is enabled in a 256-color terminal, the colors do not work properly.
   This is because I was too lazy to change the ANSI format that styles are printed with.
 
