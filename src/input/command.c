@@ -10,7 +10,7 @@
 #include <ctype.h>
 
 #define C_EXIT_COMMAND   '\033'
-#define C_OTHER_EXIT     17
+#define C_OTHER_EXIT     5
 #define C_COMMAND_ENTER  13
 #define C_BACKSPACE      127
 

@@ -27,7 +27,7 @@
 
 #define C_ENTER_FILE       13
 #define C_EXIT_FILES       27 
-#define C_OTHER_EXIT       17
+#define C_OTHER_EXIT       5
 #define C_BACK_DIR         '<'
 
 void open_new_files_view(editor_state_t *state, const char *filename) {
