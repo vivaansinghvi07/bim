@@ -135,5 +135,5 @@ Like `vim`, `bim` also features plenty of useful keybindings with their own func
 | `B` | `normal` | Deletes the text in a line from the cursor to the end. |
 | `v` | `normal` | Searches for the next occurance of the token under the cursor. |
 | `V` | `normal` | Searches for the previous occurance of the token under the cursor. |
-| `Esc` | any mode | Returns to `normal` mode. If is done in a `command` mode, discards any inputted text. |
+| `Esc`, `C-q` | any mode | Returns to `normal` mode. If is done in a `command` mode, discards any inputted text. |
 | `Enter` | `command` mode | Submits the inputted text to the command. |
