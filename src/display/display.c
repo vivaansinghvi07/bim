@@ -134,14 +134,14 @@ uint8_t get_ansi_style(const uint8_t key) {
 ansi_code_t get_random_ansi_code(bool supports_256_color) {
         if (supports_256_color) {
                 return (ansi_code_t) { .rgb = (rgb_t) {
-                        arc4random_uniform(156) + 100,
-                        arc4random_uniform(156) + 100,
-                        arc4random_uniform(156) + 100
-                }, .style = get_ansi_style(arc4random_uniform(ANSI_STYLE_VARIATION))};
+                        get_random_number(156) + 100,
+                        get_random_number(156) + 100,
+                        get_random_number(156) + 100
+                }, .style = get_ansi_style(get_random_number(ANSI_STYLE_VARIATION))};
         } else {
-                uint8_t style = get_ansi_style(arc4random_uniform(ANSI_STYLE_VARIATION));
+                uint8_t style = get_ansi_style(get_random_number(ANSI_STYLE_VARIATION));
                 return (ansi_code_t) { .rgb = (rgb_t) {
-                        0, 0, arc4random_uniform(7) + arc4random_uniform(2) * 60 + 31,  // random color mode, 31-37 normally, and 91-97 for bright versions
+                        0, 0, get_random_number(7) + get_random_number(2) * 60 + 31,  // random color mode, 31-37 normally, and 91-97 for bright versions
                 }, .style = style};
         }
 }

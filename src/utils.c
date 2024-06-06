@@ -15,6 +15,22 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 
+int __H, __W;
+const int H(void) {
+        return __H;
+}
+const int W(void) {
+        return __W;
+}
+
+size_t get_random_number(const ssize_t upper) {
+#ifdef __APPLE__
+        return arc4random_uniform(upper);
+#else
+        return rand() % upper;
+#endif
+}
+
 bool resize_detected(const int sW, const int sH) {
         return __W != sW || __H != sH;
 }

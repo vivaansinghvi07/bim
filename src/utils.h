@@ -6,6 +6,7 @@
 
 #include "list.h"
 
+#include <stdint.h>
 #include <stdbool.h>
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -17,13 +18,8 @@ typedef struct timespec _;
 
 list_typedef(dyn_str, char);
 
-int __H, __W;
-inline const int H(void) {
-        return __H;
-}
-inline const int W(void) {
-        return __W;
-}
+const int H(void);
+const int W(void);
 
 bool resize_detected(const int sW, const int sH);
 struct winsize get_window_size(void);
