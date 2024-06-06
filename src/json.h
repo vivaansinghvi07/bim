@@ -7,7 +7,7 @@
 #include <sys/types.h>
 
 typedef enum {
-        JSON_NUM, JSON_STR, JSON_LIST, JSON_OBJ
+        JSON_NUM, JSON_STR, JSON_LIST, JSON_OBJ, JSON_NULL
 } json_value_type_t;
 
 typedef struct _json_value_t json_value_t;

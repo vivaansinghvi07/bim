@@ -16,6 +16,10 @@ dyn_str *generate_json_string(const json_value_t *json_value, const bool is_pare
         }
 
         switch (json_value->type) {
+                case JSON_NULL: {
+                        list_create_space(*value, 4);
+                        memcpy(value->items + value->len - 4, "null", 4);
+                } break;
                 case JSON_NUM: {
                         const char *num = num_to_str(json_value->num);
                         ssize_t len = strlen(num);
@@ -105,6 +109,8 @@ json_value_type_t determine_json_type(char c) {
                 return JSON_STR;
         } else if (isdigit(c)) {
                 return JSON_NUM;
+        } else if (c == 'n') {
+                return JSON_NULL;
         } else {
                 exit_error("Invalid JSON received: unable to determine value type.\n");
                 exit(1);  // already called by exit_error but makes clangd stop crying
@@ -123,6 +129,12 @@ json_value_t *load_json_value(const char *str, bool is_parent) {
         ret->type = determine_json_type(str[i]);
         
         switch (ret->type) {
+                case JSON_NULL: {
+                        if (strncmp(str + i, "null", 4)) {
+                                exit_error("Invalid JSON received: unexpected token.\n");
+                        }
+                        i += 4;
+                } break;
                 case JSON_NUM: {
                         char *endptr;
                         ret->num = strtoll(str + i, &endptr, 0);

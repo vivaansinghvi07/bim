@@ -99,6 +99,7 @@ void editor_log(const char *format, ...) {
 /* https://stackoverflow.com/questions/1056411/how-to-pass-variable-number-of-arguments-to-printf-sprintf */
 void exit_error(const char *format, ...) {
         input_restore_tty();
+        exit_altscr();
         va_list arg_ptr;
         va_start(arg_ptr, format);
         vfprintf(stderr, format, arg_ptr);
