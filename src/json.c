@@ -1,7 +1,9 @@
 #include "json.h"
+#include "list.h"
 #include "utils.h"
 
 #include <ctype.h>
+#include <stdint.h>
 
 typedef struct {
         ssize_t loc;
@@ -16,6 +18,11 @@ dyn_str *generate_json_string(const json_value_t *json_value, const bool is_pare
         }
 
         switch (json_value->type) {
+                case JSON_BOOL: {
+                        uint8_t space = json_value->boolean ? 4 : 5;
+                        list_create_space(*value, space);
+                        memcpy(value->items + value->len - space, json_value->boolean ? "true" : "false", space);
+                } break;
                 case JSON_NULL: {
                         list_create_space(*value, 4);
                         memcpy(value->items + value->len - 4, "null", 4);
@@ -111,6 +118,8 @@ json_value_type_t determine_json_type(char c) {
                 return JSON_NUM;
         } else if (c == 'n') {
                 return JSON_NULL;
+        } else if (c == 't' || c == 'f') {
+                return JSON_BOOL;
         } else {
                 exit_error("Invalid JSON received: unable to determine value type.\n");
                 exit(1);  // already called by exit_error but makes clangd stop crying
@@ -129,6 +138,17 @@ json_value_t *load_json_value(const char *str, bool is_parent) {
         ret->type = determine_json_type(str[i]);
         
         switch (ret->type) {
+                case JSON_BOOL: {
+                        if (!strncmp(str + i, "false", 5)) {
+                                i += 5;
+                                ret->boolean = false;
+                        } else if (!strncmp(str + i, "true", 4)) {
+                                i += 4;
+                                ret->boolean = true;
+                        } else {
+                                exit_error("Invalid JSON received: unexpected token.\n");
+                        }
+                } break;
                 case JSON_NULL: {
                         if (strncmp(str + i, "null", 4)) {
                                 exit_error("Invalid JSON received: unexpected token.\n");
