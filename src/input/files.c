@@ -27,6 +27,7 @@
 
 #define C_ENTER_FILE       13
 #define C_EXIT_FILES       27 
+#define C_OTHER_EXIT       17
 #define C_BACK_DIR         '<'
 
 void open_new_files_view(editor_state_t *state, const char *filename) {
@@ -148,7 +149,7 @@ void handle_files_input(editor_state_t *state, char c) {
                 case C_RENAME_FILE: handle_c_rename(state); break;
                 case C_BACK_DIR: handle_c_back_dir(state); break;
                 case C_ENTER_FILE: handle_c_enter_file(state); break;
-                case C_EXIT_FILES: handle_c_exit_files(state); break;
+                case C_OTHER_EXIT: case C_EXIT_FILES: handle_c_exit_files(state); break; 
         }
 }
 

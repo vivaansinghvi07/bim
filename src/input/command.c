@@ -10,6 +10,7 @@
 #include <ctype.h>
 
 #define C_EXIT_COMMAND   '\033'
+#define C_OTHER_EXIT     17
 #define C_COMMAND_ENTER  13
 #define C_BACKSPACE      127
 
@@ -162,7 +163,7 @@ void handle_c_add_to_command(editor_state_t *state, char c) {
 
 void handle_command_input(editor_state_t *state, char c) {
         switch (c) {
-                case C_EXIT_COMMAND: handle_c_exit_command(state); break;
+                case C_OTHER_EXIT: case C_EXIT_COMMAND: handle_c_exit_command(state); break;
                 case C_COMMAND_ENTER: handle_c_command_enter(state); break;
                 case C_BACKSPACE: handle_c_command_backspace(state); break;
                 default: handle_c_add_to_command(state, c); break;

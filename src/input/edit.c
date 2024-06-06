@@ -19,6 +19,7 @@
 #define CHAR_TAB 9
 #define CHAR_NEWLINE 13
 #define CHAR_ESCAPE 27
+#define CHAR_CTRL_Q 17
 #define CHAR_BACKSPACE 127
 
 void insert_tab(buf_t *buf, dyn_str *line, const int tab_width) {
@@ -100,7 +101,7 @@ void handle_edit_input(editor_state_t *state, char c) {
                 case CHAR_CTRL_A: handle_c_move_left(buf); break; 
                 case CHAR_CTRL_S: handle_c_move_down(buf); break;
                 case CHAR_CTRL_D: handle_c_move_right(buf); break; 
-                case CHAR_ESCAPE: handle_exit_edit(state); break;
+                case CHAR_CTRL_Q: case CHAR_ESCAPE: handle_exit_edit(state); break;
                 case CHAR_TAB: insert_tab(buf, line, state->tab_width); break;
                 case CHAR_NEWLINE: insert_newline(buf, line); break;
                 case CHAR_BACKSPACE: delete_single_character(buf, line, state->tab_width); break;
