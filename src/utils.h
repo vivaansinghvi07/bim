@@ -21,6 +21,7 @@ list_typedef(dyn_str, char);
 const int H(void);
 const int W(void);
 
+size_t get_random_number(const ssize_t upper);
 bool resize_detected(const int sW, const int sH);
 struct winsize get_window_size(void);
 void update_screen_dimensions(void);

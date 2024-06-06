@@ -30,8 +30,9 @@
  */
 char *get_bottom_bar(const int W, const editor_state_t *state) {
 
-        char *bar = malloc(W * sizeof(char));
+        char *bar = malloc((W + 1) * sizeof(char));
         memset(bar, ' ', W * sizeof(char));
+        bar[W] = '\0';
 
         // error message?!?!?!?!?!?!?
         if (state->error_message.len) {
@@ -113,6 +114,9 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                 } else {
                         memcpy(bar + W - 2 - filename_len, filename, filename_len);
                 }
+        }
+        if (bar[W] != '\0') {
+                exit_error("AAAAA");
         }
         return bar;
 }
