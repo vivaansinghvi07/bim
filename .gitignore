@@ -2,6 +2,9 @@
 bim
 bim_test
 
+.cache/
+archive/
+
 # Prerequisites
 *.d
 
