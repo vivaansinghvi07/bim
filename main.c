@@ -125,4 +125,3 @@ int main(const int argc, const char **argv) {
         input_restore_tty();
         exit_altscr();
 }
-
