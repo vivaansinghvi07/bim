@@ -377,9 +377,11 @@ void handle_search_jump(const editor_state_t *state, buf_t *buf, const bool reve
                 text_pos_t *pos = positions.items + i;
                 if (!strncmp(target->items, buf->lines.items[pos->line].items + pos->col, target->len)) {
                         jump_to(buf, pos);
+                        free_list_items(1, &positions);
                         return;
                 }
         }
+        free_list_items(1, &positions);
 }
 
 void handle_c_jump_next(const editor_state_t *state, buf_t *buf) {
