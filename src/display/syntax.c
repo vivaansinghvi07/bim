@@ -4,6 +4,34 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+static keyword_t FT_CPP_A[] = {{"alignas", KW_SPECIAL_FUNC}, {"alignof", KW_SPECIAL_FUNC}, {"and", KW_CTRL_FLOW}, {"and_eq", KW_DECL}, {"asm", KW_DECL}, {"atomic_cancel", KW_DECL}, {"atomic_commit", KW_DECL}, {"atomic_noexcept", KW_DECL}, {"auto", KW_TYPE}};
+static keyword_t FT_CPP_B[] = {{"bitand", KW_CTRL_FLOW}, {"bitor", KW_CTRL_FLOW}, {"bool", KW_TYPE}, {"break", KW_CTRL_FLOW}};
+static keyword_t FT_CPP_C[] = {{"case", KW_CTRL_FLOW}, {"catch", KW_CTRL_FLOW}, {"char", KW_TYPE}, {"char8_t", KW_TYPE}, {"char16_t", KW_TYPE}, {"char32_t", KW_TYPE}, {"class", KW_DECL}, {"compl", KW_CTRL_FLOW}, {"concept", KW_DECL}, {"const", KW_MODIFIER}, {"consteval", KW_MODIFIER}, {"constexpr", KW_MODIFIER}, {"constinit", KW_MODIFIER}, {"const_cast", KW_SPECIAL_FUNC}, {"continue", KW_CTRL_FLOW}, {"co_await", KW_CTRL_FLOW}, {"co_return", KW_CTRL_FLOW}, {"co_yield", KW_CTRL_FLOW}};
+static keyword_t FT_CPP_D[] = {{"decltype", KW_SPECIAL_FUNC}, {"default", KW_CTRL_FLOW}, {"delete", KW_DECL}, {"do", KW_CTRL_FLOW}, {"double", KW_TYPE}, {"dynamic_cast", KW_SPECIAL_FUNC}};
+static keyword_t FT_CPP_E[] = {{"else", KW_CTRL_FLOW}, {"enum", KW_DECL}, {"explicit", KW_MODIFIER}, {"export", KW_MODIFIER}, {"extern", KW_MODIFIER}};
+static keyword_t FT_CPP_F[] = {{"false", KW_CONST}, {"float", KW_TYPE}, {"for", KW_CTRL_FLOW}, {"friend", KW_MODIFIER}};
+static keyword_t FT_CPP_G[] = {{"goto", KW_CTRL_FLOW}};
+static keyword_t FT_CPP_I[] = {{"if", KW_CTRL_FLOW}, {"inline", KW_MODIFIER}, {"int", KW_TYPE}};
+static keyword_t FT_CPP_L[] = {{"long", KW_TYPE}};
+static keyword_t FT_CPP_M[] = {{"mutable", KW_MODIFIER}};
+static keyword_t FT_CPP_N[] = {{"namespace", KW_DECL}, {"new", KW_DECL}, {"noexcept", KW_MODIFIER}, {"not", KW_CTRL_FLOW}, {"not_eq", KW_DECL}, {"nullptr", KW_CONST}};
+static keyword_t FT_CPP_O[] = {{"operator", KW_SPECIAL_FUNC}, {"or", KW_CTRL_FLOW}, {"or_eq", KW_DECL}};
+static keyword_t FT_CPP_P[] = {{"private", KW_MODIFIER}, {"protected", KW_MODIFIER}, {"public", KW_MODIFIER}};
+static keyword_t FT_CPP_R[] = {{"reflexpr", KW_SPECIAL_FUNC}, {"register", KW_TYPE}, {"reinterpret_cast", KW_SPECIAL_FUNC}, {"requires", KW_SPECIAL_FUNC}, {"return", KW_CTRL_FLOW}};
+static keyword_t FT_CPP_S[] = {{"short", KW_TYPE}, {"signed", KW_TYPE}, {"sizeof", KW_SPECIAL_FUNC}, {"static", KW_MODIFIER}, {"static_assert", KW_SPECIAL_FUNC}, {"static_cast", KW_SPECIAL_FUNC}, {"struct", KW_DECL}, {"switch", KW_CTRL_FLOW}, {"synchronized", KW_DECL}};
+static keyword_t FT_CPP_T[] = {{"template", KW_DECL}, {"this", KW_CONST}, {"thread_local", KW_MODIFIER}, {"throw", KW_CTRL_FLOW}, {"true", KW_CONST}, {"try", KW_CTRL_FLOW}, {"typedef", KW_DECL}, {"typeid", KW_SPECIAL_FUNC}, {"typename", KW_TYPE}};
+static keyword_t FT_CPP_U[] = {{"union", KW_DECL}, {"unsigned", KW_TYPE}, {"using", KW_DECL}};
+static keyword_t FT_CPP_V[] = {{"virtual", KW_MODIFIER}, {"void", KW_TYPE}, {"volatile", KW_MODIFIER}};
+static keyword_t FT_CPP_W[] = {{"wchar_t", KW_TYPE}, {"while", KW_CTRL_FLOW}};
+static keyword_t FT_CPP_X[] = {{"xor", KW_CTRL_FLOW}, {"xor_eq", KW_DECL}};
+static keyword_t FT_CPP__[] = {{"#if", KW_CTRL_FLOW}, {"#elif", KW_CTRL_FLOW}, {"#else", KW_CTRL_FLOW}, {"#endif", KW_CTRL_FLOW}, {"#ifdef", KW_CTRL_FLOW}, {"#ifndef", KW_CTRL_FLOW}, {"#elifdef (C++23)", KW_CTRL_FLOW}, {"#elifndef", KW_CTRL_FLOW}, {"#define", KW_DECL}, {"#undef", KW_DECL}, {"#include", KW_DECL}, {"#line", KW_DECL}, {"#error", KW_DECL}, {"#warning", KW_DECL}, {"#pragma", KW_DECL}, {"#defined", KW_DECL}, {"#__has_include", KW_DECL}, {"#__has_cpp_attribute", KW_DECL}, {"#export", KW_DECL}, {"#import", KW_DECL}};
+
+static syntax_rules_t CPP_RULES = {"'\"", "//", "/*", "*/", {
+        {9, FT_CPP_A}, {4, FT_CPP_B}, {18, FT_CPP_C}, {6, FT_CPP_D}, {5, FT_CPP_E}, {4, FT_CPP_F}, {1, FT_CPP_G},
+        {0, NULL}, {3, FT_CPP_I}, {0, NULL}, {0, NULL}, {1, FT_CPP_L}, {1, FT_CPP_M}, {6, FT_CPP_N},
+        {3, FT_CPP_O}, {3, FT_CPP_P}, {0, NULL}, {5, FT_CPP_R}, {9, FT_CPP_S}, {9, FT_CPP_T}, {3, FT_CPP_U},
+        {3, FT_CPP_V}, {2, FT_CPP_W}, {2, FT_CPP_X}, {0, NULL}, {0, NULL}, {20, FT_CPP__},
+}};
 static keyword_t FT_C_A[] = {{"alignas", KW_MODIFIER}, {"alignof", KW_SPECIAL_FUNC}, {"auto", KW_TYPE}};
 static keyword_t FT_C_B[] = {{"bool", KW_TYPE}, {"break", KW_CTRL_FLOW}};
 static keyword_t FT_C_C[] = {{"case", KW_CTRL_FLOW}, {"char", KW_TYPE}, {"const", KW_MODIFIER}, {"constexpr", KW_MODIFIER}, {"continue", KW_CTRL_FLOW}};
@@ -154,6 +182,8 @@ void store_syntax_rules_from_filename(const char *filename) {
         } else if (n - i == 2 && !strncmp(filename + i, "py", 2)
                    || n - i == 3 && !strncmp(filename + i, "pyi", 3)) {
                 syntax_rules = &PYTHON_RULES;
+        } else if (n - i == 3 && (!strncmp(filename + i, "cpp", 3) || !strncmp(filename + i, "hpp", 3))) {
+                syntax_rules = &CPP_RULES;
         } else if (n - i == 2 && (!strncmp(filename + i, "ts", 2) || !strncmp(filename + i, "js", 2))) {
                 syntax_rules = &TYPESCRIPT_RULES;
         } else if (n - i == 3 && !strncmp(filename + i, "htm", 3)
