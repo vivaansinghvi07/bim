@@ -2,7 +2,6 @@
 #include "buf.h"
 #include "utils.h"
 #include "mode.h"
-#include "input/command.h"
 #include "display/display.h"
 
 #include <stdarg.h>

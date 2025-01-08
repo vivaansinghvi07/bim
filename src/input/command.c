@@ -2,7 +2,6 @@
 #include "normal.h"
 #include "files.h"
 #include "../mode.h"
-#include "../display/display.h"
 
 #include <sys/stat.h>
 #include <stdlib.h>
