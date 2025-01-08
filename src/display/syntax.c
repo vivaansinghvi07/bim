@@ -182,7 +182,8 @@ void store_syntax_rules_from_filename(const char *filename) {
         } else if (n - i == 2 && !strncmp(filename + i, "py", 2)
                    || n - i == 3 && !strncmp(filename + i, "pyi", 3)) {
                 syntax_rules = &PYTHON_RULES;
-        } else if (n - i == 3 && (!strncmp(filename + i, "cpp", 3) || !strncmp(filename + i, "hpp", 3))) {
+        } else if (n - i == 3 && (!strncmp(filename + i, "cpp", 3) || !strncmp(filename + i, "hpp", 3)
+                                  || !strncmp(filename + i, "c++", 3) || !strncmp(filename + i, "h++", 3))) {
                 syntax_rules = &CPP_RULES;
         } else if (n - i == 2 && (!strncmp(filename + i, "ts", 2) || !strncmp(filename + i, "js", 2))) {
                 syntax_rules = &TYPESCRIPT_RULES;
