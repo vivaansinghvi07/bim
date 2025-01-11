@@ -64,7 +64,6 @@ void insert_newline(buf_t *buf, dyn_str *line, const int tab_width) {
         ssize_t spaces_to_add = 0;
         for (;spaces_to_add < line->len && line->items[spaces_to_add] == ' '; ++spaces_to_add);
         spaces_to_add = spaces_to_add + (is_open_paren_char(line->items[col - 1])) * tab_width;
-        editor_log("spaces_to_add: %d\n", spaces_to_add);
         if (spaces_to_add > 0) {
                 list_create_space(*next_line, spaces_to_add);
                 memmove(next_line->items, next_line->items + spaces_to_add, next_line->len - spaces_to_add);
@@ -72,13 +71,6 @@ void insert_newline(buf_t *buf, dyn_str *line, const int tab_width) {
                 jump_to(buf, &(text_pos_t){ .col = buf->cursor_col + spaces_to_add - 1, .line = buf->cursor_line - 1});
         } else {
                 reset_prev_col();
-        }
-        for (int i = 0; i < buf->lines.len; ++i) {
-                if (buf->lines.items + i == next_line) {
-                        editor_log("next_line: ");
-                }
-                dyn_str *temp = buf->lines.items + i;
-                editor_log("%d %d %d\n", i, temp->len, temp->cap);
         }
 }
 
