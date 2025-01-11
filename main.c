@@ -56,7 +56,7 @@ int main(const int argc, const char **argv) {
                 if (resize_detected(old_W, old_H)) {
                         old_W = W(), old_H = H();
                         display_buffer(&state);
-                }                
+                }
 
                 set_timer(&state.timer);
                 

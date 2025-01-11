@@ -34,7 +34,18 @@ void insert_tab(buf_t *buf, dyn_str *line, const int tab_width) {
         }
 }
 
-void insert_newline(buf_t *buf, dyn_str *line) {
+void insert_single_character(buf_t *buf, dyn_str *line, char c) {
+        int col = buf->cursor_col - 1;
+        list_insert(*line, col, c);
+        handle_c_move_right(buf);
+}
+
+bool is_open_paren_char(const char c) {
+        return c == '(' || c == '[' || c == '{';
+}
+
+void insert_newline(buf_t *buf, dyn_str *line, const int tab_width) {
+
         int col = buf->cursor_col - 1;
         size_t split_text_len = line->len - col;
         size_t new_len = max(MIN_NEW_LINE_LEN, split_text_len * 2);   // times 2 for some leeway
@@ -49,13 +60,26 @@ void insert_newline(buf_t *buf, dyn_str *line) {
         line->len = col;
         handle_c_move_down(buf);
         buf->cursor_col = buf->screen_left_col = 1;
-        reset_prev_col();
-}
 
-void insert_single_character(buf_t *buf, dyn_str *line, char c) {
-        int col = buf->cursor_col - 1;
-        list_insert(*line, col, c);
-        handle_c_move_right(buf);
+        ssize_t spaces_to_add = 0;
+        for (;spaces_to_add < line->len && line->items[spaces_to_add] == ' '; ++spaces_to_add);
+        spaces_to_add = spaces_to_add + (is_open_paren_char(line->items[col - 1])) * tab_width;
+        editor_log("spaces_to_add: %d\n", spaces_to_add);
+        if (spaces_to_add > 0) {
+                list_create_space(*next_line, spaces_to_add);
+                memmove(next_line->items, next_line->items + spaces_to_add, next_line->len - spaces_to_add);
+                memset(next_line->items, ' ', spaces_to_add);
+                jump_to(buf, &(text_pos_t){ .col = buf->cursor_col + spaces_to_add - 1, .line = buf->cursor_line - 1});
+        } else {
+                reset_prev_col();
+        }
+        for (int i = 0; i < buf->lines.len; ++i) {
+                if (buf->lines.items + i == next_line) {
+                        editor_log("next_line: ");
+                }
+                dyn_str *temp = buf->lines.items + i;
+                editor_log("%d %d %d\n", i, temp->len, temp->cap);
+        }
 }
 
 void delete_single_character(buf_t *buf, dyn_str *line, const int tab_width) {
@@ -103,7 +127,7 @@ void handle_edit_input(editor_state_t *state, char c) {
                 case CHAR_CTRL_D: handle_c_move_right(buf); break; 
                 case CHAR_CTRL_E: case CHAR_ESCAPE: handle_exit_edit(state); break;
                 case CHAR_TAB: insert_tab(buf, line, state->tab_width); break;
-                case CHAR_NEWLINE: insert_newline(buf, line); break;
+                case CHAR_NEWLINE: insert_newline(buf, line, state->tab_width); break;
                 case CHAR_BACKSPACE: delete_single_character(buf, line, state->tab_width); break;
                 default: {
                         if (!isprint(c)) {
