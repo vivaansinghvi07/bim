@@ -40,8 +40,8 @@ void insert_single_character(buf_t *buf, dyn_str *line, char c) {
         handle_c_move_right(buf);
 }
 
-bool is_open_paren_char(const char c) {
-        return c == '(' || c == '[' || c == '{';
+bool is_deeper_tab_char(const char c) {
+        return c == '(' || c == '[' || c == '{' || c == ':';
 }
 
 void insert_newline(buf_t *buf, dyn_str *line, const int tab_width) {
@@ -63,7 +63,7 @@ void insert_newline(buf_t *buf, dyn_str *line, const int tab_width) {
 
         ssize_t spaces_to_add = 0;
         for (;spaces_to_add < line->len && line->items[spaces_to_add] == ' '; ++spaces_to_add);
-        spaces_to_add = spaces_to_add + (is_open_paren_char(line->items[col - 1])) * tab_width;
+        spaces_to_add = spaces_to_add + (is_deeper_tab_char(line->items[col - 1])) * tab_width;
         if (spaces_to_add > 0) {
                 list_create_space(*next_line, spaces_to_add);
                 memmove(next_line->items, next_line->items + spaces_to_add, next_line->len - spaces_to_add);
