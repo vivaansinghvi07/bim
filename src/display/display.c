@@ -109,7 +109,7 @@ char *get_bottom_bar(const int W, const editor_state_t *state) {
                 // absolutely unreadable pointer arithmetic
                 if (W - used_up_front_space - 2 < filename_len) {
                         memcpy(bar + used_up_front_space, "...", 3);
-                        memcpy(bar + used_up_front_space + 3, filename + filename_len - (W - used_up_front_space - 2),
+                        memcpy(bar + used_up_front_space + 3, filename + filename_len - (W - used_up_front_space - 5),
                                W - used_up_front_space - 5);
                 } else {
                         memcpy(bar + W - 2 - filename_len, filename, filename_len);
